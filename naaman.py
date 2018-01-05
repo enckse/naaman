@@ -72,6 +72,10 @@ def _validate_options(args):
             _console_output("searching {}".format(args.search))
         else:
             _console_error("search only available via sync")
+            invalid = True
+    if args.search and args.upgrades:
+        _console_error("can not search and upgrade")
+        invalid = True
     if invalid:
         exit(1)
 
@@ -122,7 +126,6 @@ def main():
     else:
         logger.setLevel(logging.INFO)
     _validate_options(args)
-
 
 if __name__ == "__main__":
     main()
