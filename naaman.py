@@ -105,11 +105,6 @@ def _validate_options(args, unknown, groups):
         if args.search or not args.upgrades:
             need_targets = True
 
-    if args.upgrade:
-        call_on("upgrade")
-        valid_count += 1
-        need_targets = True
-
     if args.remove:
         call_on("remove")
         valid_count += 1
@@ -143,8 +138,6 @@ def _validate_options(args, unknown, groups):
             callback = _query
         if args.search:
             callback = _search
-        if args.upgrade:
-            callback = _upgrade
         if args.upgrades:
             callback = _upgrades
         if args.sync and not args.search and not args.upgrades:
@@ -302,11 +295,6 @@ def _syncing(context, can_install, targets, updating):
     for i in do_install:
         if not _install(i, makepkg, cache_dirs):
             _console_error("error installing package: {}".format(i.name))
-
-
-def _upgrade(context):
-    """Upgrade packages."""
-    _syncing(context, False, context.targets, False)
 
 
 def _get_deps(pkgs, name):
@@ -500,9 +488,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-S', '--sync',
                         help="synchronize packages",
-                        action="store_true")
-    parser.add_argument('-U', '--upgrade',
-                        help="upgrade packages",
                         action="store_true")
     parser.add_argument('-R', '--remove',
                         help='remove a package',

@@ -106,13 +106,6 @@ or some packages
 naaman -Su <package> <package1>
 ```
 
-### Upgrade
-
-to perform an upgrade
-```
-naaman -U <package> <package1>
-```
-
 ### Remove
 
 to remove packages
@@ -154,12 +147,7 @@ remove a package
 naaman -R <package3>
 ```
 
-update one of the packages
-```
-naaman -U <package1>
-```
-
-actually just update everything
+updating everything now
 ```
 pacman -Su
 ```
