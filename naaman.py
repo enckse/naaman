@@ -61,7 +61,7 @@ def _console_error(string):
 class Context(object):
     """Context for operations."""
 
-    def __init__(self, targets, config_file, groups):
+    def __init__(self, targets, config_file, groups, confirm):
         """Init the context."""
         self.root = "root" == getpass.getuser()
         self.targets = []
@@ -70,6 +70,7 @@ class Context(object):
         self.handle = config.init_with_config(config_file)
         self.db = self.handle.get_localdb()
         self.groups = groups
+        self.confirm = confirm
 
 
 def _validate_options(args, unknown, groups):
@@ -130,7 +131,7 @@ def _validate_options(args, unknown, groups):
         _console_error("invalid config file")
         invalid = True
 
-    ctx = Context(unknown, args.config, groups)
+    ctx = Context(unknown, args.config, groups, not args.no_confirm)
     callback = None
     if not invalid:
         if args.query:
@@ -279,7 +280,8 @@ def _syncing(context, can_install, targets, updating):
     if len(do_install) == 0:
         _console_output("nothing to do")
         exit(0)
-    _confirm("install packages", report)
+    if context.confirm:
+        _confirm("install packages", report)
     makepkg = "-sri"
     if args.makepkg and len(args.makepkg) > 0:
         makepkg = " ".join(args.makepkg)
@@ -322,13 +324,15 @@ def _upgrades(context):
 def _remove(context):
     """Remove package."""
     p = list(_do_query(context))
-    _confirm("remove packages", ["{} {}".format(x.name, x.version) for x in p])
+    if context.confirm:
+        _confirm("remove packages", ["{} {}".format(x.name,
+                                                    x.version) for x in p])
     options = context.groups[_REMOVE_OPTIONS]
     ok = True
     try:
         t = transaction.init_from_options(context.handle, options)
-        for p in pkgs:
-            t.remove_pkg(p)
+        for pkg in p:
+            t.remove_pkg(pkg)
         ok = transaction.finalize(t)
     except Exception as e:
         logger.error("transaction failed")
@@ -512,6 +516,9 @@ def main():
     parser.add_argument('--config',
                         help='pacman config',
                         default='/etc/pacman.conf')
+    parser.add_argument('--no-confirm',
+                        help="naaman will not ask for confirmation",
+                        action="store_true")
     _remove_options(parser)
     _sync_up_options(parser)
     args, unknown = parser.parse_known_args()
