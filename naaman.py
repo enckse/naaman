@@ -15,12 +15,16 @@ import urllib.request
 import urllib.parse
 import json
 import string
+from pycman import transaction
+
 
 _NAME = "naaman"
 logger = logging.getLogger(_NAME)
 console_format = logging.Formatter('%(message)s')
 file_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
+
+_REMOVE_OPTIONS = "Remove options"
 
 _AUR = "https://aur.archlinux.org{}"
 _RESULT_JSON = 'results'
@@ -47,7 +51,7 @@ def _console_error(string):
 class Context(object):
     """Context for operations."""
 
-    def __init__(self, targets, config_file):
+    def __init__(self, targets, config_file, groups):
         """Init the context."""
         self.root = "root" == getpass.getuser()
         self.targets = []
@@ -55,9 +59,10 @@ class Context(object):
             self.targets = targets
         self.handle = config.init_with_config(config_file)
         self.db = self.handle.get_localdb()
+        self.groups = groups
 
 
-def _validate_options(args, unknown):
+def _validate_options(args, unknown, groups):
     """Validate argument options."""
     valid_count = 0
     invalid = False
@@ -111,7 +116,7 @@ def _validate_options(args, unknown):
         _console_error("invalid config file")
         invalid = True
 
-    ctx = Context(unknown, args.config)
+    ctx = Context(unknown, args.config, groups)
     callback = None
     if args.query:
         callback = _query
@@ -132,12 +137,40 @@ def _validate_options(args, unknown):
     callback(ctx)
 
 
+def _confirm(message, package_names):
+    logger.info("")
+    for p in package_names:
+        logger.info("  -> {}".format(p))
+    logger.info("")
+    c = input(" ===> {}, (Y/n)? ".format(message))
+    if c == "n":
+        _console_error("user cancelled")
+        exit(1)
+
+
 def _sync_upgrade(context):
     """Sync upgrade."""
 
 
 def _remove(context):
     """Remove package."""
+    pkgs = list(_do_query(context))
+    _confirm("remove packages", context.targets)
+    options = context.groups[_REMOVE_OPTIONS]
+    ok = True
+    try:
+        t = transaction.init_from_options(context.handle, options)
+        for p in pkgs:
+            t.remove_pkg(p)
+        ok = transaction.finalize(t)
+    except Exception as e:
+        logger.error("transaction failed")
+        logger.error(e)
+        ok = False
+    if not ok:
+        _console_error("unable to remove packages")
+        exit(1)
+    _console_output("packages removed")
 
 
 def _get_segment(j, key):
@@ -199,20 +232,49 @@ def _search(context):
 
 
 def _query(context):
+    """Perform query."""
+    for q in _do_query(context):
+        logger.info("{} {}".format(q.name, q.version))
+
+
+def _is_aur_pkg(pkg):
+    """Detect AUR package."""
+    # TODO: determine the proper way to do this...
+    return pkg.packager == "Unknown Packager"
+
+
+def _do_query(context):
     """Query pacman."""
-    def _print(pkg):
-        logger.info("{} {}".format(pkg.name, pkg.version))
     if len(context.targets) > 0:
         for target in context.targets:
             pkg = context.db.get_pkg(target)
-            if not pkg:
+            valid = False
+            if pkg and _is_aur_pkg(pkg):
+                    yield pkg
+            else:
                 _console_error("unknown package: {}".format(target))
                 exit(1)
-            _print(pkg)
     else:
         for pkg in context.db.pkgcache:
-            if pkg.packager == "Unknown Packager":
-                _print(pkg)
+            if _is_aur_pkg(pkg):
+                yield pkg
+
+
+def _remove_options(parser):
+    """Get removal options."""
+    group = parser.add_argument_group(_REMOVE_OPTIONS)
+    group.add_argument('--cascade',
+                       action='store_true', default=False,
+                       help='remove packages and dependent packages')
+    group.add_argument('--nodeps', action='store_true', default=False,
+                       help='skip dependency checks')
+    group.add_argument('--dbonly', action='store_true', default=False,
+                       help='only modify database entries, not files')
+    group.add_argument('--nosave', action='store_true', default=False,
+                       help='remove configuration files as well')
+    group.add_argument('--recursive',
+                       action='store_true', default=False,
+                       help="remove dependencies also")
 
 
 def main():
@@ -242,7 +304,12 @@ def main():
     parser.add_argument('--config',
                         help='pacman config',
                         default='/etc/pacman.conf')
+    _remove_options(parser)
     args, unknown = parser.parse_known_args()
+    arg_groups = {}
+    for group in parser._action_groups:
+        g = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
+        arg_groups[group.title] = argparse.Namespace(**g)
     ch = logging.StreamHandler()
     cache_dir = BaseDirectory.xdg_cache_home
     if not os.path.exists(cache_dir):
@@ -260,7 +327,7 @@ def main():
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
-    _validate_options(args, unknown)
+    _validate_options(args, unknown, arg_groups)
 
 
 if __name__ == "__main__":
