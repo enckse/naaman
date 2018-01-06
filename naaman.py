@@ -238,11 +238,15 @@ def _syncing(context, can_install, targets, updating):
     ignored = args.ignore
     if not ignored:
         ignored = []
+    no_vcs = False
+    if args.no_vcs or args.force_refresh or args.refresh:
+        no_vcs = True
+    logger.debug("vcs? {}".format(no_vcs))
     for name in targets:
         if name in ignored:
             _console_output("{} is ignored".format(name))
             continue
-        if args.no_vcs and _is_vcs(name):
+        if no_vcs and _is_vcs(name):
             logger.debug("skipping vcs package {}".format(name))
             continue
         package = _rpc_search(name, _AUR_NAME_TYPE, True, context)
@@ -464,6 +468,12 @@ def _sync_up_options(parser):
                        help="makepkg options")
     group.add_argument('--no-vcs',
                        help="skip vcs packages",
+                       action='store_true')
+    group.add_argument('-y', '--refresh',
+                       help="refresh packages",
+                       action='store_true')
+    group.add_argument('-yy', '--force-refresh',
+                       help="refresh packages",
                        action='store_true')
     group.add_argument("--ignore",
                        help="ignore packages",

@@ -46,6 +46,16 @@ to skip vcs-package updates/installs
 --no-vcs
 ```
 
+similarly what pacman deems refresh
+```
+-yy
+```
+
+and this will also skip vcs updates and assume you are only interested in AUR rpc "database" changes/refreshes
+```
+-y
+```
+
 similar to pacman, packages can be ignored
 ```
 --ignore <package> <package1>
