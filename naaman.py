@@ -24,6 +24,7 @@ console_format = logging.Formatter('%(message)s')
 file_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
 
+_SYNC_UP_OPTIONS = "Sync/Update options"
 _REMOVE_OPTIONS = "Remove options"
 
 _AUR = "https://aur.archlinux.org{}"
@@ -129,10 +130,6 @@ def _validate_options(args, unknown, groups):
         _console_error("invalid config file")
         invalid = True
 
-    makepkg = "sri"
-    if args.makepkg and len(args.makepkg) > 0:
-        makepkg = " ".join(args.makepkg)
-    logger.debug("makepkg {}".format(makepkg))
     ctx = Context(unknown, args.config, groups)
     callback = None
     if not invalid:
@@ -195,7 +192,7 @@ def _install():
 
 def _sync(context):
     """Sync packages (install)."""
-    _syncing(context, True)
+    _syncing(context, True, context.targets)
 
 
 def _is_vcs(name):
@@ -212,10 +209,14 @@ def _is_vcs(name):
             return "latest (vcs version)"
 
 
-def _syncing(context, can_install):
+def _syncing(context, can_install, targets):
     """Sync/install packages."""
     inst = []
-    for name in context.targets:
+    args = context.groups[_SYNC_UP_OPTIONS]
+    for name in targets:
+        if args.no_vcs and _is_vcs(name):
+            logger.debug("skipping vcs package {}".format(name))
+            continue
         package = _rpc_search(name, _AUR_NAME_TYPE, True, context)
         if package:
             inst.append(package)
@@ -239,7 +240,11 @@ def _syncing(context, can_install):
         logger.debug(i)
         report.append("{} {}{}".format(i[0], vers, tag))
     _confirm("install packages", report)
- 
+    makepkg = "sri"
+    if args.makepkg and len(args.makepkg) > 0:
+        makepkg = " ".join(args.makepkg)
+    logger.debug("makepkg {}".format(makepkg))
+
 
 def _upgrade(context):
     """Upgrade packages."""
@@ -372,6 +377,19 @@ def _remove_options(parser):
                        help="remove dependencies also")
 
 
+def _sync_up_options(parser):
+    """Sync/update options."""
+    group = parser.add_argument_group(_SYNC_UP_OPTIONS)
+    group.add_argument("--makepkg",
+                       metavar='N',
+                       type=str,
+                       nargs='+',
+                       help="makepkg options")
+    group.add_argument('--no-vcs',
+                       help="skip vcs packages",
+                       action='store_true')
+
+
 def main():
     """Entry point."""
     parser = argparse.ArgumentParser()
@@ -399,12 +417,8 @@ def main():
     parser.add_argument('--config',
                         help='pacman config',
                         default='/etc/pacman.conf')
-    parser.add_argument("--makepkg",
-                        metavar='N',
-                        type=str,
-                        nargs='+',
-                        help="makepkg options")
     _remove_options(parser)
+    _sync_up_options(parser)
     args, unknown = parser.parse_known_args()
     arg_groups = {}
     for group in parser._action_groups:
