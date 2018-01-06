@@ -96,6 +96,12 @@ do not place aur makepkg xz into the pacman cache
 --no-cache
 ```
 
+to disable naaman using sudo
+```
+--sudo
+```
+
+
 ### Sync
 
 you can perform a sync to install new packages from the AUR
