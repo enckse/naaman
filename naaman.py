@@ -43,10 +43,12 @@ def _console_error(string):
     """Console error."""
     _console_output(string, prefix="FAILURE", callback=logger.error)
 
+
 class Context(object):
     """Context for operations."""
 
     def __init__(self, targets, config_file):
+        """Init the context."""
         self.root = "root" == getpass.getuser()
         self.targets = []
         if targets and len(targets) > 0:
@@ -133,8 +135,10 @@ def _validate_options(args, unknown):
 def _sync_upgrade(context):
     """Sync upgrade."""
 
+
 def _remove(context):
     """Remove package."""
+
 
 def _get_segment(j, key):
     """Get an ascii printable segment."""
@@ -184,12 +188,12 @@ def _rpc_search(package_name, typed, exact, context):
         logger.error(e)
 
 
-
 def _search(context):
     """Perform a search."""
     for target in context.targets:
         logger.debug("searching for {}".format(target))
         _rpc_search(target, _AUR_NAME_DESC_TYPE, False, context)
+
 
 def _query(context):
     """Query pacman."""
@@ -206,6 +210,7 @@ def _query(context):
         for pkg in context.db.pkgcache:
             if pkg.packager == "Unknown Packager":
                 _print(pkg)
+
 
 def main():
     """Entry point."""
@@ -253,6 +258,7 @@ def main():
     else:
         logger.setLevel(logging.INFO)
     _validate_options(args, unknown)
+
 
 if __name__ == "__main__":
     main()
