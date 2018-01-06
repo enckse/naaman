@@ -19,6 +19,7 @@ from xdg import BaseDirectory
 from pycman import config
 from pycman import transaction
 
+_VERSION = "0.1.0"
 _NAME = "naaman"
 logger = logging.getLogger(_NAME)
 console_format = logging.Formatter('%(message)s')
@@ -112,8 +113,11 @@ def _validate_options(args, unknown, groups):
         call_on("query")
         valid_count += 1
 
-    if not invalid and valid_count != 1:
-        _console_error("multiple top-level arguments given (this is invalid)")
+    if not invalid:
+        if valid_count > 1:
+            _console_error("multiple top-level arguments given")
+        elif valid_count == 0:
+            _console_error("no arguments given")
         invalid = True
 
     if not invalid and need_targets:
@@ -477,6 +481,9 @@ def main():
     parser.add_argument('-s', '--search',
                         help='search for packages',
                         action="store_true")
+    parser.add_argument('--version',
+                        help="display version",
+                        action='store_true')
     parser.add_argument('--verbose',
                         help="verbose output",
                         action='store_true')
@@ -486,6 +493,9 @@ def main():
     _remove_options(parser)
     _sync_up_options(parser)
     args, unknown = parser.parse_known_args()
+    if args.version:
+        print("{} ({})".format(_NAME, _VERSION))
+        exit(0)
     arg_groups = {}
     for group in parser._action_groups:
         g = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
