@@ -768,6 +768,9 @@ def main():
     parser.add_argument('--cache-dir',
                         help="cache dir for naaman",
                         default=cache_dir)
+    parser.add_argument('--no-config',
+                        help='do not load the config file',
+                        action="store_true")
     _remove_options(parser)
     _sync_up_options(parser)
     args, unknown = parser.parse_known_args()
@@ -794,7 +797,10 @@ def main():
     logger.debug(args.cache_dir)
     logger.debug(args.config)
     if os.path.exists(args.config):
-        args = _load_config(args, args.config)
+        if args.no_config:
+            logger.debug("not loading config")
+        else:
+            args = _load_config(args, args.config)
     else:
         logger.debug('no config')
     arg_groups = {}

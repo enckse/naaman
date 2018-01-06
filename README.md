@@ -101,6 +101,11 @@ to disable naaman using sudo
 --sudo
 ```
 
+do not load the config
+```
+--no-config
+```
+
 skip dependency checks/handling
 ```
 --skip-deps
