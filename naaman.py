@@ -32,11 +32,12 @@ _AUR = "https://aur.archlinux.org{}"
 _RESULT_JSON = 'results'
 _AUR_NAME = "Name"
 _AUR_DESC = "Description"
-_AUR_URL = _AUR.format("/rpc?v=5&type=search&by={}&arg={}")
+_AUR_RAW_URL = _AUR.format("/rpc?v=5&type={}&arg{}")
+_AUR_INFO = _AUR_RAW_URL.format("info", "[]={}")
+_AUR_SEARCH = _AUR_RAW_URL.format("search&by=name-desc", "={}")
 _AUR_VERS = "Version"
 _AUR_URLP = "URLPath"
-_AUR_NAME_DESC_TYPE = "name-desc"
-_AUR_NAME_TYPE = "name"
+_AUR_DEPS = "Depends"
 _PRINTABLE = set(string.printable)
 _AUR_TARGET_LEN = 4
 
@@ -75,7 +76,8 @@ class Context(object):
                  confirm,
                  quiet,
                  cache,
-                 sudo):
+                 sudo,
+                 aur_dependencies):
         """Init the context."""
         self.root = "root" == getpass.getuser()
         self.targets = []
@@ -90,6 +92,15 @@ class Context(object):
         self._repos = None
         self._cache_dir = cache
         self.can_sudo = sudo
+        self.deps = aur_dependencies
+        self._tracked_depends = []
+        self._pkgcaching = None
+
+    def known_dependency(self, package):
+        """Check if we know a dependency."""
+        known = package in self._tracked_depends
+        self._tracked_depends.append(package)
+        return known
 
     def cache_file(self, file_name, ext=".cache"):
         """Get a cache file."""
@@ -144,6 +155,15 @@ class Context(object):
         returncode = subprocess.call(cmd)
         logger.debug(returncode)
         return returncode == 0
+
+    def check_pkgcache(self, name):
+        """Check the pkgcache."""
+        if self._pkgcaching is None:
+            self._pkgcaching = self.get_packages()
+        for pkg in self.db.pkgcache:
+            if pkg.name == name:
+                return True
+        return False
 
 
 def _validate_options(args, unknown, groups):
@@ -210,7 +230,8 @@ def _validate_options(args, unknown, groups):
                   not args.no_confirm,
                   args.quiet,
                   args.cache_dir,
-                  args.sudo)
+                  args.sudo,
+                  not args.skip_deps)
     callback = None
     if not invalid:
         if args.query:
@@ -346,7 +367,7 @@ def _syncing(context, can_install, targets, updating):
         if no_vcs and _is_vcs(name):
             logger.debug("skipping vcs package {}".format(name))
             continue
-        package = _rpc_search(name, _AUR_NAME_TYPE, True, context)
+        package = _rpc_search(name, True, context)
         if package:
             inst.append(package)
         else:
@@ -459,25 +480,67 @@ class AURPackage(object):
         self.url = url
 
 
-def _rpc_search(package_name, typed, exact, context):
+def _handle_deps(context, dependencies):
+    """Handle dependencies resolution."""
+    logger.debug("resolving deps")
+    missing = False
+    syncpkgs = context.get_packages()
+    for d in dependencies:
+        logger.debug(d)
+        if context.targets and d in context.targets:
+            logger.debug("installing it")
+            continue
+        if context.known_dependency(d):
+            logger.debug("known")
+            continue
+        search = _rpc_search(d, True, context)
+        if search is None:
+            logger.debug("not aur")
+            continue
+        if context.check_pkgcache(d):
+            logger.debug("installed")
+            continue
+        _console_error("unmet AUR dependency: {}".format(d))
+        missing = True
+    if missing:
+        exit(1)
+
+
+def _rpc_search(package_name, exact, context):
     """Search for a package in the aur."""
     if exact and context.check_repos(package_name):
         logger.debug("in repos")
         return None
-    url = _AUR_URL
-    url = url.format(typed, urllib.parse.quote(package_name))
+    if exact:
+        url = _AUR_INFO
+    else:
+        url = _AUR_SEARCH
+    url = url.format(urllib.parse.quote(package_name))
+    logger.debug(url)
     try:
         with urllib.request.urlopen(url) as req:
             result = req.read()
             j = json.loads(result.decode("utf-8"))
+            if "error" in j:
+                _console_error(j['error'])
+            result_json = []
             if _RESULT_JSON in j:
-                for result in j[_RESULT_JSON]:
+                result_json = j[_RESULT_JSON]
+            if len(result_json) > 0:
+                for result in result_json:
                     try:
                         name = _get_segment(result, _AUR_NAME)
                         desc = _get_segment(result, _AUR_DESC)
                         vers = _get_segment(result, _AUR_VERS)
                         if exact:
                             if name == package_name:
+                                deps = None
+                                if context.deps:
+                                    if _AUR_DEPS in result:
+                                        _aur_deps = result[_AUR_DEPS]
+                                        _handle_deps(context, _aur_deps)
+                                else:
+                                    logger.debug("no dependency checks")
                                 return AURPackage(name,
                                                   vers,
                                                   result[_AUR_URLP])
@@ -516,7 +579,7 @@ def _search(context):
             # NOTE: we are suppressing this ourselves
             logger.debug("target name too short")
             continue
-        _rpc_search(target, _AUR_NAME_DESC_TYPE, False, context)
+        _rpc_search(target, False, context)
 
 
 def _query(context):
@@ -547,6 +610,7 @@ def _do_query(context):
             if _is_aur_pkg(pkg, syncpkgs):
                 yield pkg
 
+
 def _remove_options(parser):
     """Get removal options."""
     group = parser.add_argument_group(_REMOVE_OPTIONS)
@@ -555,6 +619,7 @@ def _remove_options(parser):
                        type=str,
                        nargs='+',
                        help="pacman -R options")
+
 
 def _sync_up_options(parser):
     """Sync/update options."""
@@ -585,6 +650,9 @@ def _sync_up_options(parser):
     group.add_argument("--no-cache",
                        help="skip caching package files",
                        action="store_true")
+    group.add_argument("--skip-deps",
+                       help="skip dependency checks",
+                       action="store_true")
 
 
 def _load_config(args, config_file):
@@ -611,6 +679,7 @@ def _load_config(args, config_file):
                 continue
             if key in ["IGNORE",
                        "PACMAN",
+                       "SKIP_DEPS",
                        "REMOVAL",
                        "MAKEPKG",
                        "NO_VCS",
@@ -625,7 +694,7 @@ def _load_config(args, config_file):
                             arr = []
                         arr += value.split(" ")
                         setattr(args, lowered, arr)
-                    elif key in ["NO_VCS", "SUDO"]:
+                    elif key in ["NO_VCS", "SUDO", "SKIP_DEPS"]:
                         val = bool(value)
                     elif key == "VCS_IGNORE":
                         val = int(value)
