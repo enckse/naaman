@@ -160,6 +160,7 @@ naaman is:
 * not pacman
 * relying on you to check and verify AURs are safe before you use them
 * uses some nomenclature strangely due to trying to act like pacman
+* capable of being tricked/fooled/skipped
 
 These items are known and are not currently planned to be solved
 * Complicated/multi-AUR package dependency resolution
