@@ -81,11 +81,14 @@ class Context(object):
     def pacman(self, args, require_sudo=True):
         """Call pacman."""
         cmd = []
+        logger.debug("calling pacman")
         if require_sudo and not self.root:
             cmd.append("/usr/bin/sudo")
         cmd.append("/usr/bin/pacman")
         cmd = cmd + args
+        logger.debug(cmd)
         returncode = subprocess.call(cmd)
+        logger.debug(returncode)
         return returncode == 0
 
 
