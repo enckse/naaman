@@ -92,7 +92,7 @@ class Context(object):
         """Get mirror packages."""
         self._get_dbs()
         syncpkgs = set()
-        for db in self._sync: 
+        for db in self._sync:
             syncpkgs |= set(p.name for p in db.pkgcache)
         return syncpkgs
 
