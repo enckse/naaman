@@ -1,7 +1,7 @@
 naaman
 ===
 
-N(ot) A(nother) A(UR) Man(ager)
+N(ot) A(nother) A(UR) Man(ager) or more like "nah"-"man"
 
 naaman is focused on providing a pacman-ish interface to dealing with AUR packages.
 
