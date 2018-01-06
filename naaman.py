@@ -227,9 +227,9 @@ def _validate_options(args, unknown, groups):
         if valid_count != 1:
             invalid = True
 
-    if not invalid and (args.search or args.upgrades):
+    if not invalid and (args.search or args.upgrades or args.clean):
         if not args.sync:
-            _console_error("search and upgrade are sync only")
+            _console_error("search, upgrade, and clean are sync only")
             invalid = True
 
     if not invalid and need_targets:
