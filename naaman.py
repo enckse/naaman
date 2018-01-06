@@ -49,7 +49,7 @@ makepkg {}
 exit_code=$?
 if [ $(ls *.pkg.tar.xz | wc -l) -gt 0 ]; then
     for d in $(echo '{}'); do
-        sudo cp *.pkg.tar.xz $d
+        {} cp *.pkg.tar.xz $d
     done
 fi
 exit $exit_code
@@ -288,8 +288,11 @@ def _shell(command, suppress_error=False, workingdir=None):
     return out
 
 
-def _install(file_definition, makepkg, cache_dirs):
+def _install(file_definition, makepkg, cache_dirs, can_sudo):
     """Install a package."""
+    sudo = ""
+    if can_sudo:
+        sudo = "sudo"
     url = _AUR.format(file_definition.url)
     logger.info("installing: {}".format(file_definition.name))
     with tempfile.TemporaryDirectory() as t:
@@ -301,7 +304,7 @@ def _install(file_definition, makepkg, cache_dirs):
         f_dir = os.path.join(t, file_definition.name)
         temp_sh = os.path.join(t, _NAME + ".sh")
         with open(temp_sh, 'w') as f:
-            script = _BASH.format(f_dir, makepkg, cache_dirs)
+            script = _BASH.format(f_dir, makepkg, cache_dirs, sudo)
             f.write(script)
         result = subprocess.call("/bin/bash --rcfile {}".format(temp_sh),
                                  shell=True)
@@ -452,7 +455,7 @@ def _syncing(context, can_install, targets, updating):
                 continue
         cache_dirs = " ".join(['{}'.format(x) for x in cache if " " not in x])
     for i in do_install:
-        if not _install(i, makepkg, cache_dirs):
+        if not _install(i, makepkg, cache_dirs, context.can_sudo):
             _console_error("error installing package: {}".format(i.name))
 
 
