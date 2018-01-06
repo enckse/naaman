@@ -43,7 +43,13 @@ _BASH = """#!/bin/bash
 trap '' 2
 cd {}
 makepkg {}
-exit $?
+exit_code=$?
+if [ $(ls *.pkg.tar.xz | wc -l) -gt 0 ]; then
+    for d in $(echo '{}'); do
+        sudo cp *.pkg.tar.xz $d
+    done
+fi
+exit $exit_code
 """
 
 
@@ -189,7 +195,7 @@ def _shell(command, suppress_error=False, workingdir=None):
     return out
 
 
-def _install(file_definition, makepkg):
+def _install(file_definition, makepkg, cache_dirs):
     """Install a package."""
     url = _AUR.format(file_definition.url)
     logger.info("installing: {}".format(file_definition.name))
@@ -202,7 +208,7 @@ def _install(file_definition, makepkg):
         f_dir = os.path.join(t, file_definition.name)
         temp_sh = os.path.join(t, _NAME + ".sh")
         with open(temp_sh, 'w') as f:
-            script = _BASH.format(f_dir, makepkg)
+            script = _BASH.format(f_dir, makepkg, cache_dirs)
             f.write(script)
         result = subprocess.call("/bin/bash --rcfile {}".format(temp_sh),
                                  shell=True)
@@ -285,8 +291,16 @@ def _syncing(context, can_install, targets, updating):
     if args.makepkg and len(args.makepkg) > 0:
         makepkg = " ".join(args.makepkg)
     logger.debug("makepkg {}".format(makepkg))
+    cache = context.handle.cachedirs
+    cache_dirs = ""
+    if not args.no_cache and cache and len(cache) > 0:
+        for c in cache:
+            if " " in c:
+                logger.warn("cache dir with space is skipped ({})".format(c))
+                continue
+        cache_dirs = " ".join(['{}'.format(x) for x in cache if " " not in x])
     for i in do_install:
-        if not _install(i, makepkg):
+        if not _install(i, makepkg, cache_dirs):
             _console_error("error installing package: {}".format(i.name))
 
 
@@ -476,6 +490,9 @@ def _sync_up_options(parser):
                        metavar='N',
                        type=str,
                        nargs='+')
+    group.add_argument("--no-cache",
+                       help="skip caching package files",
+                       action="store_true")
 
 
 def main():
