@@ -46,6 +46,11 @@ to skip vcs-package updates/installs
 --no-vcs
 ```
 
+similar to pacman, packages can be ignored
+```
+--ignore <package> <package1>
+```
+
 ### Sync
 
 you can perform a sync to install new packages from the AUR

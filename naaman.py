@@ -118,7 +118,8 @@ def _validate_options(args, unknown, groups):
             _console_error("multiple top-level arguments given")
         elif valid_count == 0:
             _console_error("no arguments given")
-        invalid = True
+        if valid_count != 1:
+            invalid = True
 
     if not invalid and need_targets:
         if len(unknown) == 0:
@@ -234,7 +235,13 @@ def _syncing(context, can_install, targets, updating):
         exit(1)
     inst = []
     args = context.groups[_SYNC_UP_OPTIONS]
+    ignored = args.ignore
+    if not ignored:
+        ignored = []
     for name in targets:
+        if name in ignored:
+            _console_output("{} is ignored".format(name))
+            continue
         if args.no_vcs and _is_vcs(name):
             logger.debug("skipping vcs package {}".format(name))
             continue
@@ -458,6 +465,11 @@ def _sync_up_options(parser):
     group.add_argument('--no-vcs',
                        help="skip vcs packages",
                        action='store_true')
+    group.add_argument("--ignore",
+                       help="ignore packages",
+                       metavar='N',
+                       type=str,
+                       nargs='+')
 
 
 def main():
