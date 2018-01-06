@@ -26,14 +26,10 @@ def _console_error(string):
     _console_output(string, prefix="FAILURE", callback=logger.error)
 
 
-def _validate_options(args):
+def _validate_options(args, unknown):
     """Validate argument options."""
     valid_count = 0
     invalid = False
-    upgrade = False
-    search = None
-    remove = None
-    
 
     def call_on(name):
         _console_output("performing {}".format(name))
@@ -41,9 +37,11 @@ def _validate_options(args):
     if args.sync:
         call_on("sync")
         valid_count += 1
-        if not args.upgrades and not args.search:
-            _console_error("sync requires search or upgrade")
-            invalid = True
+        if args.upgrades or args.search:
+            _console_output("performing sync function")
+            if args.upgrades and args.search:
+                _console_error("cannot perform multiple sub-options")
+                invalid = True
 
     if args.upgrade:
         call_on("upgrade")
@@ -61,34 +59,10 @@ def _validate_options(args):
         _console_error("multiple top-level arguments given (this is invalid)")
         invalid = True
 
-    if args.list:
-        if args.query:
-            _console_output("get listing")
-        else:
-            _console_error("list only available via query")
-            invalid = True
-
-    if args.upgrades:
-        if args.upgrade or args.sync:
-            _console_output("upgrading packages")
-        else:
-            _console_error("upgrade not available via these functions")
-            invalid = True
-
-    if args.search:
-        if args.sync:
-            _console_output("searching {}".format(args.search))
-        else:
-            _console_error("search only available via sync")
-            invalid = True
-    if args.search and args.upgrades:
-        _console_error("can not search and upgrade")
-        invalid = True
-
     if invalid:
         exit(1)
-    ctx = Context()
-    ctx.root = root = getpass.getuser()
+    #ctx = Context()
+    #ctx.root = root = getpass.getuser()
     
 
 
@@ -103,23 +77,20 @@ def main():
                         action="store_true")
     parser.add_argument('-R', '--remove',
                         help='remove a package',
-                        metavar='N', nargs='+')
+                        action="store_true")
     parser.add_argument('-Q', '--query',
                         help='query package database',
-                        action="store_true")
-    parser.add_argument('-l', '--list',
-                        help='list packages',
                         action="store_true")
     parser.add_argument('-u', '--upgrades',
                         help='perform upgrades',
                         action="store_true")
     parser.add_argument('-s', '--search',
                         help='search for packages',
-                        metavar='N', nargs='+')
+                        action="store_true")
     parser.add_argument('--verbose',
                         help="verbose output",
                         action='store_true')
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
     ch = logging.StreamHandler()
     cache_dir = BaseDirectory.xdg_cache_home
     if not os.path.exists(cache_dir):
@@ -137,7 +108,7 @@ def main():
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
-    _validate_options(args)
+    _validate_options(args, unknown)
 
 if __name__ == "__main__":
     main()
