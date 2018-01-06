@@ -9,6 +9,8 @@ import logging
 import os
 from xdg import BaseDirectory
 import getpass
+import pyalpm
+from pycman import config
 
 _NAME = "naaman"
 logger = logging.getLogger(_NAME)
@@ -28,18 +30,20 @@ def _console_error(string):
 class Context(object):
     """Context for operations."""
 
-    def __init__(self, targets):
+    def __init__(self, targets, config_file):
         self.root = "root" == getpass.getuser()
         self.targets = []
         if targets and len(targets) > 0:
             self.targets = targets
+        self.handle = config.init_with_config(config_file)
+        self.db = self.handle.get_localdb()
+
 
 def _validate_options(args, unknown):
     """Validate argument options."""
     valid_count = 0
     invalid = False
     need_targets = False
-    optional_targets = False
 
     def call_on(name):
         _console_output("performing {}".format(name))
@@ -54,8 +58,6 @@ def _validate_options(args, unknown):
                 invalid = True
         if args.search or not args.upgrades:
             need_targets = True
-        else:    
-            optional_targets = True
 
     if args.upgrade:
         call_on("upgrade")
@@ -70,7 +72,6 @@ def _validate_options(args, unknown):
     if args.query:
         call_on("query")
         valid_count += 1
-        optional_targets = True
 
     if valid_count != 1:
         _console_error("multiple top-level arguments given (this is invalid)")
@@ -81,10 +82,41 @@ def _validate_options(args, unknown):
             _console_error("no targets specified")
             invalid = True
 
+    if not args.config or not os.path.exists(args.config):
+        _console_error("invalid config file")
+        invalid = True
+
     if invalid:
         exit(1)
-    ctx = Context(unknown)
+    ctx = Context(unknown, args.config)
+    if args.query:
+        _query(ctx)
+        return
+    if args.search:
+        _searchy(ctx)
+        return
+    if args.sync:
+        # this handles upgrades and sync (for now)
+        _sync_upgrade(ctx)
+    if args.remove:
+        _remove(ctx)
 
+
+def _query(context):
+    """Query pacman."""
+    def _print(pkg):
+        logger.info("{} {}".format(pkg.name, pkg.version))
+    if len(context.targets) > 0:
+        for target in context.targets:
+            pkg = context.db.get_pkg(target)
+            if not pkg:
+                _console_error("unknown package: {}".format(target))
+                exit(1)
+            _print(pkg)
+    else:
+        for pkg in context.db.pkgcache:
+            if pkg.packager == "Unknown Packager":
+                _print(pkg)
 
 def main():
     """Entry point."""
@@ -110,6 +142,9 @@ def main():
     parser.add_argument('--verbose',
                         help="verbose output",
                         action='store_true')
+    parser.add_argument('--config',
+                        help='pacman config',
+                        default='/etc/pacman.conf')
     args, unknown = parser.parse_known_args()
     ch = logging.StreamHandler()
     cache_dir = BaseDirectory.xdg_cache_home
