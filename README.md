@@ -9,7 +9,13 @@ naaman is focused on providing a pacman-ish interface to dealing with AUR packag
 
 # install
 
-## git
+## AUR
+
+You should install via the AUR to bootstrap yourself and use naaman after that.
+
+[naaman](https://aur.archlinux.org/packages/naaman/)
+
+## development
 
 git clone this repo
 
