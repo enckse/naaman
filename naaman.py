@@ -8,6 +8,7 @@ import argparse
 import logging
 import os
 from xdg import BaseDirectory
+import getpass
 
 _NAME = "naaman"
 logger = logging.getLogger(_NAME)
@@ -29,6 +30,10 @@ def _validate_options(args):
     """Validate argument options."""
     valid_count = 0
     invalid = False
+    upgrade = False
+    search = None
+    remove = None
+    
 
     def call_on(name):
         _console_output("performing {}".format(name))
@@ -36,6 +41,9 @@ def _validate_options(args):
     if args.sync:
         call_on("sync")
         valid_count += 1
+        if not args.upgrades and not args.search:
+            _console_error("sync requires search or upgrade")
+            invalid = True
 
     if args.upgrade:
         call_on("upgrade")
@@ -76,8 +84,12 @@ def _validate_options(args):
     if args.search and args.upgrades:
         _console_error("can not search and upgrade")
         invalid = True
+
     if invalid:
         exit(1)
+    ctx = Context()
+    ctx.root = root = getpass.getuser()
+    
 
 
 def main():
