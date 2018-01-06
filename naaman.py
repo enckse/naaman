@@ -68,7 +68,14 @@ def _console_error(string):
 class Context(object):
     """Context for operations."""
 
-    def __init__(self, targets, config_file, groups, confirm, quiet, cache):
+    def __init__(self,
+                 targets,
+                 config_file,
+                 groups,
+                 confirm,
+                 quiet,
+                 cache,
+                 sudo):
         """Init the context."""
         self.root = "root" == getpass.getuser()
         self.targets = []
@@ -82,6 +89,7 @@ class Context(object):
         self._sync = None
         self._repos = None
         self._cache_dir = cache
+        self.can_sudo = sudo
 
     def cache_file(self, file_name, ext=".cache"):
         """Get a cache file."""
@@ -125,7 +133,11 @@ class Context(object):
         cmd = []
         logger.debug("calling pacman")
         if require_sudo and not self.root:
-            cmd.append("/usr/bin/sudo")
+            if self.can_sudo:
+                cmd.append("/usr/bin/sudo")
+            else:
+                _console_error("sudo required but not allowed, re-run as root")
+                exit(1)
         cmd.append("/usr/bin/pacman")
         cmd = cmd + args
         logger.debug(cmd)
@@ -197,7 +209,8 @@ def _validate_options(args, unknown, groups):
                   groups,
                   not args.no_confirm,
                   args.quiet,
-                  args.cache_dir)
+                  args.cache_dir,
+                  args.sudo)
     callback = None
     if not invalid:
         if args.query:
@@ -418,7 +431,7 @@ def _remove(context):
                                                     x.version) for x in p])
     options = context.groups[_REMOVE_OPTIONS]
     removals = context.get_config_vals(options.removal)
-    result = context.pacman(["-R"] + removals + [x.name for x in p])
+    result = context.pacman(["-R"] + removals.split(" ") + [x.name for x in p])
     if not result:
         _console_error("unable to remove packages")
         exit(1)
@@ -601,6 +614,7 @@ def _load_config(args, config_file):
                        "REMOVAL",
                        "MAKEPKG",
                        "NO_VCS",
+                       "SUDO",
                        "VCS_IGNORE"]:
                 val = None
                 lowered = key.lower()
@@ -611,7 +625,7 @@ def _load_config(args, config_file):
                             arr = []
                         arr += value.split(" ")
                         setattr(args, lowered, arr)
-                    elif key == "NO_VCS":
+                    elif key in ["NO_VCS", "SUDO"]:
                         val = bool(value)
                     elif key == "VCS_IGNORE":
                         val = int(value)
@@ -652,6 +666,9 @@ def main():
     parser.add_argument('--version',
                         help="display version",
                         action='store_true')
+    parser.add_argument('--sudo',
+                        help="allow calling sudo",
+                        action='store_false')
     parser.add_argument('--verbose',
                         help="verbose output",
                         action='store_true')
