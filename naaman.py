@@ -37,6 +37,7 @@ _AUR_URLP = "URLPath"
 _AUR_NAME_DESC_TYPE = "name-desc"
 _AUR_NAME_TYPE = "name"
 _PRINTABLE = set(string.printable)
+_AUR_TARGET_LEN = 4
 
 # Script for installs
 _BASH = """#!/bin/bash
@@ -78,6 +79,31 @@ class Context(object):
         self.confirm = confirm
         self.makepkg_defaults = "-sri"
         self.quiet = quiet
+        self._sync = None
+        self._repos = None
+
+    def _get_dbs(self):
+        """Get sync'd dbs."""
+        if self._sync:
+            return
+        self._sync = self.handle.get_syncdbs()
+
+    def get_packages(self):
+        """Get mirror packages."""
+        self._get_dbs()
+        syncpkgs = set()
+        for db in self._sync: 
+            syncpkgs |= set(p.name for p in db.pkgcache)
+        return syncpkgs
+
+    def check_repos(self, package_name):
+        """Check repos for a package."""
+        self._get_dbs()
+        for db in self._sync:
+            pkg = db.get_pkg(package_name)
+            if pkg is not None:
+                return True
+        return False
 
     def pacman(self, args, require_sudo=True):
         """Call pacman."""
@@ -383,6 +409,9 @@ class AURPackage(object):
 
 def _rpc_search(package_name, typed, exact, context):
     """Search for a package in the aur."""
+    if exact and context.check_repos(package_name):
+        logger.debug("in repos")
+        return None
     url = _AUR_URL
     url = url.format(typed, urllib.parse.quote(package_name))
     try:
@@ -431,6 +460,10 @@ def _search(context):
         exit(1)
     for target in context.targets:
         logger.debug("searching for {}".format(target))
+        if len(target) < _AUR_TARGET_LEN:
+            # NOTE: we are suppressing this ourselves
+            logger.debug("target name too short")
+            continue
         _rpc_search(target, _AUR_NAME_DESC_TYPE, False, context)
 
 
@@ -447,9 +480,7 @@ def _is_aur_pkg(pkg, sync_packages):
 
 def _do_query(context):
     """Query pacman."""
-    syncpkgs = set()
-    for db in context.handle.get_syncdbs():
-        syncpkgs |= set(p.name for p in db.pkgcache)
+    syncpkgs = context.get_packages()
     if len(context.targets) > 0:
         for target in context.targets:
             pkg = context.db.get_pkg(target)
