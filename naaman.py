@@ -7,24 +7,22 @@ Is an AUR wrapper/manager that uses pacman as it's backing data store.
 import argparse
 import logging
 import os
-from xdg import BaseDirectory
 import getpass
 import pyalpm
-from pycman import config
 import urllib.request
 import urllib.parse
 import json
 import string
-from pycman import transaction
 import tempfile
 import subprocess
-
+from xdg import BaseDirectory
+from pycman import config
+from pycman import transaction
 
 _NAME = "naaman"
 logger = logging.getLogger(_NAME)
 console_format = logging.Formatter('%(message)s')
 file_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-
 
 _SYNC_UP_OPTIONS = "Sync/Update options"
 _REMOVE_OPTIONS = "Remove options"
@@ -39,7 +37,6 @@ _AUR_URLP = "URLPath"
 _AUR_NAME_DESC_TYPE = "name-desc"
 _AUR_NAME_TYPE = "name"
 _PRINTABLE = set(string.printable)
-
 
 # Script for installs
 _BASH = """#!/bin/bash
