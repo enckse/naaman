@@ -186,15 +186,15 @@ def _shell(command, suppress_error=False, workingdir=None):
 
 def _install(file_definition, makepkg):
     """Install a package."""
-    url = _AUR.format(file_definition[2])
-    logger.info("installing: {}".format(file_definition[0]))
+    url = _AUR.format(file_definition.url)
+    logger.info("installing: {}".format(file_definition.name))
     with tempfile.TemporaryDirectory() as t:
-        f_name = file_definition[0] + ".tar.gz"
+        f_name = file_definition.name + ".tar.gz"
         file_name = os.path.join(t, f_name)
         logger.debug(file_name)
         urllib.request.urlretrieve(url, file_name)
         _shell(["tar", "xf", f_name], workingdir=t)
-        f_dir = os.path.join(t, file_definition[0])
+        f_dir = os.path.join(t, file_definition.name)
         temp_sh = os.path.join(t, _NAME + ".sh")
         with open(temp_sh, 'w') as f:
             script = _BASH.format(f_dir, makepkg)
@@ -243,23 +243,23 @@ def _syncing(context, can_install, targets, updating):
     report = []
     do_install = []
     for i in inst:
-        pkg = context.db.get_pkg(i[0])
-        vers = i[1]
+        pkg = context.db.get_pkg(i.name)
+        vers = i.version
         tag = ""
-        vcs = _is_vcs(i[0])
+        vcs = _is_vcs(i.name)
         if pkg:
-            if pkg.version == i[1] or vcs:
+            if pkg.version == i.version or vcs:
                 if not vcs and updating:
                     continue
                 tag = " [installed]"
         else:
             if not can_install:
-                _console_error("{} not installed".format(i[0]))
+                _console_error("{} not installed".format(i.name))
                 exit(1)
         logger.debug(i)
         if vcs:
             vers = vcs
-        report.append("{} {}{}".format(i[0], vers, tag))
+        report.append("{} {}{}".format(i.name, vers, tag))
         do_install.append(i)
     if len(do_install) == 0:
         _console_output("nothing to do")
@@ -271,7 +271,7 @@ def _syncing(context, can_install, targets, updating):
     logger.debug("makepkg {}".format(makepkg))
     for i in do_install:
         if not _install(i, makepkg):
-            _console_error("error installing package: {}".format(i[0]))
+            _console_error("error installing package: {}".format(i.name))
 
 
 def _upgrade(context):
@@ -336,6 +336,16 @@ def _get_segment(j, key):
     return res
 
 
+class AURPackage(object):
+    """AUR package object."""
+
+    def __init__(self, name, version, url):
+        """Init the instance."""
+        self.name = name
+        self.version = version
+        self.url = url
+
+
 def _rpc_search(package_name, typed, exact, context):
     """Search for a package in the aur."""
     url = _AUR_URL
@@ -352,7 +362,9 @@ def _rpc_search(package_name, typed, exact, context):
                         vers = _get_segment(result, _AUR_VERS)
                         if exact:
                             if name == package_name:
-                                return (name, vers, result[_AUR_URLP])
+                                return AURPackage(name,
+                                                  vers,
+                                                  result[_AUR_URLP])
                         else:
                             ind = ""
                             if not name or not desc or not vers:
