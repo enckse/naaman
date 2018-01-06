@@ -15,6 +15,7 @@ import json
 import string
 import tempfile
 import subprocess
+from datetime import datetime, timedelta
 from xdg import BaseDirectory
 from pycman import config
 
@@ -67,7 +68,7 @@ def _console_error(string):
 class Context(object):
     """Context for operations."""
 
-    def __init__(self, targets, config_file, groups, confirm, quiet):
+    def __init__(self, targets, config_file, groups, confirm, quiet, cache):
         """Init the context."""
         self.root = "root" == getpass.getuser()
         self.targets = []
@@ -81,6 +82,14 @@ class Context(object):
         self.quiet = quiet
         self._sync = None
         self._repos = None
+        self._cache_dir = cache
+
+    def cache_file(self, file_name, ext=".cache"):
+        """Get a cache file."""
+        if not os.path.exists(self._cache_dir):
+            logger.error("cache directory has gone missing")
+            exit(1)
+        return os.path.join(self._cache_dir, file_name + ext)
 
     def _get_dbs(self):
         """Get sync'd dbs."""
@@ -176,7 +185,8 @@ def _validate_options(args, unknown, groups):
                   args.pacman,
                   groups,
                   not args.no_confirm,
-                  args.quiet)
+                  args.quiet,
+                  args.cache_dir)
     callback = None
     if not invalid:
         if args.query:
@@ -285,6 +295,25 @@ def _syncing(context, can_install, targets, updating):
     no_vcs = False
     if args.no_vcs or args.force_refresh or args.refresh:
         no_vcs = True
+    if args.vcs_ignore > 0:
+        cache_check = context.cache_file("vcs")
+        update_cache = True
+        now = datetime.now()
+        current_time = now.timestamp()
+        # we have a cache item, has necessary time elapsed?
+        if os.path.exists(cache_check):
+            with open(cache_check, 'r') as f:
+                last = datetime.fromtimestamp(float(f.read()))
+                seconds = (now - last).total_seconds()
+                minutes = seconds / 60
+                hours = minutes / 60
+                if hours < args.vcs_ignore:
+                    update_cache = False
+                    no_vcs = True
+        if update_cache:
+            logger.info("updating vcs last cache time")
+            with open(cache_check, 'w') as f:
+                f.write(str(current_time))
     logger.debug("vcs? {}".format(no_vcs))
     for name in targets:
         if name in ignored:
@@ -521,6 +550,10 @@ def _sync_up_options(parser):
                        type=str,
                        nargs='+',
                        help="makepkg options")
+    group.add_argument('--vcs-ignore',
+                       type=int,
+                       default=0,
+                       help="time betweeen vcs update checks (hours)")
     group.add_argument('--no-vcs',
                        help="skip vcs packages",
                        action='store_true')
@@ -593,10 +626,10 @@ def main():
         g = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
         arg_groups[group.title] = argparse.Namespace(**g)
     ch = logging.StreamHandler()
-    if not os.path.exists(cache_dir):
+    if not os.path.exists(args.cache_dir):
         logger.debug("creating cache dir")
-        os.makedirs(cache_dir)
-    fh = logging.FileHandler(os.path.join(cache_dir, _NAME + '.log'))
+        os.makedirs(args.cache_dir)
+    fh = logging.FileHandler(os.path.join(args.cache_dir, _NAME + '.log'))
     fh.setFormatter(file_format)
     if args.verbose:
         ch.setFormatter(file_format)

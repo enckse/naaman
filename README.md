@@ -44,6 +44,11 @@ perform debug output/logging
 
 specify the pacman config (defaults to `/etc/pacman.conf`)
 ```
+--pacman
+```
+
+specify the naaman config file (defaults to `~/.config/naaman.conf`)
+```
 --config
 ```
 
@@ -57,6 +62,11 @@ to specify makepkg flags (to pass-thru)
 to skip vcs-package updates/installs
 ```
 --no-vcs
+```
+
+to ignore vcs updates for a certain number of hours (<= 0 disables this and is default)
+```
+--vcs-ignore 24
 ```
 
 similarly what pacman deems refresh
