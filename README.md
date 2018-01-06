@@ -104,7 +104,7 @@ do not place aur makepkg xz into the pacman cache
 
 to disable naaman using sudo
 ```
---sudo
+--no-sudo
 ```
 
 do not load the config

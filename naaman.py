@@ -80,7 +80,7 @@ class Context(object):
                  confirm,
                  quiet,
                  cache,
-                 sudo,
+                 no_sudo,
                  aur_dependencies):
         """Init the context."""
         self.root = "root" == getpass.getuser()
@@ -95,7 +95,7 @@ class Context(object):
         self._sync = None
         self._repos = None
         self._cache_dir = cache
-        self.can_sudo = sudo
+        self.can_sudo = not no_sudo
         self.deps = aur_dependencies
         self._tracked_depends = []
         self._pkgcaching = None
@@ -252,7 +252,7 @@ def _validate_options(args, unknown, groups):
                   not args.no_confirm,
                   args.quiet,
                   args.cache_dir,
-                  args.sudo,
+                  args.no_sudo,
                   not args.skip_deps)
     callback = None
     if not invalid:
@@ -814,7 +814,7 @@ def _load_config(args, config_file):
                        "IGNORE_FOR",
                        "MAKEPKG",
                        "NO_VCS",
-                       "SUDO",
+                       "NO_SUDO",
                        "VCS_IGNORE"]:
                 val = None
                 lowered = key.lower()
@@ -825,7 +825,7 @@ def _load_config(args, config_file):
                             arr = []
                         arr += value.split(" ")
                         setattr(args, lowered, arr)
-                    elif key in ["NO_VCS", "SUDO", "SKIP_DEPS", "NO_CACHE"]:
+                    elif key in ["NO_VCS", "NO_SUDO", "SKIP_DEPS", "NO_CACHE"]:
                         val = bool(value)
                     elif key == "VCS_IGNORE":
                         val = int(value)
@@ -869,9 +869,9 @@ def main():
     parser.add_argument('--version',
                         help="display version",
                         action='store_true')
-    parser.add_argument('--sudo',
-                        help="allow calling sudo",
-                        action='store_false')
+    parser.add_argument('--no-sudo',
+                        help="disable calling sudo",
+                        action='store_true')
     parser.add_argument('--verbose',
                         help="verbose output",
                         action='store_true')
