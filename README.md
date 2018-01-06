@@ -173,6 +173,11 @@ or to check for some packages
 naaman -Q <package>
 ```
 
+to check for packages that are dropped (gone) from the aur
+```
+naaman -Qg
+```
+
 ## Workflow
 
 install some packages
