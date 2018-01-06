@@ -41,6 +41,9 @@ _AUR_DEPS = "Depends"
 _PRINTABLE = set(string.printable)
 _AUR_TARGET_LEN = 4
 
+_CACHE_FILE = ".cache"
+_CACHE_FILES = [_CACHE_FILE]
+
 # Script for installs
 _BASH = """#!/bin/bash
 trap '' 2
@@ -102,7 +105,14 @@ class Context(object):
         self._tracked_depends.append(package)
         return known
 
-    def cache_file(self, file_name, ext=".cache"):
+    def get_cache_files(self):
+        """Get cache file list."""
+        for f in os.listdir(self._cache_dir):
+            name, ext = os.path.splitext(f)
+            if ext in _CACHE_FILES:
+                yield (f, os.path.join(self._cache_dir, f))
+
+    def cache_file(self, file_name, ext=_CACHE_FILE):
         """Get a cache file."""
         if not os.path.exists(self._cache_dir):
             logger.error("cache directory has gone missing")
@@ -185,12 +195,19 @@ def _validate_options(args, unknown, groups):
     if args.sync:
         call_on("sync")
         valid_count += 1
-        if args.upgrades or args.search:
+        if args.upgrades or args.search or args.clean:
             call_on("sync function")
-            if args.upgrades and args.search:
+            sub_count = 0
+            if args.upgrades:
+                sub_count += 1
+            if args.clean:
+                sub_count += 1
+            if args.search:
+                sub_count += 1
+            if sub_count != 1:
                 _console_error("cannot perform multiple sub-options")
                 invalid = True
-        if args.search or not args.upgrades:
+        if args.search or (not args.upgrades and not args.clean):
             need_targets = True
 
     if args.remove:
@@ -240,8 +257,11 @@ def _validate_options(args, unknown, groups):
             callback = _search
         if args.upgrades:
             callback = _upgrades
-        if args.sync and not args.search and not args.upgrades:
-            callback = _sync
+        if args.clean:
+            callback = _clean
+        if args.sync:
+            if not args.search and not args.upgrades and not args.clean:
+                callback = _sync
         if args.remove:
             callback = _remove
 
@@ -252,6 +272,20 @@ def _validate_options(args, unknown, groups):
     if invalid:
         exit(1)
     callback(ctx)
+
+
+def _clean(context):
+    """Clean cache files."""
+    logger.debug("cleaning requested")
+    files = [x for x in context.get_cache_files()]
+    if len(files) == 0:
+        _console_output("nothing to cleanup")
+        return
+    if context.confirm:
+        _confirm("clear cache files", [x[0] for x in files])
+    for f in files:
+        _console_output("removing {}".format(f[0]))
+        os.remove(f[1])
 
 
 def _confirm(message, package_names):
@@ -797,6 +831,9 @@ def main():
                         action="store_true")
     parser.add_argument('-s', '--search',
                         help='search for packages',
+                        action="store_true")
+    parser.add_argument('-c', '--clean',
+                        help="clean the cache",
                         action="store_true")
     parser.add_argument('--version',
                         help="display version",

@@ -144,6 +144,11 @@ or some packages
 naaman -Su <package> <package1>
 ```
 
+remove cache information for naaman
+```
+naaman -Sc
+```
+
 ### Remove
 
 to remove packages
