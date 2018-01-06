@@ -51,6 +51,8 @@ specify the naaman config file (defaults to `~/.config/naaman.conf`)
 ```
 --config
 ```
+* if the config file does not exist it will be ignore
+* see the naaman.conf example for how to use it (only keys in the example are supported)
 
 for sync/update/upgrades
 
