@@ -66,6 +66,11 @@ suppress naaman confirm prompts
 --no-confirm
 ```
 
+do not place aur makepkg xz into the pacman cache
+```
+--no-cache
+```
+
 ### Sync
 
 you can perform a sync to install new packages from the AUR
