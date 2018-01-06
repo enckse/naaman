@@ -84,7 +84,7 @@ naaman -R <package> <package1>
 
 ### Query
 
-to query the install packages
+to query the installed packages
 ```
 naaman -Q
 ```
