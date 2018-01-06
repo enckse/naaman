@@ -275,9 +275,28 @@ def _upgrade(context):
     _syncing(context, False, context.targets)
 
 
+def _get_deps(pkgs, name):
+    """Dependency resolution."""
+    # NOTE: This will fail at a complicated tree across a variety of packages
+    deps = []
+    logger.debug('_get_deps called')
+    logger.debug(name)
+    for p in pkgs:
+        if p.name == name or not name:
+            logger.debug('found package')
+            dependencies = p.depends + p.optdepends
+            for d in dependencies:
+                logger.debug('resolving {}'.format(d))
+                for c in _get_deps(pkgs, d):
+                    deps.append(c)
+            deps.append(p)
+    return deps
+
 def _upgrades(context):
     """Ordered upgrade."""
-
+    pkgs = list(_do_query(context))
+    deps = _get_deps(pkgs, None)
+        
 
 def _remove(context):
     """Remove package."""
