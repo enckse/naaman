@@ -142,12 +142,12 @@ def _validate_options(args, unknown, groups):
             _console_error("no targets specified")
             invalid = True
 
-    if not args.config or not os.path.exists(args.config):
+    if not args.pacman or not os.path.exists(args.pacman):
         _console_error("invalid config file")
         invalid = True
 
     ctx = Context(unknown,
-                  args.config,
+                  args.pacman,
                   groups,
                   not args.no_confirm,
                   args.quiet)
@@ -505,6 +505,8 @@ def _sync_up_options(parser):
 
 def main():
     """Entry point."""
+    cache_dir = BaseDirectory.xdg_cache_home
+    cache_dir = os.path.join(cache_dir, _NAME)
     parser = argparse.ArgumentParser()
     parser.add_argument('-S', '--sync',
                         help="synchronize packages",
@@ -527,15 +529,22 @@ def main():
     parser.add_argument('--verbose',
                         help="verbose output",
                         action='store_true')
-    parser.add_argument('--config',
+    parser.add_argument('--pacman',
                         help='pacman config',
                         default='/etc/pacman.conf')
+    parser.add_argument('--config',
+                        help='naaman config',
+                        default=os.path.join(BaseDirectory.xdg_config_home,
+                                             'naaman.conf'))
     parser.add_argument('--no-confirm',
                         help="naaman will not ask for confirmation",
                         action="store_true")
     parser.add_argument('-q', '--quiet',
                         help='quiet various parts of naaman to display less',
                         action="store_true")
+    parser.add_argument('--cache-dir',
+                        help="cache dir for naaman",
+                        default=cache_dir)
     _remove_options(parser)
     _sync_up_options(parser)
     args, unknown = parser.parse_known_args()
@@ -547,11 +556,10 @@ def main():
         g = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
         arg_groups[group.title] = argparse.Namespace(**g)
     ch = logging.StreamHandler()
-    cache_dir = BaseDirectory.xdg_cache_home
     if not os.path.exists(cache_dir):
-        os.mkdir(cache_dir)
-    fh = logging.FileHandler(os.path.join(BaseDirectory.xdg_cache_home,
-                                          _NAME + '.log'))
+        logger.debug("creating cache dir")
+        os.makedirs(cache_dir)
+    fh = logging.FileHandler(os.path.join(cache_dir, _NAME + '.log'))
     fh.setFormatter(file_format)
     if args.verbose:
         ch.setFormatter(file_format)
@@ -563,6 +571,11 @@ def main():
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
+    logger.debug("files/folders")
+    logger.debug(args.cache_dir)
+    logger.debug(args.config)
+    if not os.path.exists(args.config):
+        logger.debug('no config')
     _validate_options(args, unknown, arg_groups)
 
 
