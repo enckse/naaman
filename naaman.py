@@ -251,7 +251,7 @@ def _syncing(context, can_install, targets, updating):
         tag = ""
         vcs = _is_vcs(i[0])
         if pkg:
-            if pkg.version == i[1]:
+            if pkg.version == i[1] or vcs:
                 if not vcs and updating:
                     continue
                 tag = " [installed]"
