@@ -66,7 +66,7 @@ def _console_error(string):
 class Context(object):
     """Context for operations."""
 
-    def __init__(self, targets, config_file, groups, confirm):
+    def __init__(self, targets, config_file, groups, confirm, quiet):
         """Init the context."""
         self.root = "root" == getpass.getuser()
         self.targets = []
@@ -77,6 +77,7 @@ class Context(object):
         self.groups = groups
         self.confirm = confirm
         self.makepkg_defaults = "-sri"
+        self.quiet = quiet
 
     def pacman(self, args, require_sudo=True):
         """Call pacman."""
@@ -145,7 +146,11 @@ def _validate_options(args, unknown, groups):
         _console_error("invalid config file")
         invalid = True
 
-    ctx = Context(unknown, args.config, groups, not args.no_confirm)
+    ctx = Context(unknown,
+                  args.config,
+                  groups,
+                  not args.no_confirm,
+                  args.quiet)
     callback = None
     if not invalid:
         if args.query:
@@ -396,6 +401,9 @@ def _rpc_search(package_name, typed, exact, context):
                                 logger.debug("unable to read this package")
                                 logger.debug(result)
                                 continue
+                            if context.quiet:
+                                logger.info(name)
+                                continue
                             if context.db.get_pkg(name) is not None:
                                 ind = " [installed]"
                             logger.info("aur/{} {}{}".format(name, vers, ind))
@@ -524,6 +532,9 @@ def main():
                         default='/etc/pacman.conf')
     parser.add_argument('--no-confirm',
                         help="naaman will not ask for confirmation",
+                        action="store_true")
+    parser.add_argument('-q', '--quiet',
+                        help='quiet various parts of naaman to display less',
                         action="store_true")
     _remove_options(parser)
     _sync_up_options(parser)
