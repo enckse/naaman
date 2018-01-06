@@ -578,6 +578,57 @@ def _sync_up_options(parser):
                        action="store_true")
 
 
+def _load_config(args, config_file):
+    """Load configuration into arguments."""
+    logger.debug('loading config file')
+    with open(config_file, 'r') as f:
+        for l in f.readlines():
+            line = l.strip()
+            logger.debug(line)
+            if line.startswith("#"):
+                continue
+            if "=" not in line:
+                logger.warn("unable to read line, not k=v")
+                continue
+            parts = line.split("=")
+            key = parts[0]
+            value = "=".join(parts[1:])
+            if value.startswith('"') and value.endswith('"'):
+                value = value[1:len(value) - 1]
+            logger.debug((key, value))
+            chars = [x for x in key if (x >= 'A' and x <= 'Z' or x in ["_"])]
+            if len(key) != len(chars):
+                logger.warn("invalid key")
+                continue
+            if key in ["IGNORE",
+                       "PACMAN",
+                       "MAKEPKG",
+                       "NO_VCS",
+                       "VCS_IGNORE"]:
+                val = None
+                try:
+                    if key == "IGNORE":
+                        if not args.ignore:
+                            args.ignore = []
+                        args.ignore += value.split(" ")
+                    elif key == "NO_VCS":
+                        val = bool(value)
+                    elif key == "VCS_IGNORE":
+                        val = int(value)
+                    else:
+                        val = value
+                except Exception as e:
+                    logger.error("unable to read value")
+                    logger.error(e)
+                if val:
+                    logger.debug('parsed')
+                    logger.debug((key, val))
+                    setattr(args, key.lower(), val)
+            else:
+                logger.warn("unknown key")
+    return args
+
+
 def main():
     """Entry point."""
     cache_dir = BaseDirectory.xdg_cache_home
@@ -626,10 +677,6 @@ def main():
     if args.version:
         print("{} ({})".format(_NAME, _VERSION))
         exit(0)
-    arg_groups = {}
-    for group in parser._action_groups:
-        g = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
-        arg_groups[group.title] = argparse.Namespace(**g)
     ch = logging.StreamHandler()
     if not os.path.exists(args.cache_dir):
         logger.debug("creating cache dir")
@@ -649,8 +696,14 @@ def main():
     logger.debug("files/folders")
     logger.debug(args.cache_dir)
     logger.debug(args.config)
-    if not os.path.exists(args.config):
+    if os.path.exists(args.config):
+        args = _load_config(args, args.config)
+    else:
         logger.debug('no config')
+    arg_groups = {}
+    for group in parser._action_groups:
+        g = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
+        arg_groups[group.title] = argparse.Namespace(**g)
     _validate_options(args, unknown, arg_groups)
 
 
