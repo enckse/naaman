@@ -86,21 +86,25 @@ def _validate_options(args, unknown):
         _console_error("invalid config file")
         invalid = True
 
-    if invalid:
-        exit(1)
     ctx = Context(unknown, args.config)
+    callback = None
     if args.query:
-        _query(ctx)
-        return
+        callback = _query
     if args.search:
-        _searchy(ctx)
-        return
+        callback = _search
     if args.sync:
         # this handles upgrades and sync (for now)
-        _sync_upgrade(ctx)
+        callback = _sync_upgrade
     if args.remove:
-        _remove(ctx)
+        callback = _remove
 
+    if callback is None:
+        _console_error("unable to find callback")
+        invalid = True
+
+    if invalid:
+        exit(1)
+    callback(ctx)
 
 def _query(context):
     """Query pacman."""
