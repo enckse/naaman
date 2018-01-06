@@ -30,6 +30,8 @@ def _validate_options(args, unknown):
     """Validate argument options."""
     valid_count = 0
     invalid = False
+    need_targets = False
+    optional_targets = False
 
     def call_on(name):
         _console_output("performing {}".format(name))
@@ -42,22 +44,34 @@ def _validate_options(args, unknown):
             if args.upgrades and args.search:
                 _console_error("cannot perform multiple sub-options")
                 invalid = True
+        if args.search:
+            need_targets = True
+        else:
+            optional_targets = True
 
     if args.upgrade:
         call_on("upgrade")
         valid_count += 1
+        need_targets = True
 
     if args.remove:
         call_on("remove")
         valid_count += 1
+        need_targets = True
 
     if args.query:
         call_on("query")
         valid_count += 1
+        optional_targets = True
 
     if valid_count != 1:
         _console_error("multiple top-level arguments given (this is invalid)")
         invalid = True
+
+    if need_targets:
+        if len(unknown) == 0:
+            _console_error("no targets specified")
+            invalid = True
 
     if invalid:
         exit(1)
