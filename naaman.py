@@ -76,6 +76,17 @@ class Context(object):
         self.db = self.handle.get_localdb()
         self.groups = groups
         self.confirm = confirm
+        self.makepkg_defaults = "-sri"
+    
+    def pacman(self, args, require_sudo=True):
+        """Call pacman."""
+        cmd = []
+        if require_sudo and not self.root:
+            cmd.append("/usr/bin/sudo")
+        cmd.append("/usr/bin/pacman")
+        cmd = cmd + args
+        returncode = subprocess.call(cmd)
+        return returncode == 0
 
 
 def _validate_options(args, unknown, groups):
@@ -280,7 +291,7 @@ def _syncing(context, can_install, targets, updating):
         exit(0)
     if context.confirm:
         _confirm("install packages", report)
-    makepkg = "-sri"
+    makepkg = context.makepkg_defaults
     if args.makepkg and len(args.makepkg) > 0:
         makepkg = " ".join(args.makepkg)
     logger.debug("makepkg {}".format(makepkg))
@@ -329,10 +340,8 @@ def _remove(context):
         _confirm("remove packages", ["{} {}".format(x.name,
                                                     x.version) for x in p])
     options = context.groups[_REMOVE_OPTIONS]
-    returncode = subprocess.call(["/usr/bin/sudo",
-                                  '/usr/bin/pacman',
-                                  '-R'] + [x.name for x in p])
-    if returncode != 0:
+    result = context.pacman(["-R"] + [x.name for x in p])
+    if not result:
         _console_error("unable to remove packages")
         exit(1)
     _console_output("packages removed")
