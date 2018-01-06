@@ -190,6 +190,9 @@ def _rpc_search(package_name, typed, exact, context):
 
 def _search(context):
     """Perform a search."""
+    if len(context.targets) != 1:
+        _console_error("please provide ONE target for search")
+        exit(1)
     for target in context.targets:
         logger.debug("searching for {}".format(target))
         _rpc_search(target, _AUR_NAME_DESC_TYPE, False, context)
