@@ -78,7 +78,6 @@ class Context(object):
         self.db = self.handle.get_localdb()
         self.groups = groups
         self.confirm = confirm
-        self.makepkg_defaults = "-sri"
         self.quiet = quiet
         self._sync = None
         self._repos = None
@@ -96,6 +95,13 @@ class Context(object):
         if self._sync:
             return
         self._sync = self.handle.get_syncdbs()
+
+    def get_config_vals(self, array, default=""):
+        """Get configuration array values."""
+        val = default
+        if array and len(array) > 0:
+            val = " ".join(array)
+        return val
 
     def get_packages(self):
         """Get mirror packages."""
@@ -359,9 +365,7 @@ def _syncing(context, can_install, targets, updating):
         exit(0)
     if context.confirm:
         _confirm("install packages", report)
-    makepkg = context.makepkg_defaults
-    if args.makepkg and len(args.makepkg) > 0:
-        makepkg = " ".join(args.makepkg)
+    makepkg = context.get_config_vals(args.makepkg, default="-sri")
     logger.debug("makepkg {}".format(makepkg))
     cache = context.handle.cachedirs
     cache_dirs = ""
@@ -413,7 +417,8 @@ def _remove(context):
         _confirm("remove packages", ["{} {}".format(x.name,
                                                     x.version) for x in p])
     options = context.groups[_REMOVE_OPTIONS]
-    result = context.pacman(["-R"] + [x.name for x in p])
+    removals = context.get_config_vals(options.removal)
+    result = context.pacman(["-R"] + removals + [x.name for x in p])
     if not result:
         _console_error("unable to remove packages")
         exit(1)
@@ -529,23 +534,14 @@ def _do_query(context):
             if _is_aur_pkg(pkg, syncpkgs):
                 yield pkg
 
-
 def _remove_options(parser):
     """Get removal options."""
     group = parser.add_argument_group(_REMOVE_OPTIONS)
-    group.add_argument('--cascade',
-                       action='store_true', default=False,
-                       help='remove packages and dependent packages')
-    group.add_argument('--nodeps', action='store_true', default=False,
-                       help='skip dependency checks')
-    group.add_argument('--dbonly', action='store_true', default=False,
-                       help='only modify database entries, not files')
-    group.add_argument('--nosave', action='store_true', default=False,
-                       help='remove configuration files as well')
-    group.add_argument('--recursive',
-                       action='store_true', default=False,
-                       help="remove dependencies also")
-
+    group.add_argument("--removal",
+                       metavar='N',
+                       type=str,
+                       nargs='+',
+                       help="pacman -R options")
 
 def _sync_up_options(parser):
     """Sync/update options."""
@@ -602,15 +598,19 @@ def _load_config(args, config_file):
                 continue
             if key in ["IGNORE",
                        "PACMAN",
+                       "REMOVAL",
                        "MAKEPKG",
                        "NO_VCS",
                        "VCS_IGNORE"]:
                 val = None
+                lowered = key.lower()
                 try:
-                    if key == "IGNORE":
-                        if not args.ignore:
-                            args.ignore = []
-                        args.ignore += value.split(" ")
+                    if key in ["IGNORE", "MAKEPKG", "REMOVAL"]:
+                        arr = getattr(args, lowered)
+                        if not arr:
+                            arr = []
+                        arr += value.split(" ")
+                        setattr(args, lowered, arr)
                     elif key == "NO_VCS":
                         val = bool(value)
                     elif key == "VCS_IGNORE":
@@ -623,7 +623,7 @@ def _load_config(args, config_file):
                 if val:
                     logger.debug('parsed')
                     logger.debug((key, val))
-                    setattr(args, key.lower(), val)
+                    setattr(args, lowered, val)
             else:
                 logger.warn("unknown key")
     return args

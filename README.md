@@ -125,6 +125,11 @@ to remove packages
 naaman -R <package> <package1>
 ```
 
+to specify pacman `-R` options
+```
+naaman -R <package> -removal <option> <option2>
+```
+
 ### Query
 
 to query the installed packages
