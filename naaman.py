@@ -16,6 +16,8 @@ import urllib.parse
 import json
 import string
 from pycman import transaction
+import tempfile
+import subprocess
 
 
 _NAME = "naaman"
@@ -44,11 +46,7 @@ _BASH = """#!/bin/bash
 trap '' 2
 cd {}
 makepkg {}
-exit_code=$?
-if [ $(ls *.pkg.tar.xz | wc -l) -gt 0 ]; then
-    cp *.pkg.tar.xz {}
-fi
-exit $exit_code
+exit $?
 """
 
 
@@ -137,8 +135,10 @@ def _validate_options(args, unknown, groups):
             callback = _query
         if args.search:
             callback = _search
-        if args.upgrade or args.upgrades:
+        if args.upgrade:
             callback = _upgrade
+        if args.upgrades:
+            callback = _upgrades
         if args.sync and not args.search and not args.upgrades:
             callback = _sync
         if args.remove:
@@ -168,7 +168,26 @@ def _confirm(message, package_names):
         exit(1)
 
 
-def _install():
+def _shell(command, suppress_error=False, workingdir=None):
+    """Run a shell command."""
+    logger.debug("shell")
+    logger.debug(command)
+    logger.debug(workingdir)
+    sp = subprocess.Popen(command,
+                          cwd=workingdir,
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE)
+    out, err = sp.communicate()
+    logger.debug(out)
+    if suppress_error:
+        logger.debug(err)
+    else:
+        if err and len(err) > 0:
+            logger.error(err)
+    return out
+
+
+def _install(file_definition, makepkg):
     """Install a package."""
     url = _AUR.format(file_definition[2])
     logger.info("installing: {}".format(file_definition[0]))
@@ -181,9 +200,7 @@ def _install():
         f_dir = os.path.join(t, file_definition[0])
         temp_sh = os.path.join(t, _NAME + ".sh")
         with open(temp_sh, 'w') as f:
-            script = _BASH.format(f_dir,
-                                  " ".join(makepkg),
-                                  ctx.cache_dir())
+            script = _BASH.format(f_dir, makepkg)
             f.write(script)
         result = subprocess.call("/bin/bash --rcfile {}".format(temp_sh),
                                  shell=True)
@@ -211,6 +228,9 @@ def _is_vcs(name):
 
 def _syncing(context, can_install, targets):
     """Sync/install packages."""
+    if context.root:
+        _console_error("can not run install/upgrades as root (uses makepkg)")
+        exit(1)
     inst = []
     args = context.groups[_SYNC_UP_OPTIONS]
     for name in targets:
@@ -229,25 +249,34 @@ def _syncing(context, can_install, targets):
         vers = i[1]
         tag = ""
         if pkg:
-            if can_install and pkg.version == i[1]:
+            if pkg.version == i[1]:
                 tag = " [installed]"
         else:
             if not can_install:
-                _console_error("{} not installed".fomrat(i[0]))
+                _console_error("{} not installed".format(i[0]))
+                exit(1)
         vcs = _is_vcs(i[0])
         if vcs:
             vers = vcs
         logger.debug(i)
         report.append("{} {}{}".format(i[0], vers, tag))
     _confirm("install packages", report)
-    makepkg = "sri"
+    makepkg = "-sri"
     if args.makepkg and len(args.makepkg) > 0:
         makepkg = " ".join(args.makepkg)
     logger.debug("makepkg {}".format(makepkg))
+    for i in inst:
+        if not _install(i, makepkg):
+            _console_error("error installing package: {}".format(i[0]))
 
 
 def _upgrade(context):
     """Upgrade packages."""
+    _syncing(context, False, context.targets)
+
+
+def _upgrades(context):
+    """Ordered upgrade."""
 
 
 def _remove(context):
