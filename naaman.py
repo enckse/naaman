@@ -237,26 +237,28 @@ def _query(context):
         logger.info("{} {}".format(q.name, q.version))
 
 
-def _is_aur_pkg(pkg):
+def _is_aur_pkg(pkg, sync_packages):
     """Detect AUR package."""
-    # TODO: determine the proper way to do this...
-    return pkg.packager == "Unknown Packager"
+    return pkg.name not in sync_packages
 
 
 def _do_query(context):
     """Query pacman."""
+    syncpkgs = set()
+    for db in context.handle.get_syncdbs():
+        syncpkgs |= set(p.name for p in db.pkgcache)
     if len(context.targets) > 0:
         for target in context.targets:
             pkg = context.db.get_pkg(target)
             valid = False
-            if pkg and _is_aur_pkg(pkg):
+            if pkg and _is_aur_pkg(pkg, syncpkgs):
                     yield pkg
             else:
                 _console_error("unknown package: {}".format(target))
                 exit(1)
     else:
         for pkg in context.db.pkgcache:
-            if _is_aur_pkg(pkg):
+            if _is_aur_pkg(pkg, syncpkgs):
                 yield pkg
 
 
