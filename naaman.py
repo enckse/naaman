@@ -27,6 +27,7 @@ file_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
 _SYNC_UP_OPTIONS = "Sync/Update options"
 _REMOVE_OPTIONS = "Remove options"
+_QUERY_OPTIONS = "Query options"
 
 _AUR = "https://aur.archlinux.org{}"
 _RESULT_JSON = 'results'
@@ -232,6 +233,10 @@ def _validate_options(args, unknown, groups):
             _console_error("search, upgrade, and clean are sync only")
             invalid = True
 
+    if not invalid and args.gone and not args.query:
+        _console_error("gone only works with query")
+        invalid = True
+
     if not invalid and need_targets:
         if len(unknown) == 0:
             _console_error("no targets specified")
@@ -252,7 +257,10 @@ def _validate_options(args, unknown, groups):
     callback = None
     if not invalid:
         if args.query:
-            callback = _query
+            if args.gone:
+                callback = _gone
+            else:
+                callback = _query
         if args.search:
             callback = _search
         if args.upgrades:
@@ -674,7 +682,21 @@ def _search(context):
 
 def _query(context):
     """Perform query."""
+    _querying(context, False)
+
+
+def _gone(context):
+    """Perform query for dropped aur packages."""
+    _querying(context, True)
+
+
+def _querying(context, gone):
+    """Querying for package information."""
     for q in _do_query(context):
+        if gone:
+            found = _rpc_search(q.name, True, context)
+            if found:
+                continue
         if context.quiet:
             output = "{}"
         else:
@@ -703,6 +725,14 @@ def _do_query(context):
         for pkg in context.db.pkgcache:
             if _is_aur_pkg(pkg, syncpkgs):
                 yield pkg
+
+
+def _query_options(parser):
+    """Get query options."""
+    group = parser.add_argument_group(_QUERY_OPTIONS)
+    group.add_argument('-g', "--gone",
+                       help="check for packages dropped from the aur",
+                       action="store_true")
 
 
 def _remove_options(parser):
@@ -866,6 +896,7 @@ def main():
                         action="store_true")
     _remove_options(parser)
     _sync_up_options(parser)
+    _query_options(parser)
     args, unknown = parser.parse_known_args()
     if args.version:
         print("{} ({})".format(_NAME, _VERSION))
