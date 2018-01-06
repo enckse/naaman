@@ -299,6 +299,7 @@ def _get_deps(pkgs, name):
             deps.append(p)
     return deps
 
+
 def _upgrades(context):
     """Ordered upgrade."""
     pkgs = list(_do_query(context))
