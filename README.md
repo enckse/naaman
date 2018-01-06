@@ -61,6 +61,11 @@ similar to pacman, packages can be ignored
 --ignore <package> <package1>
 ```
 
+suppress naaman confirm prompts
+```
+--no-confirm
+```
+
 ### Sync
 
 you can perform a sync to install new packages from the AUR
