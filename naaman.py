@@ -452,7 +452,11 @@ def _remove(context):
                                                     x.version) for x in p])
     options = context.groups[_REMOVE_OPTIONS]
     removals = context.get_config_vals(options.removal)
-    result = context.pacman(["-R"] + removals.split(" ") + [x.name for x in p])
+    call_with = ['-R']
+    if len(removals) > 0:
+        call_with = call_with + removals.split(" ")
+    call_with = call_with + [x.name for x in p]
+    result = context.pacman(call_with)
     if not result:
         _console_error("unable to remove packages")
         exit(1)

@@ -101,6 +101,10 @@ to disable naaman using sudo
 --sudo
 ```
 
+skip dependency checks/handling
+```
+--skip-deps
+```
 
 ### Sync
 
