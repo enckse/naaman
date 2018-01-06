@@ -638,7 +638,11 @@ def _search(context):
 def _query(context):
     """Perform query."""
     for q in _do_query(context):
-        logger.info("{} {}".format(q.name, q.version))
+        if context.quiet:
+            output = "{}"
+        else:
+            output = "{} {}"
+        logger.info(output.format(q.name, q.version))
 
 
 def _is_aur_pkg(pkg, sync_packages):
