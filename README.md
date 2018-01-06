@@ -111,6 +111,11 @@ skip dependency checks/handling
 --skip-deps
 ```
 
+ignore packages for periods of time (in hours
+```
+--ignore-for <package>=<time>
+```
+
 ### Sync
 
 you can perform a sync to install new packages from the AUR

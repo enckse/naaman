@@ -327,6 +327,15 @@ def _is_vcs(name):
             return "latest (vcs version)"
 
 
+def _get_deltahours(input_str, now):
+    """Get a timedelta in hours."""
+    last = datetime.fromtimestamp(float(input_str))
+    seconds = (now - last).total_seconds()
+    minutes = seconds / 60
+    hours = minutes / 60
+    return hours
+
+
 def _syncing(context, can_install, targets, updating):
     """Sync/install packages."""
     if context.root:
@@ -340,18 +349,15 @@ def _syncing(context, can_install, targets, updating):
     no_vcs = False
     if args.no_vcs or args.force_refresh or args.refresh:
         no_vcs = True
+    now = datetime.now()
+    current_time = now.timestamp()
     if args.vcs_ignore > 0:
         cache_check = context.cache_file("vcs")
         update_cache = True
-        now = datetime.now()
-        current_time = now.timestamp()
         # we have a cache item, has necessary time elapsed?
         if os.path.exists(cache_check):
             with open(cache_check, 'r') as f:
-                last = datetime.fromtimestamp(float(f.read()))
-                seconds = (now - last).total_seconds()
-                minutes = seconds / 60
-                hours = minutes / 60
+                hours = _get_deltahours(f.read(), now)
                 if hours < args.vcs_ignore:
                     update_cache = False
                     no_vcs = True
@@ -360,6 +366,42 @@ def _syncing(context, can_install, targets, updating):
             with open(cache_check, 'w') as f:
                 f.write(str(current_time))
     logger.debug("vcs? {}".format(no_vcs))
+    if args.ignore_for and len(args.ignore_for) > 0:
+        logger.debug("checking ignored packages.")
+        ignore_for = context.cache_file("ignoring")
+        ignore_definition = {}
+        if os.path.exists(ignore_for):
+            with open(ignore_for, 'r') as f:
+                ignore_definition = json.loads(f.read())
+        logger.debug(ignore_definition)
+        for i in args.ignore_for:
+            if "=" not in i:
+                logger.warn("invalid ignore definition {}".format(i))
+                continue
+            parts = i.split("=")
+            if len(parts) != 2:
+                logger.warn("invalid ignore format {}".format(i))
+            package = parts[0]
+            hours = 0
+            try:
+                hours = int(parts[1])
+                if hours < 1:
+                    raise Exception("hour must be >= 1")
+            except Exception as e:
+                logger.warn("invalid hour value {}".format(i))
+                logger.debug(e)
+                continue
+            update = True
+            if package in ignore_definition:
+                last = _get_deltahours(float(ignore_definition[package]), now)
+                if last < hours:
+                    ignored.append(package)
+                    update = False
+            if update:
+                ignore_definition[package] = str(current_time)
+        with open(ignore_for, 'w') as f:
+            f.write(json.dumps(ignore_definition))
+    logger.debug("ignoring {}".format(ignored))
     for name in targets:
         if name in ignored:
             _console_output("{} is ignored".format(name))
@@ -635,6 +677,11 @@ def _remove_options(parser):
 def _sync_up_options(parser):
     """Sync/update options."""
     group = parser.add_argument_group(_SYNC_UP_OPTIONS)
+    group.add_argument("--ignore-for",
+                       metavar='N',
+                       type=str,
+                       nargs='+',
+                       help="ignore packages for periods of time (hours)")
     group.add_argument("--makepkg",
                        metavar='N',
                        type=str,
@@ -692,6 +739,7 @@ def _load_config(args, config_file):
                        "PACMAN",
                        "SKIP_DEPS",
                        "REMOVAL",
+                       "IGNORE_FOR",
                        "MAKEPKG",
                        "NO_VCS",
                        "SUDO",
@@ -699,7 +747,7 @@ def _load_config(args, config_file):
                 val = None
                 lowered = key.lower()
                 try:
-                    if key in ["IGNORE", "MAKEPKG", "REMOVAL"]:
+                    if key in ["IGNORE", "MAKEPKG", "REMOVAL", "IGNORE_FOR"]:
                         arr = getattr(args, lowered)
                         if not arr:
                             arr = []
