@@ -109,6 +109,38 @@ or to check for some packages
 naaman -Q <package>
 ```
 
+## Workflow
+
+install some packages
+```
+naaman -S <package1> <package2-vcs-git> <package3>
+```
+
+see what AUR packages are installed
+```
+naaman -Q
+```
+
+update non-vcs packages
+```
+naaman -Syyu
+```
+
+remove a package
+```
+naaman -R <package3>
+```
+
+update one of the packages
+```
+naaman -U <package1>
+```
+
+actually just update everything
+```
+pacman -Su
+```
+
 ## Known issues
 
 naaman is:
