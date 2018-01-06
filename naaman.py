@@ -38,6 +38,19 @@ _AUR_NAME_TYPE = "name"
 _PRINTABLE = set(string.printable)
 
 
+# Script for installs
+_BASH = """#!/bin/bash
+trap '' 2
+cd {}
+makepkg {}
+exit_code=$?
+if [ $(ls *.pkg.tar.xz | wc -l) -gt 0 ]; then
+    cp *.pkg.tar.xz {}
+fi
+exit $exit_code
+"""
+
+
 def _console_output(string, prefix="", callback=logger.info):
     """console/pretty output."""
     callback("{} => {}".format(prefix, string))
@@ -103,11 +116,11 @@ def _validate_options(args, unknown, groups):
         call_on("query")
         valid_count += 1
 
-    if valid_count != 1:
+    if not invalid and valid_count != 1:
         _console_error("multiple top-level arguments given (this is invalid)")
         invalid = True
 
-    if need_targets:
+    if not invalid and need_targets:
         if len(unknown) == 0:
             _console_error("no targets specified")
             invalid = True
@@ -116,17 +129,23 @@ def _validate_options(args, unknown, groups):
         _console_error("invalid config file")
         invalid = True
 
+    makepkg = "sri"
+    if args.makepkg and len(args.makepkg) > 0:
+        makepkg = " ".join(args.makepkg)
+    logger.debug("makepkg {}".format(makepkg))
     ctx = Context(unknown, args.config, groups)
     callback = None
-    if args.query:
-        callback = _query
-    if args.search:
-        callback = _search
-    if args.sync and not args.search:
-        # this handles upgrades and sync (for now)
-        callback = _sync_upgrade
-    if args.remove:
-        callback = _remove
+    if not invalid:
+        if args.query:
+            callback = _query
+        if args.search:
+            callback = _search
+        if args.upgrade or args.upgrades:
+            callback = _upgrade
+        if args.sync and not args.search and not args.upgrades:
+            callback = _sync
+        if args.remove:
+            callback = _remove
 
     if not invalid and callback is None:
         _console_error("unable to find callback")
@@ -138,24 +157,98 @@ def _validate_options(args, unknown, groups):
 
 
 def _confirm(message, package_names):
+    """Confirm package changes."""
     logger.info("")
     for p in package_names:
         logger.info("  -> {}".format(p))
     logger.info("")
-    c = input(" ===> {}, (Y/n)? ".format(message))
+    msg = " ===> {}, (Y/n)? ".format(message)
+    logger.debug(msg)
+    c = input(msg)
+    logger.debug(c)
     if c == "n":
         _console_error("user cancelled")
         exit(1)
 
 
-def _sync_upgrade(context):
-    """Sync upgrade."""
+def _install():
+    """Install a package."""
+    url = _AUR.format(file_definition[2])
+    logger.info("installing: {}".format(file_definition[0]))
+    with tempfile.TemporaryDirectory() as t:
+        f_name = file_definition[0] + ".tar.gz"
+        file_name = os.path.join(t, f_name)
+        logger.debug(file_name)
+        urllib.request.urlretrieve(url, file_name)
+        _shell(["tar", "xf", f_name], workingdir=t)
+        f_dir = os.path.join(t, file_definition[0])
+        temp_sh = os.path.join(t, _NAME + ".sh")
+        with open(temp_sh, 'w') as f:
+            script = _BASH.format(f_dir,
+                                  " ".join(makepkg),
+                                  ctx.cache_dir())
+            f.write(script)
+        result = subprocess.call("/bin/bash --rcfile {}".format(temp_sh),
+                                 shell=True)
+        return result == 0
+
+
+def _sync(context):
+    """Sync packages (install)."""
+    _syncing(context, True)
+
+
+def _is_vcs(name):
+    """Check if vcs package."""
+    for t in ['-git',
+              '-nightly',
+              '-hg',
+              '-bzr',
+              '-cvs',
+              '-darcs',
+              '-svn']:
+        if name.endswith(t):
+            logger.debug("tagged as {}".format(t))
+            return "latest (vcs version)"
+
+
+def _syncing(context, can_install):
+    """Sync/install packages."""
+    inst = []
+    for name in context.targets:
+        package = _rpc_search(name, _AUR_NAME_TYPE, True, context)
+        if package:
+            inst.append(package)
+        else:
+            _console_error("unknown AUR package: {}".format(name))
+            exit(1)
+    report = []
+    for i in inst:
+        pkg = context.db.get_pkg(i[0])
+        vers = i[1]
+        tag = ""
+        if pkg:
+            if can_install and pkg.version == i[1]:
+                tag = " [installed]"
+        else:
+            if not can_install:
+                _console_error("{} not installed".fomrat(i[0]))
+        vcs = _is_vcs(i[0])
+        if vcs:
+            vers = vcs
+        logger.debug(i)
+        report.append("{} {}{}".format(i[0], vers, tag))
+    _confirm("install packages", report)
+ 
+
+def _upgrade(context):
+    """Upgrade packages."""
 
 
 def _remove(context):
     """Remove package."""
-    pkgs = list(_do_query(context))
-    _confirm("remove packages", context.targets)
+    p = list(_do_query(context))
+    _confirm("remove packages", ["{} {}".format(x.name, x.version) for x in p])
     options = context.groups[_REMOVE_OPTIONS]
     ok = True
     try:
@@ -306,6 +399,11 @@ def main():
     parser.add_argument('--config',
                         help='pacman config',
                         default='/etc/pacman.conf')
+    parser.add_argument("--makepkg",
+                        metavar='N',
+                        type=str,
+                        nargs='+',
+                        help="makepkg options")
     _remove_options(parser)
     args, unknown = parser.parse_known_args()
     arg_groups = {}
