@@ -779,6 +779,7 @@ def _load_config(args, config_file):
             if key in ["IGNORE",
                        "PACMAN",
                        "SKIP_DEPS",
+                       "NO_CACHE",
                        "REMOVAL",
                        "IGNORE_FOR",
                        "MAKEPKG",
@@ -794,7 +795,7 @@ def _load_config(args, config_file):
                             arr = []
                         arr += value.split(" ")
                         setattr(args, lowered, arr)
-                    elif key in ["NO_VCS", "SUDO", "SKIP_DEPS"]:
+                    elif key in ["NO_VCS", "SUDO", "SKIP_DEPS", "NO_CACHE"]:
                         val = bool(value)
                     elif key == "VCS_IGNORE":
                         val = int(value)
