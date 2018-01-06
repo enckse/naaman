@@ -17,7 +17,6 @@ import tempfile
 import subprocess
 from xdg import BaseDirectory
 from pycman import config
-from pycman import transaction
 
 _VERSION = "0.1.0"
 _NAME = "naaman"
@@ -328,17 +327,10 @@ def _remove(context):
         _confirm("remove packages", ["{} {}".format(x.name,
                                                     x.version) for x in p])
     options = context.groups[_REMOVE_OPTIONS]
-    ok = True
-    try:
-        t = transaction.init_from_options(context.handle, options)
-        for pkg in p:
-            t.remove_pkg(pkg)
-        ok = transaction.finalize(t)
-    except Exception as e:
-        logger.error("transaction failed")
-        logger.error(e)
-        ok = False
-    if not ok:
+    returncode = subprocess.call(["/usr/bin/sudo",
+                                  '/usr/bin/pacman',
+                                  '-R'] + [x.name for x in p])
+    if returncode != 0:
         _console_error("unable to remove packages")
         exit(1)
     _console_output("packages removed")
