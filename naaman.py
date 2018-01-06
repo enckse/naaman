@@ -484,7 +484,7 @@ class AURPackage(object):
         self.url = url
 
 
-def _handle_deps(context, dependencies):
+def _handle_deps(root_package, context, dependencies):
     """Handle dependencies resolution."""
     logger.debug("resolving deps")
     missing = False
@@ -493,6 +493,11 @@ def _handle_deps(context, dependencies):
         logger.debug(d)
         if context.targets and d in context.targets:
             logger.debug("installing it")
+            root = context.targets.index(root_package)
+            pos = context.targets.index(d)
+            if pos > root:
+                _console_error("verify order of target/deps")
+                exit(1)
             continue
         if context.known_dependency(d):
             logger.debug("known")
@@ -542,7 +547,9 @@ def _rpc_search(package_name, exact, context):
                                 if context.deps:
                                     if _AUR_DEPS in result:
                                         _aur_deps = result[_AUR_DEPS]
-                                        _handle_deps(context, _aur_deps)
+                                        _handle_deps(package_name,
+                                                     context,
+                                                     _aur_deps)
                                 else:
                                     logger.debug("no dependency checks")
                                 return AURPackage(name,
