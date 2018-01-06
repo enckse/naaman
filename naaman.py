@@ -25,6 +25,14 @@ def _console_error(string):
     """Console error."""
     _console_output(string, prefix="FAILURE", callback=logger.error)
 
+class Context(object):
+    """Context for operations."""
+
+    def __init__(self, targets):
+        self.root = "root" == getpass.getuser()
+        self.targets = []
+        if targets and len(targets) > 0:
+            self.targets = targets
 
 def _validate_options(args, unknown):
     """Validate argument options."""
@@ -40,13 +48,13 @@ def _validate_options(args, unknown):
         call_on("sync")
         valid_count += 1
         if args.upgrades or args.search:
-            _console_output("performing sync function")
+            call_on("sync function")
             if args.upgrades and args.search:
                 _console_error("cannot perform multiple sub-options")
                 invalid = True
-        if args.search:
+        if args.search or not args.upgrades:
             need_targets = True
-        else:
+        else:    
             optional_targets = True
 
     if args.upgrade:
@@ -75,9 +83,7 @@ def _validate_options(args, unknown):
 
     if invalid:
         exit(1)
-    #ctx = Context()
-    #ctx.root = root = getpass.getuser()
-    
+    ctx = Context(unknown)
 
 
 def main():
