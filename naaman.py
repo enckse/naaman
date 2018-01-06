@@ -77,7 +77,7 @@ class Context(object):
         self.groups = groups
         self.confirm = confirm
         self.makepkg_defaults = "-sri"
-    
+
     def pacman(self, args, require_sudo=True):
         """Call pacman."""
         cmd = []
