@@ -209,7 +209,7 @@ def _install(file_definition, makepkg):
 
 def _sync(context):
     """Sync packages (install)."""
-    _syncing(context, True, context.targets)
+    _syncing(context, True, context.targets, False)
 
 
 def _is_vcs(name):
@@ -226,7 +226,7 @@ def _is_vcs(name):
             return "latest (vcs version)"
 
 
-def _syncing(context, can_install, targets):
+def _syncing(context, can_install, targets, updating):
     """Sync/install packages."""
     if context.root:
         _console_error("can not run install/upgrades as root (uses makepkg)")
@@ -244,35 +244,42 @@ def _syncing(context, can_install, targets):
             _console_error("unknown AUR package: {}".format(name))
             exit(1)
     report = []
+    do_install = []
     for i in inst:
         pkg = context.db.get_pkg(i[0])
         vers = i[1]
         tag = ""
+        vcs = _is_vcs(i[0])
         if pkg:
             if pkg.version == i[1]:
+                if not vcs and updating:
+                    continue
                 tag = " [installed]"
         else:
             if not can_install:
                 _console_error("{} not installed".format(i[0]))
                 exit(1)
-        vcs = _is_vcs(i[0])
+        logger.debug(i)
         if vcs:
             vers = vcs
-        logger.debug(i)
         report.append("{} {}{}".format(i[0], vers, tag))
+        do_install.append(i)
+    if len(do_install) == 0:
+        _console_output("nothing to do")
+        exit(0)
     _confirm("install packages", report)
     makepkg = "-sri"
     if args.makepkg and len(args.makepkg) > 0:
         makepkg = " ".join(args.makepkg)
     logger.debug("makepkg {}".format(makepkg))
-    for i in inst:
+    for i in do_install:
         if not _install(i, makepkg):
             _console_error("error installing package: {}".format(i[0]))
 
 
 def _upgrade(context):
     """Upgrade packages."""
-    _syncing(context, False, context.targets)
+    _syncing(context, False, context.targets, False)
 
 
 def _get_deps(pkgs, name):
@@ -296,7 +303,8 @@ def _upgrades(context):
     """Ordered upgrade."""
     pkgs = list(_do_query(context))
     deps = _get_deps(pkgs, None)
-        
+    _syncing(context, False, [d.name for d in deps], True)
+
 
 def _remove(context):
     """Remove package."""
