@@ -1,4 +1,4 @@
-function _pyxstitch()
+function _naaman()
 {
     local cur opts 
     if [ $COMP_CWORD -eq 1 ]; then
@@ -8,4 +8,4 @@ function _pyxstitch()
     fi
 }
 
-complete -F _pyxstitch pyxstitch
+complete -F _naaman naaman

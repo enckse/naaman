@@ -9,7 +9,20 @@ naaman is focused on providing a pacman-ish interface to dealing with AUR packag
 
 # install
 
-Coming soon
+## git
+
+git clone this repo
+
+install dependencies
+```
+sudo make dependencies
+```
+
+install naaman
+```
+sudo make install
+```
+
 
 ## Usage
 
