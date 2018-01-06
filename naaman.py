@@ -338,7 +338,12 @@ def _upgrades(context):
     """Ordered upgrade."""
     pkgs = list(_do_query(context))
     deps = _get_deps(pkgs, None)
-    _syncing(context, False, [d.name for d in deps], True)
+    names = []
+    for d in deps:
+        if d.name in names:
+            continue
+        names.append(d.name)
+    _syncing(context, False, names, True)
 
 
 def _remove(context):
@@ -400,13 +405,14 @@ def _rpc_search(package_name, typed, exact, context):
                             if not name or not desc or not vers:
                                 logger.debug("unable to read this package")
                                 logger.debug(result)
-                                continue
                             if context.quiet:
                                 logger.info(name)
                                 continue
                             if context.db.get_pkg(name) is not None:
                                 ind = " [installed]"
                             logger.info("aur/{} {}{}".format(name, vers, ind))
+                            if not desc or len(desc) == 0:
+                                desc = "no description"
                             logger.info("    {}".format(desc))
                     except Exception as e:
                         logger.error("unable to parse package")
