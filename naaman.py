@@ -681,6 +681,43 @@ def _handle_deps(root_package, context, dependencies):
         context.exiting(1)
 
 
+def _rpc_caching(package_name, context):
+    """rpc caching area/check."""
+    now = datetime.now()
+    use_file_name = "rpc-"
+    for char in package_name:
+        c = char
+        if not c.isalnum() and c not in ['-']:
+            c = "_"
+        use_file_name += c
+    cache_file = context.cache_file(use_file_name)
+    logger.debug(cache_file)
+    cache = False
+    return_factory = None
+    return_cache = None
+    if os.path.exists(cache_file):
+        mtime = os.path.getmtime(cache_file)
+        last = datetime.fromtimestamp(mtime)
+        seconds = (now - last).total_seconds()
+        minutes = seconds / 60
+        logger.trace(minutes)
+        logger.trace(context.rpc_cache)
+        if minutes > context.rpc_cache:
+            os.remove(cache_file)
+            logger.debug("over rpc cache threshold")
+            cache = True
+        else:
+            def _open(url):
+                logger.debug("opening cache")
+                return open(cache_file, 'rb')
+            return_factory = _open
+    else:
+        cache = True
+    if cache:
+        return_cache = cache_file
+    return return_cache, return_factory
+
+
 def _rpc_search(package_name, exact, context):
     """Search for a package in the aur."""
     if exact and context.check_repos(package_name):
@@ -695,39 +732,13 @@ def _rpc_search(package_name, exact, context):
     factory = None
     caching = None
     if exact and context.rpc_cache > 0 and not context.force_refresh:
-        logger.debug("using rpc cache")
+        logger.debug("rpc cache enabled")
         context.lock()
         try:
-            now = datetime.now()
-            use_file_name = "rpc-"
-            for char in package_name:
-                c = char
-                if not c.isalnum() and c not in ['-']:
-                    c = "_"
-                use_file_name += c
-            cache_file = context.cache_file(use_file_name)
-            logger.debug(cache_file)
-            cache = False
-            if os.path.exists(cache_file):
-                mtime = os.path.getmtime(cache_file)
-                last = datetime.fromtimestamp(mtime)
-                seconds = (now - last).total_seconds()
-                minutes = seconds / 60
-                logger.trace(minutes)
-                logger.trace(context.rpc_cache)
-                if minutes > context.rpc_cache:
-                    os.remove(cache_file)
-                    logger.debug("over rpc cache threshold")
-                    cache = True
-                else:
-                    def _open(url):
-                        logger.debug("opening cache")
-                        return open(cache_file, 'rb')
-                    factory = _open
-            else:
-                cache = True
-            if cache:
-                caching = cache_file
+            c, f = _rpc_caching(package_name, context)
+            factory = f
+            caching = c
+            logger.trace((c, f))
         except Exception as e:
             logger.error("unexpected rpc cache error")
             logger.error(e)
