@@ -33,6 +33,7 @@ _QUERY_OPTIONS = "Query options"
 _DEFAULT_OPTS = {}
 _DEFAULT_OPTS["removal"] = []
 _DEFAULT_OPTS["makepkg"] = ["-sri"]
+_DEFAULT_OPTS["scripts"] = "/usr/share/naaman/"
 
 _AUR = "https://aur.archlinux.org{}"
 _RESULT_JSON = 'results'
@@ -50,8 +51,6 @@ _AUR_TARGET_LEN = 4
 _CACHE_FILE = ".cache"
 _LOCKS = ".lck"
 _CACHE_FILES = [_CACHE_FILE, _LOCKS]
-
-_SCRIPTS = "/usr/share/naaman/"
 
 
 def _console_output(string, prefix="", callback=logger.info):
@@ -91,6 +90,7 @@ class Context(object):
         self.rpc_cache = args.rpc_cache
         self._lock_file = os.path.join(self._cache_dir, "file" + _LOCKS)
         self.force_refresh = args.force_refresh
+        self._script_dir = self.groups[_CUSTOM_ARGS]["scripts"]
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
@@ -105,11 +105,12 @@ class Context(object):
 
     def load_script(self, name):
         """Load a script file."""
-        script = os.path.join(_SCRIPTS, name)
+        script = os.path.join(self._script_dir, name)
         if not os.path.exists(script):
             _console_error("missing required script {}".format(script))
             self.exiting(1)
         if name not in self._scripts:
+            logger.debug("loading script {}".format(name))
             with open(script, 'r') as f:
                 self._scripts[name] = f.read()
         return self._scripts[name]
@@ -920,6 +921,7 @@ def _load_config(args, config_file):
                        "SKIP_DEPS",
                        "NO_CACHE",
                        "REMOVAL",
+                       "SCRIPTS",
                        "IGNORE_FOR",
                        "MAKEPKG",
                        "NO_VCS",
