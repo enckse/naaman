@@ -499,12 +499,16 @@ def _syncing(context, is_install, targets, updating):
         context.exiting(1)
     args = context.groups[_SYNC_UP_OPTIONS]
     ignored = args.ignore
-    if not ignored or args.force_refresh:
+    skip_filters = False
+    if args.force_refresh or is_install:
+        logger.debug('skip filtering options')
+        skip_filters = True
+    if not ignored or skip_filters:
         ignored = []
     no_vcs = False
-    if args.no_vcs or (args.refresh and not args.force_refresh):
+    if args.no_vcs or (args.refresh and not skip_filters):
         no_vcs = True
-    if args.vcs_ignore > 0 and not args.force_refresh:
+    if args.vcs_ignore > 0 and not skip_filters:
         context.lock()
         try:
             if _check_vcs_ignore(context, args.vcs_ignore) is not None:
@@ -514,19 +518,15 @@ def _syncing(context, is_install, targets, updating):
             logger.error(e)
         context.unlock()
     logger.debug("novcs? {}".format(no_vcs))
-    if is_install:
-        logger.debug("ignore novcs")
-        no_vcs = False
-    if args.ignore_for and len(args.ignore_for) > 0:
-        if not args.force_refresh and not is_install:
-            logger.debug("handling ignorefors")
-            context.lock()
-            try:
-                _ignore_for(context, args.ignore_for, ignored)
-            except Exception as e:
-                logger.error("unexpected ignore_for error")
-                logger.error(e)
-            context.unlock()
+    if args.ignore_for and len(args.ignore_for) > 0 and not skip_filters:
+        logger.debug("handling ignorefors")
+        context.lock()
+        try:
+            _ignore_for(context, args.ignore_for, ignored)
+        except Exception as e:
+            logger.error("unexpected ignore_for error")
+            logger.error(e)
+        context.unlock()
     logger.trace("ignoring {}".format(ignored))
     check_inst = []
     for name in targets:
