@@ -14,8 +14,10 @@ import urllib.parse
 import json
 import string
 import signal
+import base64
 import tempfile
 import subprocess
+import time
 from datetime import datetime, timedelta
 from xdg import BaseDirectory
 from pycman import config
@@ -75,7 +77,8 @@ class Context(object):
                  cache,
                  no_sudo,
                  aur_dependencies,
-                 reorder):
+                 reorder,
+                 rpc_cache):
         """Init the context."""
         self.root = "root" == getpass.getuser()
         self.targets = []
@@ -96,6 +99,7 @@ class Context(object):
         self._scripts = {}
         self.reorder_deps = reorder
         self.reorders = []
+        self.rpc_cache = rpc_cache
         self._lock_file = os.path.join(self._cache_dir, "file" + _LOCKS)
 
         def sigint_handler(signum, frame):
@@ -287,7 +291,8 @@ def _validate_options(args, unknown, groups):
                   args.cache_dir,
                   args.no_sudo,
                   not args.skip_deps,
-                  args.reorder_deps)
+                  args.reorder_deps,
+                  args.rpc_cache)
     callback = None
     if not invalid:
         if args.query:
@@ -689,9 +694,49 @@ def _rpc_search(package_name, exact, context):
         url = _AUR_SEARCH
     url = url.format(urllib.parse.quote(package_name))
     logger.debug(url)
+    factory = None
+    caching = None
+    if exact and context.rpc_cache > 0:
+        logger.debug("using rpc cache")
+        context.lock()
+        try:
+            now = datetime.now()
+            encoded = base64.b32encode(url.replace(_AUR, "").encode("utf-8"))
+            logger.debug(encoded)
+            cache_file = context.cache_file(encoded.decode("utf-8"))
+            logger.debug(cache_file)
+            cache = False
+            if os.path.exists(cache_file):
+                mtime = os.path.getmtime(cache_file)
+                last = datetime.fromtimestamp(mtime)
+                seconds = (now - last).total_seconds()
+                minutes = seconds / 60
+                logger.debug(minutes)
+                if minutes > context.rpc_cache:
+                    logger.debug("over rpc cache threshold")
+                    cache = True
+                else:
+                    def _open(url):
+                        logger.debug("opening cache")
+                        return open(cache_file, 'rb')
+                    factory = _open
+            else:
+                cache = True
+            if cache:
+                caching = cache_file
+        except Exception as e:
+            logger.error("unexpected rpc cache error")
+            logger.error(e)
+        context.unlock()
+    if factory is None:
+        factory = urllib.request.urlopen
     try:
-        with urllib.request.urlopen(url) as req:
+        with factory(url) as req:
             result = req.read()
+            if caching:
+                logger.debug('writing cache')
+                with open(caching, 'wb') as f:
+                    f.write(result)
             j = json.loads(result.decode("utf-8"))
             if "error" in j:
                 _console_error(j['error'])
@@ -846,6 +891,10 @@ def _sync_up_options(parser):
     group.add_argument("--reorder-deps",
                        help="attempt to re-order dependency installs",
                        action="store_false")
+    group.add_argument("--rpc-cache",
+                       help="enable rpc caching (minutes)",
+                       type=int,
+                       default=60)
 
 
 def _load_config(args, config_file):
@@ -875,6 +924,7 @@ def _load_config(args, config_file):
                 continue
             if key in ["IGNORE",
                        "PACMAN",
+                       "RPC_CACHE",
                        "SKIP_DEPS",
                        "NO_CACHE",
                        "REMOVAL",
@@ -903,7 +953,7 @@ def _load_config(args, config_file):
                                  "NO_CACHE",
                                  "REORDER_DEPS"]:
                         val == value == "True"
-                    elif key == "VCS_IGNORE":
+                    elif key in ["VCS_IGNORE", "RPC_CACHE"]:
                         val = int(value)
                     else:
                         val = value
