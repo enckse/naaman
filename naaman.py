@@ -887,7 +887,8 @@ def _query_options(parser):
     """Get query options."""
     group = parser.add_argument_group(_QUERY_OPTIONS)
     group.add_argument('-g', "--gone",
-                       help="check for packages dropped from the aur",
+                       help="""specifying this option will check for packages
+installed from the AUR but are no longer in the AUR.""",
                        action="store_true")
 
 
