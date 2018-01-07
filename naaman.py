@@ -926,21 +926,34 @@ refreshed.""",
 option to make sure all packages are updated.""",
                        action='store_true')
     group.add_argument("--ignore",
-                       help="ignore packages",
+                       help="""ignore packages by name. packages ignored will
+be skipped during upgrades unless forced (-yy). utilize this to keep packages
+back and/or prevent upgrading packages""",
                        metavar='N',
                        type=str,
                        nargs='+')
     group.add_argument("--no-cache",
-                       help="skip caching package files",
+                       help="""skip caching package files. by default naaman
+will take the resulting makepkg output packages and place them in the pacman
+cache directory. setting this will disable this operation.""",
                        action="store_true")
     group.add_argument("--skip-deps",
-                       help="skip dependency checks",
+                       help="""skip dependency checks. naaman will attempt to
+detect and error when checking an AUR package for other AUR packages that are
+NOT installed. setting this will disable this check.""",
                        action="store_true")
     group.add_argument("--reorder-deps",
-                       help="attempt to re-order dependency installs",
+                       help="""attempt to re-order dependency installs. by
+setting this, naaman will no longer try and re-order dependencies. this
+setting attempts to detect install order and adjust to resolve any detected
+dependency issues (e.g. -S package1 package0 where package1 relies on
+package0 will change to install package0 and then package1)""",
                        action="store_false")
     group.add_argument("--rpc-cache",
-                       help="enable rpc caching (minutes)",
+                       help="""enable rpc caching (minutes). instead of making
+a web rpc request to check for updated AUR package information, naaman will
+cache the last received information about a package for this duration of time
+""",
                        type=int,
                        default=60)
 
