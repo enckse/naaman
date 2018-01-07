@@ -502,7 +502,7 @@ def _syncing(context, can_install, targets, updating):
     if not ignored or args.force_refresh:
         ignored = []
     no_vcs = False
-    if args.no_vcs or args.refresh:
+    if args.no_vcs or (args.refresh and not args.force_refresh):
         no_vcs = True
     if args.vcs_ignore > 0 and not args.force_refresh:
         context.lock()
@@ -513,7 +513,7 @@ def _syncing(context, can_install, targets, updating):
             logger.error("unexpected vcs error")
             logger.error(e)
         context.unlock()
-    logger.debug("vcs? {}".format(no_vcs))
+    logger.debug("novcs? {}".format(no_vcs))
     if args.ignore_for and len(args.ignore_for) > 0 and not args.force_refresh:
         context.lock()
         try:
@@ -1018,6 +1018,18 @@ def _load_config(args, config_file):
     return args
 
 
+def _manual_args(args):
+    """Manual arg parse."""
+    if args.refresh and not args.force_refresh:
+        import sys
+        if len(sys.argv) > 0:
+            checks = [x for x in sys.argv if x.startswith("-") and "y" in x]
+            for check in checks:
+                if "yy" in check:
+                    args.force_refresh = True
+                    break
+
+
 def main():
     """Entry point."""
     cache_dir = BaseDirectory.xdg_cache_home
@@ -1115,6 +1127,7 @@ def main():
             args = _load_config(args, args.config)
     else:
         logger.debug('no config')
+    _manual_args(args)
     arg_groups = {}
     dirs = dir(args)
     custom_args = {}
