@@ -432,14 +432,14 @@ def _syncing(context, can_install, targets, updating):
         context.exiting(1)
     args = context.groups[_SYNC_UP_OPTIONS]
     ignored = args.ignore
-    if not ignored:
+    if not ignored or args.force_refresh:
         ignored = []
     no_vcs = False
-    if args.no_vcs or args.force_refresh or args.refresh:
+    if args.no_vcs or args.refresh:
         no_vcs = True
     now = datetime.now()
     current_time = now.timestamp()
-    if args.vcs_ignore > 0:
+    if args.vcs_ignore > 0 and not args.force_refresh:
         cache_check = context.cache_file("vcs")
         update_cache = True
         # we have a cache item, has necessary time elapsed?
@@ -460,7 +460,7 @@ def _syncing(context, can_install, targets, updating):
             logger.error(e)
         context.unlock()
     logger.debug("vcs? {}".format(no_vcs))
-    if args.ignore_for and len(args.ignore_for) > 0:
+    if args.ignore_for and len(args.ignore_for) > 0 and not args.force_refresh:
         logger.debug("checking ignored packages.")
         ignore_for = context.cache_file("ignoring")
         ignore_definition = {}
