@@ -91,12 +91,18 @@ class Context(object):
         self.rpc_cache = args.rpc_cache
         self._lock_file = os.path.join(self._cache_dir, "file" + _LOCKS)
         self.force_refresh = args.force_refresh
+        self._trace_log = args.debug
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
             _console_error("CTRL-C")
             self.exiting(1)
         signal.signal(signal.SIGINT, sigint_handler)
+
+    def trace(self, message):
+        """Trace logging, very verbose."""
+        if self._trace_log:
+            logger.debug(message)
 
     def exiting(self, code):
         """Exiting via context."""
@@ -992,6 +998,9 @@ def main():
                         action='store_true')
     parser.add_argument('--verbose',
                         help="verbose output",
+                        action='store_true')
+    parser.add_argument('--debug',
+                        help="debug trace logging",
                         action='store_true')
     parser.add_argument('--pacman',
                         help='pacman config',
