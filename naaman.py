@@ -95,16 +95,20 @@ class Context(object):
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
             _console_error("CTRL-C")
-            self.unlock()
-            exit(1)
+            self.exiting(1)
         signal.signal(signal.SIGINT, sigint_handler)
+
+    def exiting(self, code):
+        """Exiting via context."""
+        self.unlock()
+        exit(code)
 
     def load_script(self, name):
         """Load a script file."""
         script = os.path.join(_SCRIPTS, name)
         if not os.path.exists(script):
             _console_error("missing required script {}".format(script))
-            exit(1)
+            self.exiting(1)
         if name not in self._scripts:
             with open(script, 'r') as f:
                 self._scripts[name] = f.read()
@@ -127,7 +131,7 @@ class Context(object):
         """Get a cache file."""
         if not os.path.exists(self._cache_dir):
             logger.error("cache directory has gone missing")
-            exit(1)
+            self.exiting(1)
         return os.path.join(self._cache_dir, file_name + ext)
 
     def _get_dbs(self):
@@ -162,7 +166,7 @@ class Context(object):
                 cmd.append("/usr/bin/sudo")
             else:
                 _console_error("sudo required but not allowed, re-run as root")
-                exit(1)
+                self.exiting(1)
         cmd.append("/usr/bin/pacman")
         cmd = cmd + args
         logger.debug(cmd)
@@ -298,7 +302,7 @@ def _validate_options(args, unknown, groups):
         invalid = True
 
     if invalid:
-        exit(1)
+        ctx.exiting(1)
     callback(ctx)
 
 
@@ -309,15 +313,17 @@ def _clean(context):
     if len(files) == 0:
         _console_output("nothing to cleanup")
         return
-    if context.confirm:
-        _confirm("clear cache files", [x[0] for x in files])
+    _confirm(context, "clear cache files", [x[0] for x in files])
     for f in files:
         _console_output("removing {}".format(f[0]))
         os.remove(f[1])
 
 
-def _confirm(message, package_names):
+def _confirm(context, message, package_names):
     """Confirm package changes."""
+    if not context.confirm:
+        logger.debug("no confirmation needed.")
+        return
     logger.info("")
     for p in package_names:
         logger.info("  -> {}".format(p))
@@ -328,7 +334,7 @@ def _confirm(message, package_names):
     logger.debug(c)
     if c == "n":
         _console_error("user cancelled")
-        exit(1)
+        context.exiting(1)
 
 
 def _shell(command, suppress_error=False, workingdir=None):
@@ -411,7 +417,7 @@ def _syncing(context, can_install, targets, updating):
     """Sync/install packages."""
     if context.root:
         _console_error("can not run install/upgrades as root (uses makepkg)")
-        exit(1)
+        context.exiting(1)
     args = context.groups[_SYNC_UP_OPTIONS]
     ignored = args.ignore
     if not ignored:
@@ -498,7 +504,7 @@ def _syncing(context, can_install, targets, updating):
             check_inst.append(package)
         else:
             _console_error("unknown AUR package: {}".format(name))
-            exit(1)
+            context.exiting(1)
     inst = []
     for item in context.reorders:
         obj = [x for x in check_inst if x.name == item]
@@ -524,7 +530,7 @@ def _syncing(context, can_install, targets, updating):
         else:
             if not can_install:
                 _console_error("{} not installed".format(i.name))
-                exit(1)
+                context.exiting(1)
         logger.debug(i)
         if vcs:
             vers = vcs
@@ -532,9 +538,8 @@ def _syncing(context, can_install, targets, updating):
         do_install.append(i)
     if len(do_install) == 0:
         _console_output("nothing to do")
-        exit(0)
-    if context.confirm:
-        _confirm("install packages", report)
+        context.exiting(0)
+    _confirm(context, "install packages", report)
     makepkg = context.groups[_CUSTOM_ARGS]["makepkg"]
     logger.debug("makepkg {}".format(makepkg))
     cache = context.handle.cachedirs
@@ -593,9 +598,9 @@ def _upgrades(context):
 def _remove(context):
     """Remove package."""
     p = list(_do_query(context))
-    if context.confirm:
-        _confirm("remove packages", ["{} {}".format(x.name,
-                                                    x.version) for x in p])
+    _confirm(context,
+             "remove packages",
+             ["{} {}".format(x.name, x.version) for x in p])
     removals = context.groups[_CUSTOM_ARGS]["removal"]
     call_with = ['-R']
     if len(removals) > 0:
@@ -604,7 +609,7 @@ def _remove(context):
     result = context.pacman(call_with)
     if not result:
         _console_error("unable to remove packages")
-        exit(1)
+        context.exiting(1)
     _console_output("packages removed")
 
 
@@ -646,7 +651,7 @@ def _handle_deps(root_package, context, dependencies):
                     context.reorders.append(d)
                 else:
                     _console_error("verify order of target/deps")
-                    exit(1)
+                    context.exiting(1)
             continue
         if context.known_dependency(d):
             logger.debug("known")
@@ -661,7 +666,7 @@ def _handle_deps(root_package, context, dependencies):
         _console_error("unmet AUR dependency: {}".format(d))
         missing = True
     if missing:
-        exit(1)
+        context.exiting(1)
 
 
 def _rpc_search(package_name, exact, context):
@@ -778,7 +783,7 @@ def _search(context):
     """Perform a search."""
     if len(context.targets) != 1:
         _console_error("please provide ONE target for search")
-        exit(1)
+        context.exiting(1)
     for target in context.targets:
         logger.debug("searching for {}".format(target))
         if len(target) < _AUR_TARGET_LEN:
@@ -828,7 +833,7 @@ def _do_query(context):
                     yield pkg
             else:
                 _console_error("unknown package: {}".format(target))
-                exit(1)
+                context.exiting(1)
     else:
         for pkg in context.db.pkgcache:
             if _is_aur_pkg(pkg, syncpkgs):
