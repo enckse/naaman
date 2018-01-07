@@ -14,7 +14,6 @@ import urllib.parse
 import json
 import string
 import signal
-import base64
 import tempfile
 import subprocess
 import time
@@ -701,9 +700,13 @@ def _rpc_search(package_name, exact, context):
         context.lock()
         try:
             now = datetime.now()
-            encoded = base64.b32encode(url.replace(_AUR, "").encode("utf-8"))
-            logger.debug(encoded)
-            cache_file = context.cache_file(encoded.decode("utf-8"))
+            use_file_name = "rpc-"
+            for char in package_name:
+                c = char
+                if not c.isalnum() and c not in ['-']:
+                    c = "_"
+                use_file_name += c
+            cache_file = context.cache_file(use_file_name)
             logger.debug(cache_file)
             cache = False
             if os.path.exists(cache_file):
