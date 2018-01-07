@@ -5,23 +5,30 @@ see \- naaman.conf
 naaman configuration file key information
 .SS "options:"
 .TP
-VCS_IGNORE
-see naaman '\-\-vcs\-ignore' for information
+IGNORE
+see naaman '\-\-ignore' for information
 .TP
-PACMAN
-see naaman '\-\-pacman' for information
+IGNORE_FOR
+see naaman '\-\-ignore-for' for information
 .TP
-NO_VCS
-see naaman '\-\-no\-vcs' for information
+MAKEPKG
+makepkg options. these entries are passed directly to makepkg.
+This option may be specified multiple times.
+.TP
+NO_CACHE
+see naaman '\-\-no\-cache' for information
 .TP
 NO_SUDO
 see naaman '\-\-no\-sudo' for information
 .TP
-SKIP_DEPS
-see naaman '\-\-skip\-deps' for information
+NO_VCS
+see naaman '\-\-no\-vcs' for information
 .TP
-NO_CACHE
-see naaman '\-\-no\-cache' for information
+PACMAN
+see naaman '\-\-pacman' for information
+.TP
+REMOVAL
+pacman \fB\-R\fR removal options. These entries are passed
 .TP
 REORDER_DEPS
 see naaman '\-\-reorder\-deps' for information
@@ -32,16 +39,9 @@ see naaman '\-\-rpc\-cache' for information
 SCRIPTS
 location of scripts naaman uses to perform various operations.
 .TP
-REMOVAL
-pacman \fB\-R\fR removal options. These entries are passed
+SKIP_DEPS
+see naaman '\-\-skip\-deps' for information
 directly to pacman. this option may be specified multiple times.
 .TP
-MAKEPKG
-makepkg options. these entries are passed directly to makepkg.
-This option may be specified multiple times.
-.TP
-IGNORE
-see naaman '\-\-ignore' for information
-.TP
-IGNORE_FOR
-see naaman '\-\-ignore-for' for information
+VCS_IGNORE
+see naaman '\-\-vcs\-ignore' for information
