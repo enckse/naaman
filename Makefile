@@ -2,7 +2,8 @@ OPTS=$(shell python naaman.py --help | grep "^\s" | sed "s/^[ ]*//g" | grep "^\-
 BIN=bin/
 INSTALL=
 COMPLETION=$(BIN)bash.completions
-MANPAGE=$(BIN)naaman.man
+MAN8=naaman.8
+MANPAGE8=$(BIN)$(MAN8)
 
 all: analyze completions
 
@@ -14,7 +15,8 @@ completions: clean
 	cat scripts/bash | sed "s/_COMPLETIONS_/$(OPTS)/g" > $(COMPLETION)
 
 manpages: clean
-	help2man ./scripts/naaman.sh --output="$(MANPAGE)" --name="Not Another Aur MANager"
+	help2man ./scripts/naaman.sh --output="$(MANPAGE8)" --name="Not Another Aur MANager"
+	cd $(BIN) && gzip $(MAN8)
 
 analyze:
 	pip install pep257 pycodestyle
@@ -24,8 +26,9 @@ analyze:
 dependencies:
 	pacman -S python-xdg pyalpm bash-completion
 
-install: completions
+install: completions manpages
 	install -Dm755 naaman.py $(INSTALL)/usr/bin/naaman
 	install -Dm644 LICENSE $(INSTALL)/usr/share/license/naaman/LICENSE
 	install -Dm644 $(COMPLETION) $(INSTALL)/usr/share/bash-completion/completions/naaman
 	install -Dm644 scripts/makepkg $(INSTALL)/usr/share/naaman/makepkg
+	install -Dm644 $(MANPAGE8).gz $(INSTALL)/usr/share/man/man8/
