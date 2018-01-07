@@ -9,6 +9,11 @@ MANPAGE5=$(BIN)$(MAN5)
 
 all: analyze completions manpages
 
+travis: ci all
+
+ci:
+	pip install pyxdg
+
 clean:
 	rm -rf $(BIN)
 	mkdir -p $(BIN)
