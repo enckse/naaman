@@ -901,7 +901,7 @@ def _sync_up_options(parser):
                        help="ignore packages for periods of time (hours)")
     group.add_argument('--vcs-ignore',
                        type=int,
-                       default=0,
+                       default=30,
                        help="time betweeen vcs update checks (hours)")
     group.add_argument('--no-vcs',
                        help="skip vcs packages",
