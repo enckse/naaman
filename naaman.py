@@ -25,9 +25,12 @@ logger = logging.getLogger(_NAME)
 console_format = logging.Formatter('%(message)s')
 file_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
+_CUSTOM_ARGS = "Custom options"
 _SYNC_UP_OPTIONS = "Sync/Update options"
-_REMOVE_OPTIONS = "Remove options"
 _QUERY_OPTIONS = "Query options"
+_DEFAULT_OPTS = {}
+_DEFAULT_OPTS["removal"] = []
+_DEFAULT_OPTS["makepkg"] = ["-sri"]
 
 _AUR = "https://aur.archlinux.org{}"
 _RESULT_JSON = 'results'
@@ -125,13 +128,6 @@ class Context(object):
         if self._sync:
             return
         self._sync = self.handle.get_syncdbs()
-
-    def get_config_vals(self, array, default=""):
-        """Get configuration array values."""
-        val = default
-        if array and len(array) > 0:
-            val = " ".join(array)
-        return val
 
     def get_packages(self):
         """Get mirror packages."""
@@ -346,7 +342,7 @@ def _install(file_definition, makepkg, cache_dirs, can_sudo):
         f_dir = os.path.join(t, file_definition.name)
         temp_sh = os.path.join(t, _NAME + ".sh")
         with open(temp_sh, 'w') as f:
-            script = _BASH.format(f_dir, makepkg, cache_dirs, sudo)
+            script = _BASH.format(f_dir, " ".join(makepkg), cache_dirs, sudo)
             f.write(script)
         result = subprocess.call("/bin/bash --rcfile {}".format(temp_sh),
                                  shell=True)
@@ -486,7 +482,7 @@ def _syncing(context, can_install, targets, updating):
         exit(0)
     if context.confirm:
         _confirm("install packages", report)
-    makepkg = context.get_config_vals(args.makepkg, default="-sri")
+    makepkg = context.groups[_CUSTOM_ARGS]["makepkg"]
     logger.debug("makepkg {}".format(makepkg))
     cache = context.handle.cachedirs
     cache_dirs = ""
@@ -537,11 +533,10 @@ def _remove(context):
     if context.confirm:
         _confirm("remove packages", ["{} {}".format(x.name,
                                                     x.version) for x in p])
-    options = context.groups[_REMOVE_OPTIONS]
-    removals = context.get_config_vals(options.removal)
+    removals = context.groups[_CUSTOM_ARGS]["removal"]
     call_with = ['-R']
     if len(removals) > 0:
-        call_with = call_with + removals.split(" ")
+        call_with = call_with + removals
     call_with = call_with + [x.name for x in p]
     result = context.pacman(call_with)
     if not result:
@@ -735,16 +730,6 @@ def _query_options(parser):
                        action="store_true")
 
 
-def _remove_options(parser):
-    """Get removal options."""
-    group = parser.add_argument_group(_REMOVE_OPTIONS)
-    group.add_argument("--removal",
-                       metavar='N',
-                       type=str,
-                       nargs='+',
-                       help="pacman -R options")
-
-
 def _sync_up_options(parser):
     """Sync/update options."""
     group = parser.add_argument_group(_SYNC_UP_OPTIONS)
@@ -753,11 +738,6 @@ def _sync_up_options(parser):
                        type=str,
                        nargs='+',
                        help="ignore packages for periods of time (hours)")
-    group.add_argument("--makepkg",
-                       metavar='N',
-                       type=str,
-                       nargs='+',
-                       help="makepkg options")
     group.add_argument('--vcs-ignore',
                        type=int,
                        default=0,
@@ -788,13 +768,16 @@ def _load_config(args, config_file):
     """Load configuration into arguments."""
     logger.debug('loading config file')
     with open(config_file, 'r') as f:
+        dirs = dir(args)
         for l in f.readlines():
             line = l.strip()
             logger.debug(line)
             if line.startswith("#"):
                 continue
+            if not line or len(line) == 0:
+                continue
             if "=" not in line:
-                logger.warn("unable to read line, not k=v")
+                logger.warn("unable to read line, not k=v ({})".format(line))
                 continue
             parts = line.split("=")
             key = parts[0]
@@ -820,13 +803,18 @@ def _load_config(args, config_file):
                 lowered = key.lower()
                 try:
                     if key in ["IGNORE", "MAKEPKG", "REMOVAL", "IGNORE_FOR"]:
-                        arr = getattr(args, lowered)
-                        if not arr:
+                        arr = None
+                        if key in dirs:
+                            arr = getattr(args, lowered)
+                        else:
+                            dirs.append(key)
+                        if arr is None:
                             arr = []
-                        arr += value.split(" ")
-                        setattr(args, lowered, arr)
+                        if value is not None:
+                            arr.append(value)
+                            setattr(args, lowered, arr)
                     elif key in ["NO_VCS", "NO_SUDO", "SKIP_DEPS", "NO_CACHE"]:
-                        val = bool(value)
+                        val == value == "True"
                     elif key == "VCS_IGNORE":
                         val = int(value)
                     else:
@@ -894,7 +882,6 @@ def main():
     parser.add_argument('--no-config',
                         help='do not load the config file',
                         action="store_true")
-    _remove_options(parser)
     _sync_up_options(parser)
     _query_options(parser)
     args, unknown = parser.parse_known_args()
@@ -928,9 +915,18 @@ def main():
     else:
         logger.debug('no config')
     arg_groups = {}
+    dirs = dir(args)
+    custom_args = {}
+    for k in _DEFAULT_OPTS:
+        if k not in dirs:
+            logger.debug('setting default for {}'.format(k))
+            setattr(args, k, _DEFAULT_OPTS[k])
+        custom_args[k] = getattr(args, k)
+    arg_groups[_CUSTOM_ARGS] = custom_args
     for group in parser._action_groups:
         g = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
         arg_groups[group.title] = argparse.Namespace(**g)
+    logger.debug(arg_groups)
     _validate_options(args, unknown, arg_groups)
 
 

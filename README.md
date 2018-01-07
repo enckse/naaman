@@ -62,11 +62,6 @@ specify the naaman config file (defaults to `~/.config/naaman.conf`)
 
 for sync/update/upgrades
 
-to specify makepkg flags (to pass-thru)
-```
---makepkg -sri -abc -xyz
-```
-
 to skip vcs-package updates/installs
 ```
 --no-vcs
@@ -154,11 +149,6 @@ naaman -Sc
 to remove packages
 ```
 naaman -R <package> <package1>
-```
-
-to specify pacman `-R` options
-```
-naaman -R <package> -removal <option> <option2>
 ```
 
 ### Query
