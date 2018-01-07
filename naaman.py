@@ -455,6 +455,46 @@ def _check_vcs_ignore(context, threshold):
     return result
 
 
+def _ignore_for(context, ignore_for, ignored):
+    """Ignore for settings."""
+    logger.debug("checking ignored packages.")
+    ignore_file = context.cache_file("ignoring")
+    ignore_definition = {}
+    now, current_time = _get_now_and_time()
+    if os.path.exists(ignore_file):
+        with open(ignore_file, 'r') as f:
+            ignore_definition = json.loads(f.read())
+    logger.trace(ignore_definition)
+    for i in ignore_for:
+        if "=" not in i:
+            logger.warn("invalid ignore definition {}".format(i))
+            continue
+        parts = i.split("=")
+        if len(parts) != 2:
+            logger.warn("invalid ignore format {}".format(i))
+        package = parts[0]
+        hours = 0
+        try:
+            hours = int(parts[1])
+            if hours < 1:
+                raise Exception("hour must be >= 1")
+        except Exception as e:
+            logger.warn("invalid hour value {}".format(i))
+            logger.trace(e)
+            continue
+        update = True
+        if package in ignore_definition:
+            last = _get_deltahours(float(ignore_definition[package]), now)
+            if last < hours:
+                ignored.append(package)
+                update = False
+        if update:
+            ignore_definition[package] = str(current_time)
+    with open(ignore_file, 'w') as f:
+        logger.debug("writing ignore definitions")
+        f.write(json.dumps(ignore_definition))
+
+
 def _syncing(context, can_install, targets, updating):
     """Sync/install packages."""
     if context.root:
@@ -478,43 +518,9 @@ def _syncing(context, can_install, targets, updating):
         context.unlock()
     logger.debug("vcs? {}".format(no_vcs))
     if args.ignore_for and len(args.ignore_for) > 0 and not args.force_refresh:
-        logger.debug("checking ignored packages.")
-        ignore_for = context.cache_file("ignoring")
-        ignore_definition = {}
         context.lock()
         try:
-            if os.path.exists(ignore_for):
-                with open(ignore_for, 'r') as f:
-                    ignore_definition = json.loads(f.read())
-            logger.trace(ignore_definition)
-            for i in args.ignore_for:
-                if "=" not in i:
-                    logger.warn("invalid ignore definition {}".format(i))
-                    continue
-                parts = i.split("=")
-                if len(parts) != 2:
-                    logger.warn("invalid ignore format {}".format(i))
-                package = parts[0]
-                hours = 0
-                try:
-                    hours = int(parts[1])
-                    if hours < 1:
-                        raise Exception("hour must be >= 1")
-                except Exception as e:
-                    logger.warn("invalid hour value {}".format(i))
-                    logger.trace(e)
-                    continue
-                update = True
-                if package in ignore_definition:
-                    last = _get_deltahours(float(ignore_definition[package]),
-                                           now)
-                    if last < hours:
-                        ignored.append(package)
-                        update = False
-                if update:
-                    ignore_definition[package] = str(current_time)
-            with open(ignore_for, 'w') as f:
-                f.write(json.dumps(ignore_definition))
+            _ignore_for(context, args.ignore_for, ignored)
         except Exception as e:
             logger.error("unexpected ignore_for error")
             logger.error(e)
