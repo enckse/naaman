@@ -7,7 +7,7 @@ MAN5=naaman.conf.5
 MANPAGE8=$(BIN)$(MAN8)
 MANPAGE5=$(BIN)$(MAN5)
 
-all: analyze completions
+all: analyze completions manpages
 
 clean:
 	rm -rf $(BIN)
