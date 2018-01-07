@@ -713,6 +713,7 @@ def _rpc_search(package_name, exact, context):
                 minutes = seconds / 60
                 logger.debug(minutes)
                 if minutes > context.rpc_cache:
+                    os.remove(cache_file)
                     logger.debug("over rpc cache threshold")
                     cache = True
                 else:
