@@ -95,6 +95,8 @@ class Context(object):
         self.force_refresh = args.force_refresh
         self._custom_args = self.groups[_CUSTOM_ARGS]
         self._script_dir = self.get_custom_arg(_CUSTOM_SCRIPTS)
+        self.now = datetime.now()
+        self.timestamp = self.now.timestamp()
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
@@ -427,20 +429,14 @@ def _get_deltahours(input_str, now):
     return hours
 
 
-def _get_now_and_time():
-    """Get time and timestamp."""
-    now = datetime.now()
-    current_time = now.timestamp()
-    return now, current_time
-
-
 def _check_vcs_ignore(context, threshold):
     """VCS caching check."""
     logger.debug("checking vcs ignore cache")
     cache_check = context.cache_file("vcs")
     update_cache = True
     result = None
-    now, current_time = _get_now_and_time()
+    now = context.now
+    current_time = context.timestamp
     # we have a cache item, has necessary time elapsed?
     if os.path.exists(cache_check):
         with open(cache_check, 'r') as f:
@@ -460,7 +456,8 @@ def _ignore_for(context, ignore_for, ignored):
     logger.debug("checking ignored packages.")
     ignore_file = context.cache_file("ignoring")
     ignore_definition = {}
-    now, current_time = _get_now_and_time()
+    now = context.now
+    current_time = context.timestamp
     if os.path.exists(ignore_file):
         with open(ignore_file, 'r') as f:
             ignore_definition = json.loads(f.read())
@@ -706,7 +703,7 @@ def _handle_deps(root_package, context, dependencies):
 
 def _rpc_caching(package_name, context):
     """rpc caching area/check."""
-    now = datetime.now()
+    now = context.now
     use_file_name = "rpc-"
     for char in package_name:
         c = char
