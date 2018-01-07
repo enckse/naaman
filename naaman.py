@@ -47,7 +47,8 @@ _PRINTABLE = set(string.printable)
 _AUR_TARGET_LEN = 4
 
 _CACHE_FILE = ".cache"
-_CACHE_FILES = [_CACHE_FILE]
+_LOCKS = ".lck"
+_CACHE_FILES = [_CACHE_FILE, _LOCKS]
 
 _SCRIPTS = "/usr/share/naaman/"
 
@@ -95,7 +96,8 @@ class Context(object):
         self._scripts = {}
         self.reorder_deps = reorder
         self.reorders = []
-        self._lock_file = os.path.join(self._cache_dir, "file.lck")
+        self._lock_file = os.path.join(self._cache_dir, "file" + _LOCKS)
+
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
             _console_error("CTRL-C")
@@ -156,7 +158,6 @@ class Context(object):
             if pkg is not None:
                 return True
         return False
-
 
     def pacman(self, args, require_sudo=True):
         """Call pacman."""
