@@ -418,11 +418,41 @@ def _is_vcs(name):
 
 def _get_deltahours(input_str, now):
     """Get a timedelta in hours."""
+    logger.debug("timedelta (hours)")
     last = datetime.fromtimestamp(float(input_str))
     seconds = (now - last).total_seconds()
     minutes = seconds / 60
     hours = minutes / 60
+    logger.trace((last, seconds, minutes, hours))
     return hours
+
+
+def _get_now_and_time():
+    """Get time and timestamp."""
+    now = datetime.now()
+    current_time = now.timestamp()
+    return now, current_time
+
+
+def _check_vcs_ignore(context, threshold):
+    """VCS caching check."""
+    logger.debug("checking vcs ignore cache")
+    cache_check = context.cache_file("vcs")
+    update_cache = True
+    result = None
+    now, current_time = _get_now_and_time()
+    # we have a cache item, has necessary time elapsed?
+    if os.path.exists(cache_check):
+        with open(cache_check, 'r') as f:
+            hours = _get_deltahours(f.read(), now)
+            if hours < threshold:
+                update_cache = False
+                result = True
+    if update_cache:
+        logger.info("updating vcs last cache time")
+        with open(cache_check, 'w') as f:
+            f.write(str(current_time))
+    return result
 
 
 def _syncing(context, can_install, targets, updating):
@@ -437,24 +467,11 @@ def _syncing(context, can_install, targets, updating):
     no_vcs = False
     if args.no_vcs or args.refresh:
         no_vcs = True
-    now = datetime.now()
-    current_time = now.timestamp()
     if args.vcs_ignore > 0 and not args.force_refresh:
-        cache_check = context.cache_file("vcs")
-        update_cache = True
-        # we have a cache item, has necessary time elapsed?
         context.lock()
         try:
-            if os.path.exists(cache_check):
-                with open(cache_check, 'r') as f:
-                    hours = _get_deltahours(f.read(), now)
-                    if hours < args.vcs_ignore:
-                        update_cache = False
-                        no_vcs = True
-            if update_cache:
-                logger.info("updating vcs last cache time")
-                with open(cache_check, 'w') as f:
-                    f.write(str(current_time))
+            if _check_vcs_ignore(context, args.vcs_ignore) is not None:
+                no_vcs = True
         except Exception as e:
             logger.error("unexpected vcs error")
             logger.error(e)
