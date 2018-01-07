@@ -117,6 +117,11 @@ ignore packages for periods of time (in hours
 --ignore-for <package>=<time>
 ```
 
+provide file caching/url requests when accessing the AUR rpc (minutes, <= 0 is disabled, default is 60)
+```
+--rpc-cache=60
+```
+
 ### Sync
 
 you can perform a sync to install new packages from the AUR
