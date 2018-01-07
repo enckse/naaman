@@ -2,6 +2,7 @@ OPTS=$(shell python naaman.py --help | grep "^\s" | sed "s/^[ ]*//g" | grep "^\-
 BIN=bin/
 INSTALL=
 COMPLETION=$(BIN)bash.completions
+MANPAGE=$(BIN)naaman.man
 
 all: analyze completions
 
@@ -11,6 +12,9 @@ clean:
 
 completions: clean
 	cat scripts/bash | sed "s/_COMPLETIONS_/$(OPTS)/g" > $(COMPLETION)
+
+manpages: clean
+	help2man ./scripts/naaman.sh --output="$(MANPAGE)" --name="Not Another Aur MANager"
 
 analyze:
 	pip install pep257 pycodestyle
