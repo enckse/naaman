@@ -500,7 +500,7 @@ def _syncing(context, is_install, targets, updating):
     args = context.groups[_SYNC_UP_OPTIONS]
     ignored = args.ignore
     skip_filters = False
-    if args.force_refresh or is_install:
+    if args.force_refresh:
         logger.debug('skip filtering options')
         skip_filters = True
     if not ignored or skip_filters:
@@ -813,6 +813,8 @@ def _rpc_search(package_name, exact, context):
                                 continue
                             if context.db.get_pkg(name) is not None:
                                 ind = " [installed]"
+                            if _is_vcs(name):
+                                ind += " [vcs]"
                             logger.info("aur/{} {}{}".format(name, vers, ind))
                             if not desc or len(desc) == 0:
                                 desc = "no description"
@@ -928,7 +930,8 @@ refreshed (assumes -U).""",
     group.add_argument('-yy', '--force-refresh',
                        help="""similar to -y but will force refresh over any
 --ignore, --ignore-for, --vcs-ignore and disable any rpc caching. Use this
-option to make sure all packages are updated.""",
+option to override the mentioned flags and force update or installing a
+package set.""",
                        action='store_true')
     group.add_argument("--ignore",
                        help="""ignore packages by name. packages ignored will

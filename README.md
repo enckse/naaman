@@ -72,14 +72,9 @@ to ignore vcs updates for a certain number of hours (<= 0 disables this and is d
 --vcs-ignore 24
 ```
 
-similarly what pacman deems refresh
+to override ignoring/vcs cache/etc (applies to -S and -u)
 ```
 -yy
-```
-
-and this will also skip vcs updates and assume you are only interested in AUR rpc "database" changes/refreshes
-```
--y
 ```
 
 read/see more options via man
