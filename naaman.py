@@ -1046,10 +1046,6 @@ def _manual_args(args):
                 if "yy" in check:
                     args.force_refresh = True
                     break
-    if args.refresh or args.force_refresh:
-        if not args.upgrades:
-            logger.debug('forcing upgrade')
-            args.upgrades = True
 
 
 def main():
