@@ -13,6 +13,7 @@ import urllib.request
 import urllib.parse
 import json
 import string
+import signal
 import tempfile
 import subprocess
 from datetime import datetime, timedelta
@@ -94,6 +95,13 @@ class Context(object):
         self._scripts = {}
         self.reorder_deps = reorder
         self.reorders = []
+        self._lock_file = os.path.join(self._cache_dir, "file.lck")
+        def sigint_handler(signum, frame):
+            """Handle ctrl-c."""
+            _console_error("CTRL-C")
+            self.unlock()
+            exit(1)
+        signal.signal(signal.SIGINT, sigint_handler)
 
     def load_script(self, name):
         """Load a script file."""
@@ -149,6 +157,7 @@ class Context(object):
                 return True
         return False
 
+
     def pacman(self, args, require_sudo=True):
         """Call pacman."""
         cmd = []
@@ -174,6 +183,26 @@ class Context(object):
             if pkg.name == name:
                 return True
         return False
+
+    def unlock(self):
+        """Unlock an instance."""
+        logger.debug("unlocking")
+        if os.path.exists(self._lock_file):
+            os.remove(self._lock_file)
+            logger.debug("unlocked")
+
+    def lock(self):
+        """Lock to a single instance."""
+        logger.debug("locking")
+        if not os.path.exists(self._lock_file):
+            logger.debug("locked")
+            with open(self._lock_file, 'w') as f:
+                f.write(str(datetime.now()))
+            return
+        _console_error("lock file exists")
+        _console_error("only one instance of naaman may run at a time")
+        _console_error("delete {} if this is an error".format(self._lock_file))
+        exit(1)
 
 
 def _validate_options(args, unknown, groups):
@@ -405,52 +434,65 @@ def _syncing(context, can_install, targets, updating):
         cache_check = context.cache_file("vcs")
         update_cache = True
         # we have a cache item, has necessary time elapsed?
-        if os.path.exists(cache_check):
-            with open(cache_check, 'r') as f:
-                hours = _get_deltahours(f.read(), now)
-                if hours < args.vcs_ignore:
-                    update_cache = False
-                    no_vcs = True
-        if update_cache:
-            logger.info("updating vcs last cache time")
-            with open(cache_check, 'w') as f:
-                f.write(str(current_time))
+        context.lock()
+        try:
+            if os.path.exists(cache_check):
+                with open(cache_check, 'r') as f:
+                    hours = _get_deltahours(f.read(), now)
+                    if hours < args.vcs_ignore:
+                        update_cache = False
+                        no_vcs = True
+            if update_cache:
+                logger.info("updating vcs last cache time")
+                with open(cache_check, 'w') as f:
+                    f.write(str(current_time))
+        except Exception as e:
+            logger.error("unexpected vcs error")
+            logger.error(e)
+        context.unlock()
     logger.debug("vcs? {}".format(no_vcs))
     if args.ignore_for and len(args.ignore_for) > 0:
         logger.debug("checking ignored packages.")
         ignore_for = context.cache_file("ignoring")
         ignore_definition = {}
-        if os.path.exists(ignore_for):
-            with open(ignore_for, 'r') as f:
-                ignore_definition = json.loads(f.read())
-        logger.debug(ignore_definition)
-        for i in args.ignore_for:
-            if "=" not in i:
-                logger.warn("invalid ignore definition {}".format(i))
-                continue
-            parts = i.split("=")
-            if len(parts) != 2:
-                logger.warn("invalid ignore format {}".format(i))
-            package = parts[0]
-            hours = 0
-            try:
-                hours = int(parts[1])
-                if hours < 1:
-                    raise Exception("hour must be >= 1")
-            except Exception as e:
-                logger.warn("invalid hour value {}".format(i))
-                logger.debug(e)
-                continue
-            update = True
-            if package in ignore_definition:
-                last = _get_deltahours(float(ignore_definition[package]), now)
-                if last < hours:
-                    ignored.append(package)
-                    update = False
-            if update:
-                ignore_definition[package] = str(current_time)
-        with open(ignore_for, 'w') as f:
-            f.write(json.dumps(ignore_definition))
+        context.lock()
+        try:
+            if os.path.exists(ignore_for):
+                with open(ignore_for, 'r') as f:
+                    ignore_definition = json.loads(f.read())
+            logger.debug(ignore_definition)
+            for i in args.ignore_for:
+                if "=" not in i:
+                    logger.warn("invalid ignore definition {}".format(i))
+                    continue
+                parts = i.split("=")
+                if len(parts) != 2:
+                    logger.warn("invalid ignore format {}".format(i))
+                package = parts[0]
+                hours = 0
+                try:
+                    hours = int(parts[1])
+                    if hours < 1:
+                        raise Exception("hour must be >= 1")
+                except Exception as e:
+                    logger.warn("invalid hour value {}".format(i))
+                    logger.debug(e)
+                    continue
+                update = True
+                if package in ignore_definition:
+                    last = _get_deltahours(float(ignore_definition[package]),
+                                           now)
+                    if last < hours:
+                        ignored.append(package)
+                        update = False
+                if update:
+                    ignore_definition[package] = str(current_time)
+            with open(ignore_for, 'w') as f:
+                f.write(json.dumps(ignore_definition))
+        except Exception as e:
+            logger.error("unexpected ignore_for error")
+            logger.error(e)
+        context.unlock()
     logger.debug("ignoring {}".format(ignored))
     check_inst = []
     for name in targets:
@@ -512,13 +554,19 @@ def _syncing(context, can_install, targets, updating):
                 logger.warn("cache dir with space is skipped ({})".format(c))
                 continue
         cache_dirs = " ".join(['{}'.format(x) for x in cache if " " not in x])
-    for i in do_install:
-        if not _install(i,
-                        makepkg,
-                        cache_dirs,
-                        context.can_sudo,
-                        context.load_script("makepkg")):
-            _console_error("error installing package: {}".format(i.name))
+    context.lock()
+    try:
+        for i in do_install:
+            if not _install(i,
+                            makepkg,
+                            cache_dirs,
+                            context.can_sudo,
+                            context.load_script("makepkg")):
+                _console_error("error installing package: {}".format(i.name))
+    except Exception as e:
+        logger.error("unexpected install error")
+        logger.error(e)
+    context.unlock()
 
 
 def _get_deps(pkgs, name):
