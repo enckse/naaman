@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from xdg import BaseDirectory
 from pycman import config
 
-_VERSION = "0.1.0"
+_VERSION = "0.2.0"
 _NAME = "naaman"
 logger = logging.getLogger(_NAME)
 console_format = logging.Formatter('%(message)s')
