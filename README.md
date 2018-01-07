@@ -195,6 +195,26 @@ updating everything now
 pacman -Su
 ```
 
+## Config
+
+Most configuration values map to parameters, with the exception of `REMOVAL` and `MAKEPKG`. Each of which can be listed multiple times (additive).
+
+### REMOVAL
+
+Specify flags to pass to pacman when executing a `-R`
+```
+REMOVAL="-c"
+REMOVAL="-n"
+```
+
+### MAKEPKG
+
+Specify flags to pass to makepkg
+```
+MAKEPKG="-sri"
+MAKEPKG="-f"
+```
+
 ## Known issues
 
 naaman is:
