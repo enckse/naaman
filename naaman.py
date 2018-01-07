@@ -492,7 +492,7 @@ def _ignore_for(context, ignore_for, ignored):
         f.write(json.dumps(ignore_definition))
 
 
-def _syncing(context, can_install, targets, updating):
+def _syncing(context, is_install, targets, updating):
     """Sync/install packages."""
     if context.root:
         _console_error("can not run install/upgrades as root (uses makepkg)")
@@ -514,14 +514,19 @@ def _syncing(context, can_install, targets, updating):
             logger.error(e)
         context.unlock()
     logger.debug("novcs? {}".format(no_vcs))
-    if args.ignore_for and len(args.ignore_for) > 0 and not args.force_refresh:
-        context.lock()
-        try:
-            _ignore_for(context, args.ignore_for, ignored)
-        except Exception as e:
-            logger.error("unexpected ignore_for error")
-            logger.error(e)
-        context.unlock()
+    if is_install:
+        logger.debug("ignore novcs")
+        no_vcs = False
+    if args.ignore_for and len(args.ignore_for) > 0:
+        if not args.force_refresh and not is_install:
+            logger.debug("handling ignorefors")
+            context.lock()
+            try:
+                _ignore_for(context, args.ignore_for, ignored)
+            except Exception as e:
+                logger.error("unexpected ignore_for error")
+                logger.error(e)
+            context.unlock()
     logger.trace("ignoring {}".format(ignored))
     check_inst = []
     for name in targets:
@@ -560,7 +565,7 @@ def _syncing(context, can_install, targets, updating):
                     continue
                 tag = " [installed]"
         else:
-            if not can_install:
+            if not is_install:
                 _console_error("{} not installed".format(i.name))
                 context.exiting(1)
         logger.trace(i)
