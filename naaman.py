@@ -30,10 +30,13 @@ file_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 _CUSTOM_ARGS = "Custom options"
 _SYNC_UP_OPTIONS = "Sync/Update options"
 _QUERY_OPTIONS = "Query options"
+_CUSTOM_REMOVAL = "removal"
+_CUSTOM_SCRIPTS = "scripts"
+_CUSTOM_MAKEPKG = "makepkg"
 _DEFAULT_OPTS = {}
-_DEFAULT_OPTS["removal"] = []
-_DEFAULT_OPTS["makepkg"] = ["-sri"]
-_DEFAULT_OPTS["scripts"] = "/usr/share/naaman/"
+_DEFAULT_OPTS[_CUSTOM_REMOVAL] = []
+_DEFAULT_OPTS[_CUSTOM_MAKEPKG] = ["-sri"]
+_DEFAULT_OPTS[_CUSTOM_SCRIPTS] = "/usr/share/naaman/"
 
 _AUR = "https://aur.archlinux.org{}"
 _RESULT_JSON = 'results'
@@ -90,13 +93,21 @@ class Context(object):
         self.rpc_cache = args.rpc_cache
         self._lock_file = os.path.join(self._cache_dir, "file" + _LOCKS)
         self.force_refresh = args.force_refresh
-        self._script_dir = self.groups[_CUSTOM_ARGS]["scripts"]
+        self._custom_args = self.groups[_CUSTOM_ARGS]
+        self._script_dir = self.get_custom_arg(_CUSTOM_SCRIPTS)
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
             _console_error("CTRL-C")
             self.exiting(1)
         signal.signal(signal.SIGINT, sigint_handler)
+
+    def get_custom_arg(self, name):
+        """Get custom args."""
+        if name not in self._custom_args:
+            _console_error("custom argument missing")
+            self.exiting(1)
+        return self._custom_args[name]
 
     def exiting(self, code):
         """Exiting via context."""
@@ -541,7 +552,7 @@ def _syncing(context, can_install, targets, updating):
         _console_output("nothing to do")
         context.exiting(0)
     _confirm(context, "install packages", report)
-    makepkg = context.groups[_CUSTOM_ARGS]["makepkg"]
+    makepkg = context.get_custom_arg(_CUSTOM_MAKEPKG)
     logger.debug("makepkg {}".format(makepkg))
     cache = context.handle.cachedirs
     cache_dirs = ""
@@ -602,7 +613,7 @@ def _remove(context):
     _confirm(context,
              "remove packages",
              ["{} {}".format(x.name, x.version) for x in p])
-    removals = context.groups[_CUSTOM_ARGS]["removal"]
+    removals = context.get_custom_arg(_CUSTOM_REMOVAL)
     call_with = ['-R']
     if len(removals) > 0:
         call_with = call_with + removals
