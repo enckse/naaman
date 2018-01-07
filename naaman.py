@@ -169,9 +169,9 @@ class Context(object):
                 self.exiting(1)
         cmd.append("/usr/bin/pacman")
         cmd = cmd + args
-        logger.debug(cmd)
+        logger.trace(cmd)
         returncode = subprocess.call(cmd)
-        logger.debug(returncode)
+        logger.trace(returncode)
         return returncode == 0
 
     def check_pkgcache(self, name):
@@ -199,7 +199,7 @@ class Context(object):
                 obj = {}
                 obj["time"] = str(datetime.now())
                 obj["pid"] = str(os.getpid())
-                logger.debug(obj)
+                logger.trace(obj)
                 f.write(json.dumps(obj))
             return
         _console_error("lock file exists")
@@ -329,9 +329,9 @@ def _confirm(context, message, package_names):
         logger.info("  -> {}".format(p))
     logger.info("")
     msg = " ===> {}, (Y/n)? ".format(message)
-    logger.debug(msg)
+    logger.trace(msg)
     c = input(msg)
-    logger.debug(c)
+    logger.trace(c)
     if c == "n":
         _console_error("user cancelled")
         context.exiting(1)
@@ -340,16 +340,16 @@ def _confirm(context, message, package_names):
 def _shell(command, suppress_error=False, workingdir=None):
     """Run a shell command."""
     logger.debug("shell")
-    logger.debug(command)
-    logger.debug(workingdir)
+    logger.trace(command)
+    logger.trace(workingdir)
     sp = subprocess.Popen(command,
                           cwd=workingdir,
                           stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE)
     out, err = sp.communicate()
-    logger.debug(out)
+    logger.trace(out)
     if suppress_error:
-        logger.debug(err)
+        logger.trace(err)
     else:
         if err and len(err) > 0:
             logger.error(err)
@@ -457,7 +457,7 @@ def _syncing(context, can_install, targets, updating):
             if os.path.exists(ignore_for):
                 with open(ignore_for, 'r') as f:
                     ignore_definition = json.loads(f.read())
-            logger.debug(ignore_definition)
+            logger.trace(ignore_definition)
             for i in args.ignore_for:
                 if "=" not in i:
                     logger.warn("invalid ignore definition {}".format(i))
@@ -473,7 +473,7 @@ def _syncing(context, can_install, targets, updating):
                         raise Exception("hour must be >= 1")
                 except Exception as e:
                     logger.warn("invalid hour value {}".format(i))
-                    logger.debug(e)
+                    logger.trace(e)
                     continue
                 update = True
                 if package in ignore_definition:
@@ -490,7 +490,7 @@ def _syncing(context, can_install, targets, updating):
             logger.error("unexpected ignore_for error")
             logger.error(e)
         context.unlock()
-    logger.debug("ignoring {}".format(ignored))
+    logger.trace("ignoring {}".format(ignored))
     check_inst = []
     for name in targets:
         if name in ignored:
@@ -514,7 +514,7 @@ def _syncing(context, can_install, targets, updating):
         obj = [x for x in inst if x.name == item.name]
         if len(obj) == 0:
             inst += [item]
-    logger.debug(inst)
+    logger.trace(inst)
     report = []
     do_install = []
     for i in inst:
@@ -531,7 +531,7 @@ def _syncing(context, can_install, targets, updating):
             if not can_install:
                 _console_error("{} not installed".format(i.name))
                 context.exiting(1)
-        logger.debug(i)
+        logger.trace(i)
         if vcs:
             vers = vcs
         report.append("{} {}{}".format(i.name, vers, tag))
@@ -569,8 +569,8 @@ def _get_deps(pkgs, name):
     """Dependency resolution."""
     # NOTE: This will fail at a complicated tree across a variety of packages
     deps = []
-    logger.debug('_get_deps called')
-    logger.debug(name)
+    logger.debug('getting deps')
+    logger.trace(name)
     for p in pkgs:
         if p.name == name or not name:
             logger.debug('found package')
@@ -701,8 +701,8 @@ def _rpc_search(package_name, exact, context):
                 last = datetime.fromtimestamp(mtime)
                 seconds = (now - last).total_seconds()
                 minutes = seconds / 60
-                logger.debug(minutes)
-                logger.debug(context.rpc_cache)
+                logger.trace(minutes)
+                logger.trace(context.rpc_cache)
                 if minutes > context.rpc_cache:
                     os.remove(cache_file)
                     logger.debug("over rpc cache threshold")
@@ -759,7 +759,7 @@ def _rpc_search(package_name, exact, context):
                             ind = ""
                             if not name or not desc or not vers:
                                 logger.debug("unable to read this package")
-                                logger.debug(result)
+                                logger.trace(result)
                             if context.quiet:
                                 logger.info(name)
                                 continue
@@ -772,7 +772,7 @@ def _rpc_search(package_name, exact, context):
                     except Exception as e:
                         logger.error("unable to parse package")
                         logger.error(e)
-                        logger.debug(result)
+                        logger.trace(result)
                         break
     except Exception as e:
         logger.error("error calling AUR search")
@@ -896,7 +896,7 @@ def _load_config(args, config_file):
         dirs = dir(args)
         for l in f.readlines():
             line = l.strip()
-            logger.debug(line)
+            logger.trace(line)
             if line.startswith("#"):
                 continue
             if not line or len(line) == 0:
@@ -909,7 +909,7 @@ def _load_config(args, config_file):
             value = "=".join(parts[1:])
             if value.startswith('"') and value.endswith('"'):
                 value = value[1:len(value) - 1]
-            logger.debug((key, value))
+            logger.trace((key, value))
             chars = [x for x in key if (x >= 'A' and x <= 'Z' or x in ["_"])]
             if len(key) != len(chars):
                 logger.warn("invalid key")
@@ -953,8 +953,8 @@ def _load_config(args, config_file):
                     logger.error("unable to read value")
                     logger.error(e)
                 if val:
-                    logger.debug('parsed')
-                    logger.debug((key, val))
+                    logger.trace('parsed')
+                    logger.trace((key, val))
                     setattr(args, lowered, val)
             else:
                 logger.warn("unknown key")
@@ -992,6 +992,9 @@ def main():
                         action='store_true')
     parser.add_argument('--verbose',
                         help="verbose output",
+                        action='store_true')
+    parser.add_argument('--trace',
+                        help="trace debug logging",
                         action='store_true')
     parser.add_argument('--pacman',
                         help='pacman config',
@@ -1034,9 +1037,20 @@ def main():
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
-    logger.debug("files/folders")
-    logger.debug(args.cache_dir)
-    logger.debug(args.config)
+
+    def noop_trace(obj):
+        """No-operation trace."""
+        pass
+
+    trace_call = noop_trace
+    if args.trace:
+        def trace_log(obj):
+            logger.debug(obj)
+        trace_call = trace_log
+    setattr(logger, "trace", trace_call)
+    logger.trace("files/folders")
+    logger.trace(args.cache_dir)
+    logger.trace(args.config)
     if os.path.exists(args.config):
         if args.no_config:
             logger.debug("not loading config")
@@ -1056,7 +1070,7 @@ def main():
     for group in parser._action_groups:
         g = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
         arg_groups[group.title] = argparse.Namespace(**g)
-    logger.debug(arg_groups)
+    logger.trace(arg_groups)
     _validate_options(args, unknown, arg_groups)
 
 
