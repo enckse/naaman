@@ -899,19 +899,31 @@ def _sync_up_options(parser):
                        metavar='N',
                        type=str,
                        nargs='+',
-                       help="ignore packages for periods of time (hours)")
+                       help="""ignore packages for periods of time (hours).
+specifying this options allows for ignoring certain packages over time.
+this is specified as <package>=<hours>, where <package> will only check
+for updates every <hours> period.""")
     group.add_argument('--vcs-ignore',
                        type=int,
-                       default=30,
-                       help="time betweeen vcs update checks (hours)")
+                       default=720,
+                       help="""time betweeen vcs update checks (hours).
+specifying this option will result in vcs-based AUR packages to only be
+updated (they will always update) every <hour> threshold.
+default is 720 (30 days)""")
     group.add_argument('--no-vcs',
-                       help="skip vcs packages",
+                       help="""perform all sync operations but
+skip updating any vcs packages. this will allow for performing various
+sync operations without always having vcs packages updating.""",
                        action='store_true')
     group.add_argument('-y', '--refresh',
-                       help="refresh packages",
+                       help="""refresh non-vcs packages if there are updates
+in the AUR for the package. packages with detected updates in the AUR will be
+refreshed.""",
                        action='store_true')
     group.add_argument('-yy', '--force-refresh',
-                       help="refresh packages",
+                       help="""similar to -y but will force refresh over any
+--ignore, --ignore-for, --vcs-ignore and disable any rpc caching. Use this
+option to make sure all packages are updated.""",
                        action='store_true')
     group.add_argument("--ignore",
                        help="ignore packages",
