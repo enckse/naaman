@@ -1014,7 +1014,7 @@ def _load_config(args, config_file):
                     logger.trace((key, val))
                     setattr(args, lowered, val)
             else:
-                logger.warn("unknown key")
+                logger.warn("unknown configuration key")
     return args
 
 
