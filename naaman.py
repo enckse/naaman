@@ -93,6 +93,7 @@ class Context(object):
         self._pkgcaching = None
         self._scripts = {}
         self.reorder_deps = reorder
+        self.reorders = []
 
     def load_script(self, name):
         """Load a script file."""
@@ -391,7 +392,6 @@ def _syncing(context, can_install, targets, updating):
     if context.root:
         _console_error("can not run install/upgrades as root (uses makepkg)")
         exit(1)
-    inst = []
     args = context.groups[_SYNC_UP_OPTIONS]
     ignored = args.ignore
     if not ignored:
@@ -452,6 +452,7 @@ def _syncing(context, can_install, targets, updating):
         with open(ignore_for, 'w') as f:
             f.write(json.dumps(ignore_definition))
     logger.debug("ignoring {}".format(ignored))
+    check_inst = []
     for name in targets:
         if name in ignored:
             _console_output("{} is ignored".format(name))
@@ -461,10 +462,20 @@ def _syncing(context, can_install, targets, updating):
             continue
         package = _rpc_search(name, True, context)
         if package:
-            inst.append(package)
+            check_inst.append(package)
         else:
             _console_error("unknown AUR package: {}".format(name))
             exit(1)
+    inst = []
+    for item in context.reorders:
+        obj = [x for x in check_inst if x.name == item]
+        if len(obj) > 0:
+            inst += obj
+    for item in check_inst:
+        obj = [x for x in inst if x.name == item.name]
+        if len(obj) == 0:
+            inst += [item]
+    logger.debug(inst)
     report = []
     do_install = []
     for i in inst:
@@ -592,9 +603,8 @@ def _handle_deps(root_package, context, dependencies):
             pos = context.targets.index(d)
             if pos > root:
                 if context.reorder_deps:
-                    log.info("switching {} and {}".format(d, root_package))
-                    context.targets[pos] = root_package
-                    context.targets[root] = d
+                    logger.info("switching {} and {}".format(d, root_package))
+                    context.reorders.append(d)
                 else:
                     _console_error("verify order of target/deps")
                     exit(1)
