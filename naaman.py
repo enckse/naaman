@@ -77,7 +77,8 @@ class Context(object):
                  no_sudo,
                  aur_dependencies,
                  reorder,
-                 rpc_cache):
+                 rpc_cache,
+                 force_refresh):
         """Init the context."""
         self.root = "root" == getpass.getuser()
         self.targets = []
@@ -100,6 +101,7 @@ class Context(object):
         self.reorders = []
         self.rpc_cache = rpc_cache
         self._lock_file = os.path.join(self._cache_dir, "file" + _LOCKS)
+        self.force_refresh = force_refresh
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
@@ -291,7 +293,8 @@ def _validate_options(args, unknown, groups):
                   args.no_sudo,
                   not args.skip_deps,
                   args.reorder_deps,
-                  args.rpc_cache)
+                  args.rpc_cache,
+                  args.force_refresh)
     callback = None
     if not invalid:
         if args.query:
@@ -695,7 +698,7 @@ def _rpc_search(package_name, exact, context):
     logger.debug(url)
     factory = None
     caching = None
-    if exact and context.rpc_cache > 0:
+    if exact and context.rpc_cache > 0 and not context.force_refresh:
         logger.debug("using rpc cache")
         context.lock()
         try:
@@ -715,6 +718,7 @@ def _rpc_search(package_name, exact, context):
                 seconds = (now - last).total_seconds()
                 minutes = seconds / 60
                 logger.debug(minutes)
+                logger.debug(context.rpc_cache)
                 if minutes > context.rpc_cache:
                     os.remove(cache_file)
                     logger.debug("over rpc cache threshold")
