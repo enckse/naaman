@@ -123,6 +123,11 @@ provide file caching/url requests when accessing the AUR rpc (minutes, <= 0 is d
 ```
 * this is ignored if given a `-yy`
 
+to attempt to reorder dependencies (default is true)
+```
+--reorder-deps
+```
+
 ### Sync
 
 you can perform a sync to install new packages from the AUR
