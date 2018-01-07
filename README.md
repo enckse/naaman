@@ -121,6 +121,7 @@ provide file caching/url requests when accessing the AUR rpc (minutes, <= 0 is d
 ```
 --rpc-cache=60
 ```
+* this is ignored if given a `-yy`
 
 ### Sync
 

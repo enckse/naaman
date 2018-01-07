@@ -67,41 +67,30 @@ def _console_error(string):
 class Context(object):
     """Context for operations."""
 
-    def __init__(self,
-                 targets,
-                 config_file,
-                 groups,
-                 confirm,
-                 quiet,
-                 cache,
-                 no_sudo,
-                 aur_dependencies,
-                 reorder,
-                 rpc_cache,
-                 force_refresh):
+    def __init__(self, targets, groups, args):
         """Init the context."""
         self.root = "root" == getpass.getuser()
         self.targets = []
         if targets and len(targets) > 0:
             self.targets = targets
-        self.handle = config.init_with_config(config_file)
+        self.handle = config.init_with_config(args.pacman)
         self.db = self.handle.get_localdb()
         self.groups = groups
-        self.confirm = confirm
-        self.quiet = quiet
+        self.confirm = not args.no_confirm
+        self.quiet = args.quiet
         self._sync = None
         self._repos = None
-        self._cache_dir = cache
-        self.can_sudo = not no_sudo
-        self.deps = aur_dependencies
+        self._cache_dir = args.cache_dir
+        self.can_sudo = not args.no_sudo
+        self.deps = not args.skip_deps
         self._tracked_depends = []
         self._pkgcaching = None
         self._scripts = {}
-        self.reorder_deps = reorder
+        self.reorder_deps = args.reorder_deps
         self.reorders = []
-        self.rpc_cache = rpc_cache
+        self.rpc_cache = args.rpc_cache
         self._lock_file = os.path.join(self._cache_dir, "file" + _LOCKS)
-        self.force_refresh = force_refresh
+        self.force_refresh = args.force_refresh
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
@@ -284,17 +273,7 @@ def _validate_options(args, unknown, groups):
         _console_error("invalid config file")
         invalid = True
 
-    ctx = Context(unknown,
-                  args.pacman,
-                  groups,
-                  not args.no_confirm,
-                  args.quiet,
-                  args.cache_dir,
-                  args.no_sudo,
-                  not args.skip_deps,
-                  args.reorder_deps,
-                  args.rpc_cache,
-                  args.force_refresh)
+    ctx = Context(unknown, groups, args)
     callback = None
     if not invalid:
         if args.query:
