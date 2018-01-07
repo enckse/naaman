@@ -15,6 +15,7 @@ completions: clean
 	cat scripts/bash | sed "s/_COMPLETIONS_/$(OPTS)/g" > $(COMPLETION)
 
 manpages: clean
+	./scripts/naaman-conf.sh
 	help2man ./scripts/naaman.sh --output="$(MANPAGE8)" --name="Not Another Aur MANager"
 	cd $(BIN) && gzip $(MAN8)
 
