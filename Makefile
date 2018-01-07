@@ -24,3 +24,4 @@ install: completions
 	install -Dm755 naaman.py $(INSTALL)/usr/bin/naaman
 	install -Dm644 LICENSE $(INSTALL)/usr/share/license/naaman/LICENSE
 	install -Dm644 $(COMPLETION) $(INSTALL)/usr/share/bash-completion/completions/naaman
+	install -Dm644 scripts/makepkg $(INSTALL)/usr/share/naaman/makepkg

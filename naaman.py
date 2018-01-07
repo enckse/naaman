@@ -48,19 +48,7 @@ _AUR_TARGET_LEN = 4
 _CACHE_FILE = ".cache"
 _CACHE_FILES = [_CACHE_FILE]
 
-# Script for installs
-_BASH = """#!/bin/bash
-trap '' 2
-cd {}
-makepkg {}
-exit_code=$?
-if [ $(ls *.pkg.tar.xz | wc -l) -gt 0 ]; then
-    for d in $(echo '{}'); do
-        {} cp *.pkg.tar.xz $d
-    done
-fi
-exit $exit_code
-"""
+_SCRIPTS = "/usr/share/naaman/"
 
 
 def _console_output(string, prefix="", callback=logger.info):
@@ -102,6 +90,18 @@ class Context(object):
         self.deps = aur_dependencies
         self._tracked_depends = []
         self._pkgcaching = None
+        self._scripts = {}
+
+    def load_script(self, name):
+        """Load a script file."""
+        script = os.path.join(_SCRIPTS, name)
+        if not os.path.exists(script):
+            _console_error("missing required script {}".format(script))
+            exit(1)
+        if name not in self._scripts:
+            with open(script, 'r') as f:
+                self._scripts[name] = f.read()
+        return self._scripts[name]
 
     def known_dependency(self, package):
         """Check if we know a dependency."""
@@ -326,7 +326,7 @@ def _shell(command, suppress_error=False, workingdir=None):
     return out
 
 
-def _install(file_definition, makepkg, cache_dirs, can_sudo):
+def _install(file_definition, makepkg, cache_dirs, can_sudo, script_text):
     """Install a package."""
     sudo = ""
     if can_sudo:
@@ -341,8 +341,14 @@ def _install(file_definition, makepkg, cache_dirs, can_sudo):
         _shell(["tar", "xf", f_name], workingdir=t)
         f_dir = os.path.join(t, file_definition.name)
         temp_sh = os.path.join(t, _NAME + ".sh")
+        replaces = {}
+        replaces["DIRECTORY"] = f_dir
+        replaces["MAKEPKG"] = " ".join(makepkg)
+        replaces["SUDO"] = sudo
+        script = script_text
+        for r in replaces:
+            script = script.replace("{" + r + "}", replaces[r])
         with open(temp_sh, 'w') as f:
-            script = _BASH.format(f_dir, " ".join(makepkg), cache_dirs, sudo)
             f.write(script)
         result = subprocess.call("/bin/bash --rcfile {}".format(temp_sh),
                                  shell=True)
@@ -493,7 +499,11 @@ def _syncing(context, can_install, targets, updating):
                 continue
         cache_dirs = " ".join(['{}'.format(x) for x in cache if " " not in x])
     for i in do_install:
-        if not _install(i, makepkg, cache_dirs, context.can_sudo):
+        if not _install(i,
+                        makepkg,
+                        cache_dirs,
+                        context.can_sudo,
+                        context.load_script("makepkg")):
             _console_error("error installing package: {}".format(i.name))
 
 
