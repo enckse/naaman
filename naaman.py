@@ -198,7 +198,11 @@ class Context(object):
         if not os.path.exists(self._lock_file):
             logger.debug("locked")
             with open(self._lock_file, 'w') as f:
-                f.write(str(datetime.now()))
+                obj = {}
+                obj["time"] = str(datetime.now())
+                obj["pid"] = str(os.getpid())
+                logger.debug(obj)
+                f.write(json.dumps(obj))
             return
         _console_error("lock file exists")
         _console_error("only one instance of naaman may run at a time")
