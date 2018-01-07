@@ -82,50 +82,14 @@ and this will also skip vcs updates and assume you are only interested in AUR rp
 -y
 ```
 
-similar to pacman, packages can be ignored
+read/see more options via man
 ```
---ignore <package> <package1>
-```
-
-suppress naaman confirm prompts
-```
---no-confirm
+man naaman
 ```
 
-do not place aur makepkg xz into the pacman cache
+or for the config file
 ```
---no-cache
-```
-
-to disable naaman using sudo
-```
---no-sudo
-```
-
-do not load the config
-```
---no-config
-```
-
-skip dependency checks/handling
-```
---skip-deps
-```
-
-ignore packages for periods of time (in hours
-```
---ignore-for <package>=<time>
-```
-
-provide file caching/url requests when accessing the AUR rpc (minutes, <= 0 is disabled, default is 60)
-```
---rpc-cache=60
-```
-* this is ignored if given a `-yy`
-
-to attempt to reorder dependencies (default is true)
-```
---reorder-deps
+man naaman.conf
 ```
 
 ### Sync
@@ -239,4 +203,4 @@ naaman is:
 These items are known and are not currently planned to be solved
 * Complicated/multi-AUR package dependency resolution
 * Replicating all conceivable pacman args that _might_ be useful for AUR wrappers
-* VCS packages are always updated, use `--no-vcs`
+* VCS packages are complicated, you have options to mitigate that
