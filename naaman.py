@@ -72,7 +72,8 @@ class Context(object):
                  quiet,
                  cache,
                  no_sudo,
-                 aur_dependencies):
+                 aur_dependencies,
+                 reorder):
         """Init the context."""
         self.root = "root" == getpass.getuser()
         self.targets = []
@@ -91,6 +92,7 @@ class Context(object):
         self._tracked_depends = []
         self._pkgcaching = None
         self._scripts = {}
+        self.reorder_deps = reorder
 
     def load_script(self, name):
         """Load a script file."""
@@ -249,7 +251,8 @@ def _validate_options(args, unknown, groups):
                   args.quiet,
                   args.cache_dir,
                   args.no_sudo,
-                  not args.skip_deps)
+                  not args.skip_deps,
+                  args.reorder_deps)
     callback = None
     if not invalid:
         if args.query:
@@ -588,8 +591,13 @@ def _handle_deps(root_package, context, dependencies):
             root = context.targets.index(root_package)
             pos = context.targets.index(d)
             if pos > root:
-                _console_error("verify order of target/deps")
-                exit(1)
+                if context.reorder_deps:
+                    log.info("switching {} and {}".format(d, root_package))
+                    context.targets[pos] = root_package
+                    context.targets[root] = d
+                else:
+                    _console_error("verify order of target/deps")
+                    exit(1)
             continue
         if context.known_dependency(d):
             logger.debug("known")
@@ -772,6 +780,9 @@ def _sync_up_options(parser):
     group.add_argument("--skip-deps",
                        help="skip dependency checks",
                        action="store_true")
+    group.add_argument("--reorder-deps",
+                       help="attempt to re-order dependency installs",
+                       action="store_false")
 
 
 def _load_config(args, config_file):
@@ -823,7 +834,11 @@ def _load_config(args, config_file):
                         if value is not None:
                             arr.append(value)
                             setattr(args, lowered, arr)
-                    elif key in ["NO_VCS", "NO_SUDO", "SKIP_DEPS", "NO_CACHE"]:
+                    elif key in ["NO_VCS",
+                                 "NO_SUDO",
+                                 "SKIP_DEPS",
+                                 "NO_CACHE",
+                                 "REORDER_DEPS"]:
                         val == value == "True"
                     elif key == "VCS_IGNORE":
                         val = int(value)
