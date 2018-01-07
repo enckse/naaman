@@ -500,7 +500,7 @@ def _syncing(context, is_install, targets, updating):
     args = context.groups[_SYNC_UP_OPTIONS]
     ignored = args.ignore
     skip_filters = False
-    if args.force_refresh:
+    if args.force_refresh or is_install:
         logger.debug('skip filtering options')
         skip_filters = True
     if not ignored or skip_filters:
