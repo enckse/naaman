@@ -1,4 +1,5 @@
-OPTS=$(shell python naaman.py --help | grep "^\s" | sed "s/^[ ]*//g" | grep "^\-" | sed "s/, /,/g" | cut -d " " -f 1 | sed "s/,/ /g" | sort)
+NAAMAN_SH=./scripts/naaman.sh
+OPTS=$(shell $(NAAMAN_SH) --help | grep "^\s" | sed "s/^[ ]*//g" | grep "^\-" | sed "s/, /,/g" | cut -d " " -f 1 | sed "s/,/ /g" | sort)
 BIN=bin/
 INSTALL=
 COMPLETION=$(BIN)bash.completions
@@ -24,7 +25,7 @@ completions: clean
 manpages: clean
 	./scripts/naaman-conf.sh
 	cat scripts/$(MAN5) > $(MANPAGE5)
-	help2man ./scripts/naaman.sh --output="$(MANPAGE8)" --name="Not Another Aur MANager"
+	help2man $(NAAMAN_SH) --output="$(MANPAGE8)" --name="Not Another Aur MANager"
 	cd $(BIN) && gzip $(MAN8)
 	cd $(BIN) && gzip $(MAN5)
 
