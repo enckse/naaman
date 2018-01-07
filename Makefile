@@ -10,7 +10,7 @@ clean:
 	mkdir -p $(BIN)
 
 completions: clean
-	cat bash | sed "s/_COMPLETIONS_/$(OPTS)/g" > $(COMPLETION)
+	cat scripts/bash | sed "s/_COMPLETIONS_/$(OPTS)/g" > $(COMPLETION)
 
 analyze:
 	pip install pep257 pycodestyle
