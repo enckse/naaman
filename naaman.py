@@ -211,7 +211,7 @@ class Context(object):
             logger.debug("locked")
             with open(self._lock_file, 'w') as f:
                 obj = {}
-                obj["time"] = str(datetime.now())
+                obj["time"] = str(self.now)
                 obj["pid"] = str(os.getpid())
                 logger.trace(obj)
                 f.write(json.dumps(obj))
