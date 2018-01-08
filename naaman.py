@@ -833,9 +833,21 @@ def _rpc_search(package_name, exact, context):
                             descriptions = []
                             c_len = context.terminal_width
                             if c_len > 0:
+                                # space = 4 spaces left + 4 right buffer
                                 c_len = c_len - 8
-                                for d_chunk in [desc[0 + i:c_len + i] for i in range(0, len(desc), c_len)]:
-                                    descriptions.append(d_chunk)
+                                cur_d = []
+                                words = desc.split(" ")
+                                for d_idx in range(0, len(words)):
+                                    next_word = words[d_idx]
+                                    cur_len = sum([len(x) + 1 for x in cur_d])
+                                    next_len = cur_len + len(next_word) + 1
+                                    if next_len > c_len:
+                                        descriptions.append(" ".join(cur_d))
+                                        cur_d = []
+                                    else:
+                                        cur_d.append(next_word)
+                                if len(cur_d) > 0:
+                                    descriptions.append(" ".join(cur_d))
                             else:
                                 descriptions.append(desc)
                             for d in descriptions:
