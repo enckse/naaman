@@ -242,15 +242,20 @@ def _validate_options(args, unknown, groups):
         call_on("sync")
         valid_count += 1
         if args.upgrades or args.search or args.clean:
-            call_on("sync function")
             sub_count = 0
+            sub_command = None
             if args.upgrades:
+                sub_command = "upgrade"
                 sub_count += 1
             if args.clean:
+                sub_command = "clean"
                 sub_count += 1
             if args.search:
                 sub_count += 1
-            if sub_count != 1:
+            if sub_count == 1:
+                if sub_command is not None:
+                    call_on("sync: {}".format(sub_command))
+            else:
                 _console_error("cannot perform multiple sub-options")
                 invalid = True
         if args.search or (not args.upgrades and not args.clean):
