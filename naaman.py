@@ -80,6 +80,7 @@ class Context(object):
         self.groups = groups
         self.confirm = not args.no_confirm
         self.quiet = args.quiet
+        self.info = args.info
         self._sync = None
         self._repos = None
         self._cache_dir = args.cache_dir
@@ -289,6 +290,14 @@ def _validate_options(args, unknown, groups):
         if not args.sync:
             _console_error("search, upgrade, and clean are sync only")
             invalid = True
+
+    if not invalid and args.info and not args.search:
+        _console_error("info only works with search")
+        invalid = True
+
+    if not invalid and args.info and args.quiet:
+        _console_error("info and quiet do not work together")
+        invalid = True
 
     if not invalid and args.gone and not args.query:
         _console_error("gone only works with query")
@@ -823,6 +832,28 @@ def _rpc_search(package_name, exact, context):
                             if context.quiet:
                                 logger.info(name)
                                 continue
+                            if context.info:
+                                keys = [k for k in result.keys()]
+                                max_key = max([len(k) for k in keys]) + 3
+                                spacing = ""
+                                for i in range(0, max_key):
+                                    spacing += " "
+                                for k in keys:
+                                    val = result[k]
+                                    if isinstance(val, str):
+                                        val = _get_segment(result, k)
+                                    elif val and k in ["FirstSubmitted",
+                                                       "LastModified"]:
+                                        val = str(datetime.fromtimestamp(val))
+                                    else:
+                                        val = str(val)
+                                    use_key = "{}: {}".format(k, spacing)
+                                    _terminal_output(val,
+                                                     context.terminal_width,
+                                                     use_key[0:max_key],
+                                                     spacing)
+                                logger.info("")
+                                continue
                             if context.db.get_pkg(name) is not None:
                                 ind = " [installed]"
                             if _is_vcs(name):
@@ -830,28 +861,10 @@ def _rpc_search(package_name, exact, context):
                             logger.info("aur/{} {}{}".format(name, vers, ind))
                             if not desc or len(desc) == 0:
                                 desc = "no description"
-                            descriptions = []
-                            c_len = context.terminal_width
-                            if c_len > 0:
-                                # space = 4 spaces left + 4 right buffer
-                                c_len = c_len - 8
-                                cur_d = []
-                                words = desc.split(" ")
-                                for d_idx in range(0, len(words)):
-                                    next_word = words[d_idx]
-                                    cur_len = sum([len(x) + 1 for x in cur_d])
-                                    next_len = cur_len + len(next_word) + 1
-                                    if next_len > c_len:
-                                        descriptions.append(" ".join(cur_d))
-                                        cur_d = []
-                                    else:
-                                        cur_d.append(next_word)
-                                if len(cur_d) > 0:
-                                    descriptions.append(" ".join(cur_d))
-                            else:
-                                descriptions.append(desc)
-                            for d in descriptions:
-                                logger.info("    {}".format(d))
+                            _terminal_output(desc,
+                                             context.terminal_width,
+                                             None,
+                                             "    ")
                     except Exception as e:
                         logger.error("unable to parse package")
                         logger.error(e)
@@ -860,6 +873,36 @@ def _rpc_search(package_name, exact, context):
     except Exception as e:
         logger.error("error calling AUR search")
         logger.error(e)
+
+
+def _terminal_output(input_str, terminal_width, first_string, output_string):
+    """Write multiple lines to output terminal with wrapper."""
+    lines = []
+    c_len = terminal_width
+    if c_len > 0:
+        c_len = c_len - len(output_string) - 4
+        cur = []
+        words = input_str.split(" ")
+        for c_idx in range(0, len(words)):
+            next_word = words[c_idx]
+            cur_len = sum([len(x) + 1 for x in cur])
+            next_len = cur_len + len(next_word) + 1
+            if next_len > c_len:
+                lines.append(" ".join(cur))
+                cur = []
+            else:
+                cur.append(next_word)
+        if len(cur) > 0:
+            lines.append(" ".join(cur))
+    else:
+        lines.append(input_str)
+    is_first = True
+    for l in lines:
+        out_string = output_string
+        if is_first and first_string is not None:
+            out_string = first_string
+            is_first = False
+        logger.info("{}{}".format(out_string, l))
 
 
 def _search(context):
@@ -997,6 +1040,12 @@ cache the last received information about a package for this duration of time
 """,
                        type=int,
                        default=60)
+    group.add_argument("-i", "--info",
+                       help="""display additional information about packages
+when searching for information in the AUR. this is only used during a search
+but will present as much information as possible to the user about the result
+package set.""",
+                       action="store_true")
 
 
 def _load_config(args, config_file):
