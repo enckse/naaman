@@ -101,6 +101,14 @@ class Context(object):
         self.now = datetime.now()
         self.timestamp = self.now.timestamp()
         self.terminal_width = 0
+        self.builds = args.builds
+        if self.builds:
+            if not os.path.isdir(self.builds):
+                _console_error("invalid build: {}".format(self.builds))
+                self.exiting(1)
+            self.builds = os.path.join(self.builds, _NAME)
+            if not os.path.exists(self.builds):
+                os.makedirs(self.builds)
         try:
             rows, columns = os.popen('stty size', 'r').read().split()
             self.terminal_width = int(columns)
@@ -113,6 +121,15 @@ class Context(object):
             _console_error("CTRL-C")
             self.exiting(1)
         signal.signal(signal.SIGINT, sigint_handler)
+
+    def build_dir(self):
+        """Get a build file area."""
+        dir_name = None
+        logger.debug("getting tempfile")
+        if self.builds:
+            dir_name = self.builds
+        logger.debug("using {}".format(dir_name))
+        return tempfile.TemporaryDirectory(dir=dir_name)
 
     def get_custom_arg(self, name):
         """Get custom args."""
@@ -393,14 +410,19 @@ def _shell(command, suppress_error=False, workingdir=None):
     return out
 
 
-def _install(file_definition, makepkg, cache_dirs, can_sudo, script_text):
+def _install(file_definition,
+             makepkg,
+             cache_dirs,
+             can_sudo,
+             script_text,
+             new_file):
     """Install a package."""
     sudo = ""
     if can_sudo:
         sudo = "sudo"
     url = _AUR.format(file_definition.url)
     logger.info("installing: {}".format(file_definition.name))
-    with tempfile.TemporaryDirectory() as t:
+    with new_file() as t:
         f_name = file_definition.name + ".tar.gz"
         file_name = os.path.join(t, f_name)
         logger.debug(file_name)
@@ -617,7 +639,8 @@ def _syncing(context, is_install, targets, updating):
                             makepkg,
                             cache_dirs,
                             context.can_sudo,
-                            context.load_script("makepkg")):
+                            context.load_script("makepkg"),
+                            context.build_dir):
                 _console_error("error installing package: {}".format(i.name))
     except Exception as e:
         logger.error("unexpected install error")
@@ -1095,6 +1118,7 @@ def _load_config(args, config_file):
                        "IGNORE_FOR",
                        "MAKEPKG",
                        "NO_VCS",
+                       "BUILDS",
                        "NO_SUDO",
                        "VCS_IGNORE"]:
                 val = None
@@ -1237,6 +1261,12 @@ from loading the configuration file when running specify this option. this can
 allow running a specify instance of naaman without certain config options being
 loaded.""",
                         action="store_true")
+    parser.add_argument('--builds',
+                        help="""the location where naaman will perform builds.
+if not set this will be in the temp (e.g. /tmp) area. specifying this option
+will move where makepkg operations are performed in the system.""",
+                        default=None,
+                        type=str)
     _sync_up_options(parser)
     _query_options(parser)
     args, unknown = parser.parse_known_args()
