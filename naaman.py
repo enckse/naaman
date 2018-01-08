@@ -23,6 +23,7 @@ from pycman import config
 
 _VERSION = "0.2.1"
 _NAME = "naaman"
+_CONFIG = _NAME + ".conf"
 logger = logging.getLogger(_NAME)
 console_format = logging.Formatter('%(message)s')
 file_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -1058,7 +1059,10 @@ package set. passing multiple i parameters will increase verbose (e.g. -ii)""",
 
 def _load_config(args, config_file):
     """Load configuration into arguments."""
-    logger.debug('loading config file')
+    logger.debug('loading config file: {}'.format(config_file))
+    if not os.path.exists(config_file):
+        logger.debug("does not exist")
+        return args
     with open(config_file, 'r') as f:
         dirs = dir(args)
         for l in f.readlines():
@@ -1150,6 +1154,7 @@ def main():
     """Entry point."""
     cache_dir = BaseDirectory.xdg_cache_home
     cache_dir = os.path.join(cache_dir, _NAME)
+    config_file = os.path.join(BaseDirectory.xdg_config_home, _CONFIG)
     parser = argparse.ArgumentParser()
     parser.add_argument('-S', '--sync',
                         help="""synchronize packages (install/update). a sync
@@ -1205,9 +1210,10 @@ this is NOT passed when calling pacman directly (e.g. -R).""",
                         default='/etc/pacman.conf')
     parser.add_argument('--config',
                         help="""naaman config. specify the (optional) naaman
-configuration file to use. please use man naaman.conf for available options""",
-                        default=os.path.join(BaseDirectory.xdg_config_home,
-                                             'naaman.conf'))
+configuration file to use. please use man naaman.conf for available options.
+naaman will read configs in the order of (all optional): /etc, XDG_CONFIG_HOME
+, and then --config""",
+                        default=config_file)
     parser.add_argument('--no-confirm',
                         help="""naaman will not ask for confirmation. when
 performing install, update, and remove operations naaman will ask for the user
@@ -1264,13 +1270,15 @@ loaded.""",
     logger.trace("files/folders")
     logger.trace(args.cache_dir)
     logger.trace(args.config)
-    if os.path.exists(args.config):
-        if args.no_config:
-            logger.debug("not loading config")
-        else:
-            args = _load_config(args, args.config)
+    if args.no_config:
+        logger.debug("not loading config")
     else:
-        logger.debug('no config')
+        loaded = []
+        for f in ["/etc/" + _CONFIG, config_file, args.config]:
+            if f in loaded:
+                continue
+            loaded.append(f)
+            args = _load_config(args, f)
     _manual_args(args)
     arg_groups = {}
     dirs = dir(args)
