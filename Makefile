@@ -7,7 +7,7 @@ MAN8=naaman.8
 MAN5=naaman.conf.5
 MANPAGE8=$(BIN)$(MAN8)
 MANPAGE5=$(BIN)$(MAN5)
-MONTH_YEAR=$(date +"%B %Y")
+MONTH_YEAR=$(shell date +"%B %Y")
 
 all: analyze completions manpages
 
