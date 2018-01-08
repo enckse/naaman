@@ -16,7 +16,6 @@ import string
 import signal
 import tempfile
 import subprocess
-import sys
 import time
 from datetime import datetime, timedelta
 from xdg import BaseDirectory
@@ -1011,7 +1010,7 @@ sync operations without always having vcs packages updating.""",
                        help="""refresh non-vcs packages if there are updates
 in the AUR for the package. packages with detected updates in the AUR will be
 refreshed (assumes -U).""",
-                       action='store_true')
+                       action='count')
     group.add_argument('-yy', '--force-refresh',
                        help="""similar to -y but will force refresh over any
 --ignore, --ignore-for, --vcs-ignore and disable any rpc caching. Use this
@@ -1054,7 +1053,7 @@ cache the last received information about a package for this duration of time
 when searching for information in the AUR. this is only used during a search
 but will present as much information as possible to the user about the result
 package set. passing multiple i parameters will increase verbose (e.g. -ii)""",
-                       action="store_true")
+                       action="count")
 
 
 def _load_config(args, config_file):
@@ -1130,31 +1129,21 @@ def _load_config(args, config_file):
     return args
 
 
-def _scan_arg(flags):
-    """Manually scan argv for args."""
-    results = {}
-    for f in flags:
-        results[f] = False
-    if len(sys.argv) > 0:
-        for flag in flags:
-            checks = [x for x in sys.argv if x.startswith("-") and flag in x]
-            double_flag = flag + flag
-            for check in checks:
-                if double_flag in check:
-                    results[flag] = True
-    return results
+def _multi_args(value):
+    """Handle specifying a multi-count arg."""
+    val = False
+    multi = False
+    if value and value > 0:
+        val = True
+        if value > 1:
+            multi = True
+    return val, multi
 
 
 def _manual_args(args):
     """Manual arg parse."""
-    scanned = _scan_arg(["y", "i"])
-    logger.trace(scanned)
-    for scan in scanned:
-        if scan == "y":
-            if scanned[scan]:
-                args.force_refresh = True
-        elif scan == "i":
-            args.info_verbose = scanned[scan]
+    args.refresh, args.force_refresh = _multi_args(args.refresh)
+    args.info, args.info_verbose = _multi_args(args.info)
 
 
 def main():
