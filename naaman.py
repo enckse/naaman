@@ -421,7 +421,7 @@ def _install(file_definition,
     if can_sudo:
         sudo = "sudo"
     url = _AUR.format(file_definition.url)
-    logger.info("installing: {}".format(file_definition.name))
+    _console_output("installing: {}".format(file_definition.name))
     with new_file() as t:
         f_name = file_definition.name + ".tar.gz"
         p = os.path.join(t, file_definition.name)
@@ -492,7 +492,7 @@ def _check_vcs_ignore(context, threshold):
                 update_cache = False
                 result = True
     if update_cache:
-        logger.info("updating vcs last cache time")
+        _console_output("updating vcs last cache time")
         with open(cache_check, 'w') as f:
             f.write(str(current_time))
     return result
@@ -732,7 +732,8 @@ def _handle_deps(root_package, context, dependencies):
             pos = context.targets.index(d)
             if pos > root:
                 if context.reorder_deps:
-                    logger.info("switching {} and {}".format(d, root_package))
+                    _console_output("switching {} and {}".format(d,
+                                                                 root_package))
                     context.reorders.append(d)
                 else:
                     _console_error("verify order of target/deps")
@@ -978,7 +979,7 @@ def _querying(context, gone):
         logger.info(output.format(q.name, q.version))
         matched = True
     if not matched and not context.quiet:
-        logger.info("no packages found")
+        _console_output("no packages found")
 
 
 def _is_aur_pkg(pkg, sync_packages):
