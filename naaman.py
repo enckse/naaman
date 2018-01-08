@@ -229,7 +229,7 @@ def _validate_options(args, unknown, groups):
     need_targets = False
     call_on = None
 
-    if args.search or args.query:
+    if (args.search or args.query) and not args.verbose:
         def no_call(name):
             pass
         call_on = no_call
