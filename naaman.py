@@ -16,6 +16,7 @@ import string
 import signal
 import tempfile
 import subprocess
+import sys
 import time
 from datetime import datetime, timedelta
 from xdg import BaseDirectory
@@ -81,6 +82,7 @@ class Context(object):
         self.confirm = not args.no_confirm
         self.quiet = args.quiet
         self.info = args.info
+        self.info_verbose = args.info_verbose
         self._sync = None
         self._repos = None
         self._cache_dir = args.cache_dir
@@ -769,7 +771,7 @@ def _rpc_search(package_name, exact, context):
     if exact and context.check_repos(package_name):
         logger.debug("in repos")
         return None
-    if exact:
+    if exact or context.info_verbose:
         url = _AUR_INFO
     else:
         url = _AUR_SEARCH
@@ -840,7 +842,9 @@ def _rpc_search(package_name, exact, context):
                                     spacing += " "
                                 for k in keys:
                                     val = result[k]
-                                    if isinstance(val, str):
+                                    if isinstance(val, list):
+                                        val = "  ".join(val)
+                                    elif isinstance(val, str):
                                         val = _get_segment(result, k)
                                     elif val and k in ["FirstSubmitted",
                                                        "LastModified"]:
@@ -1045,7 +1049,7 @@ cache the last received information about a package for this duration of time
                        help="""display additional information about packages
 when searching for information in the AUR. this is only used during a search
 but will present as much information as possible to the user about the result
-package set.""",
+package set. passing multiple i parameters will increase verbose (e.g. -ii)""",
                        action="store_true")
 
 
@@ -1122,16 +1126,31 @@ def _load_config(args, config_file):
     return args
 
 
+def _scan_arg(flags):
+    """Manually scan argv for args."""
+    results = {}
+    for f in flags:
+        results[f] = False
+    if len(sys.argv) > 0:
+        for flag in flags:
+            checks = [x for x in sys.argv if x.startswith("-") and flag in x]
+            double_flag = flag + flag
+            for check in checks:
+                if double_flag in check:
+                    results[flag] = True
+    return results
+
+
 def _manual_args(args):
     """Manual arg parse."""
-    if args.refresh and not args.force_refresh:
-        import sys
-        if len(sys.argv) > 0:
-            checks = [x for x in sys.argv if x.startswith("-") and "y" in x]
-            for check in checks:
-                if "yy" in check:
-                    args.force_refresh = True
-                    break
+    scanned = _scan_arg(["y", "i"])
+    logger.trace(scanned)
+    for scan in scanned:
+        if scan == "y":
+            if scanned[scan]:
+                args.force_refresh = True
+        elif scan == "i":
+            args.info_verbose = scanned[scan]
 
 
 def main():
