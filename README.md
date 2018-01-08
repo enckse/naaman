@@ -29,10 +29,9 @@ install naaman
 sudo make install
 ```
 
-
 ## Usage
 
-naaman relies on being similar to pacman while having to do things special for itself
+naaman relies on being similar to pacman while having to do special things for itself
 
 ### naaman
 
@@ -48,6 +47,11 @@ perform debug output/logging
 --verbose
 ```
 
+to output trace level outputs (for debugging)
+```
+--trace
+```
+
 specify the pacman config (defaults to `/etc/pacman.conf`)
 ```
 --pacman
@@ -57,7 +61,7 @@ specify the naaman config file (defaults to `~/.config/naaman.conf`)
 ```
 --config
 ```
-* if the config file does not exist it will be ignore
+* if the config file does not exist it will be ignored
 * see the naaman.conf example for how to use it (only keys in the example are supported)
 
 for sync/update/upgrades
@@ -72,7 +76,7 @@ to ignore vcs updates for a certain number of hours (<= 0 disables this and is d
 --vcs-ignore 24
 ```
 
-to override ignoring/vcs cache/etc (applies to -S and -u)
+to override ignoring/vcs cache/etc. (applies to -S and -u)
 ```
 -yy
 ```
@@ -98,6 +102,8 @@ search for packages in the aur
 ```
 naaman -Ss <package>
 ```
+* specify `-i` for more information
+* specify `-ii` with a specific package to get detailed information
 
 update all packages
 ```
