@@ -847,10 +847,11 @@ def _rpc_search(package_name, exact, context):
                                         val = str(datetime.fromtimestamp(val))
                                     else:
                                         val = str(val)
-                                    use_key = "{}: {}".format(k, spacing)
+                                    use_key = "{}   {}".format(k, spacing)
+                                    use_key = use_key[0:max_key - 2] + ": "
                                     _terminal_output(val,
                                                      context.terminal_width,
-                                                     use_key[0:max_key],
+                                                     use_key,
                                                      spacing)
                                 logger.info("")
                                 continue
