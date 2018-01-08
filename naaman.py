@@ -269,7 +269,7 @@ def _validate_options(args, unknown, groups):
         if valid_count > 1:
             _console_error("multiple top-level arguments given")
         elif valid_count == 0:
-            _console_error("no arguments given")
+            _console_error("no valid top-level arguments given")
         if valid_count != 1:
             invalid = True
 
