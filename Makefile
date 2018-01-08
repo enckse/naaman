@@ -7,6 +7,7 @@ MAN8=naaman.8
 MAN5=naaman.conf.5
 MANPAGE8=$(BIN)$(MAN8)
 MANPAGE5=$(BIN)$(MAN5)
+MONTH_YEAR=$(date +"%B %Y")
 
 all: analyze completions manpages
 
@@ -24,7 +25,7 @@ completions: clean
 
 manpages: clean
 	./scripts/naaman-conf.sh
-	cat scripts/$(MAN5) > $(MANPAGE5)
+	cat scripts/$(MAN5) | sed "s/<Month Year>/$(MONTH_YEAR)/g"  > $(MANPAGE5)
 	help2man $(NAAMAN_SH) --output="$(MANPAGE8)" --name="Not Another Aur MANager"
 	cd $(BIN) && gzip $(MAN8)
 	cd $(BIN) && gzip $(MAN5)
