@@ -1181,7 +1181,7 @@ information for deprecated packages or to reset duration caching options.""",
                         action="store_true")
     parser.add_argument('--version',
                         help="display version information about naaman",
-                        action='store_true')
+                        action='version', version='%(prog)s ' + _VERSION)
     parser.add_argument('--no-sudo',
                         help="""disable calling sudo. by default when naaman
 has to call pacman directly (e.g. -R), it will call with sudo if required.
@@ -1233,9 +1233,6 @@ loaded.""",
     _sync_up_options(parser)
     _query_options(parser)
     args, unknown = parser.parse_known_args()
-    if args.version:
-        print("{} ({})".format(_NAME, _VERSION))
-        exit(0)
     ch = logging.StreamHandler()
     if not os.path.exists(args.cache_dir):
         logger.debug("creating cache dir")
