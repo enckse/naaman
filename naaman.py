@@ -1181,7 +1181,8 @@ information for deprecated packages or to reset duration caching options.""",
                         action="store_true")
     parser.add_argument('--version',
                         help="display version information about naaman",
-                        action='version', version='%(prog)s ' + _VERSION)
+                        action='version',
+                        version="{} ({})".format(_NAME, _VERSION))
     parser.add_argument('--no-sudo',
                         help="""disable calling sudo. by default when naaman
 has to call pacman directly (e.g. -R), it will call with sudo if required.
