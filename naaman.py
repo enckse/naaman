@@ -40,6 +40,7 @@ _DEFAULT_OPTS[_CUSTOM_MAKEPKG] = ["-sri"]
 _DEFAULT_OPTS[_CUSTOM_SCRIPTS] = "/usr/share/naaman/"
 
 _AUR = "https://aur.archlinux.org{}"
+_AUR_GIT = _AUR.format("/{}.git")
 _RESULT_JSON = 'results'
 _AUR_NAME = "Name"
 _AUR_DESC = "Description"
@@ -55,6 +56,10 @@ _AUR_TARGET_LEN = 4
 _CACHE_FILE = ".cache"
 _LOCKS = ".lck"
 _CACHE_FILES = [_CACHE_FILE, _LOCKS]
+
+_DOWNLOAD_GIT = "git"
+_DOWNLOAD_TAR = "tar"
+_DOWNLOADS = [_DOWNLOAD_GIT, _DOWNLOAD_TAR]
 
 
 def _console_output(string, prefix="", callback=logger.info):
@@ -101,6 +106,16 @@ class Context(object):
         self.now = datetime.now()
         self.timestamp = self.now.timestamp()
         self.terminal_width = 0
+        self.use_git = False
+        if args.download and args.download == _DOWNLOAD_GIT:
+            try:
+                with open("/dev/null", "w") as null:
+                    subprocess.Popen("git", stdout=null, stderr=null)
+                    self.use_git = True
+            except Exception as e:
+                _console_error("unable to use git")
+                logger.error(e)
+                self.exiting(1)
         self.builds = args.builds
         if self.builds:
             if not os.path.isdir(self.builds):
@@ -415,7 +430,8 @@ def _install(file_definition,
              cache_dirs,
              can_sudo,
              script_text,
-             new_file):
+             new_file,
+             use_git):
     """Install a package."""
     sudo = ""
     if can_sudo:
@@ -423,13 +439,21 @@ def _install(file_definition,
     url = _AUR.format(file_definition.url)
     _console_output("installing: {}".format(file_definition.name))
     with new_file() as t:
-        f_name = file_definition.name + ".tar.gz"
         p = os.path.join(t, file_definition.name)
         os.makedirs(p)
-        file_name = os.path.join(p, f_name)
-        logger.debug(file_name)
-        urllib.request.urlretrieve(url, file_name)
-        _shell(["tar", "xf", f_name, "--strip-components=1"], workingdir=p)
+        if use_git:
+            _shell(["git",
+                    "clone",
+                    "--depth=1",
+                    _AUR_GIT.format(file_definition.name),
+                    "."], workingdir=p)
+        else:
+            logger.debug("using tar")
+            f_name = file_definition.name + ".tar.gz"
+            file_name = os.path.join(p, f_name)
+            logger.debug(file_name)
+            urllib.request.urlretrieve(url, file_name)
+            _shell(["tar", "xf", f_name, "--strip-components=1"], workingdir=p)
         f_dir = os.path.join(t, file_definition.name)
         temp_sh = os.path.join(t, _NAME + ".sh")
         replaces = {}
@@ -642,7 +666,8 @@ def _syncing(context, is_install, targets, updating):
                             cache_dirs,
                             context.can_sudo,
                             context.load_script("makepkg"),
-                            context.build_dir):
+                            context.build_dir,
+                            context.use_git):
                 _console_error("error installing package: {}".format(i.name))
     except Exception as e:
         logger.error("unexpected install error")
@@ -1121,6 +1146,7 @@ def _load_config(args, config_file):
                        "SKIP_DEPS",
                        "NO_CACHE",
                        "REMOVAL",
+                       "DOWNLAOD",
                        "SCRIPTS",
                        "IGNORE_FOR",
                        "MAKEPKG",
@@ -1152,6 +1178,9 @@ def _load_config(args, config_file):
                         val = int(value)
                     else:
                         val = value
+                    if key in ["DOWNLOAD"]:
+                        if val not in _DOWNLOADS:
+                            raise Exception("unknown download type")
                 except Exception as e:
                     logger.error("unable to read value")
                     logger.error(e)
@@ -1273,6 +1302,13 @@ loaded.""",
 if not set this will be in the temp (e.g. /tmp) area. specifying this option
 will move where makepkg operations are performed in the system.""",
                         default=None,
+                        type=str)
+    parser.add_argument('--download',
+                        help="""specifies how to retrieve AUR packages from
+the AUR repository. 'git' will (attempt, if git is installed) to git clone.
+'tar' will download the tarball.""",
+                        default=_DOWNLOAD_TAR,
+                        choices=_DOWNLOADS,
                         type=str)
     _sync_up_options(parser)
     _query_options(parser)
