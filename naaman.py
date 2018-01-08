@@ -97,6 +97,13 @@ class Context(object):
         self._script_dir = self.get_custom_arg(_CUSTOM_SCRIPTS)
         self.now = datetime.now()
         self.timestamp = self.now.timestamp()
+        self.terminal_width = 0
+        try:
+            rows, columns = os.popen('stty size', 'r').read().split()
+            self.terminal_width = int(columns)
+        except Exception as e:
+            logger.debug("unable to determine tty column size")
+            logger.debug(e)
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
@@ -823,7 +830,16 @@ def _rpc_search(package_name, exact, context):
                             logger.info("aur/{} {}{}".format(name, vers, ind))
                             if not desc or len(desc) == 0:
                                 desc = "no description"
-                            logger.info("    {}".format(desc))
+                            descriptions = []
+                            c_len = context.terminal_width
+                            if c_len > 0:
+                                c_len = c_len - 8
+                                for d_chunk in [desc[0 + i:c_len + i] for i in range(0, len(desc), c_len)]:
+                                    descriptions.append(d_chunk)
+                            else:
+                                descriptions.append(desc)
+                            for d in descriptions:
+                                logger.info("    {}".format(d))
                     except Exception as e:
                         logger.error("unable to parse package")
                         logger.error(e)
