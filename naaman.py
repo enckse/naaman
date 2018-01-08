@@ -424,10 +424,12 @@ def _install(file_definition,
     logger.info("installing: {}".format(file_definition.name))
     with new_file() as t:
         f_name = file_definition.name + ".tar.gz"
-        file_name = os.path.join(t, f_name)
+        p = os.path.join(t, file_definition.name)
+        os.makedirs(p)
+        file_name = os.path.join(p, f_name)
         logger.debug(file_name)
         urllib.request.urlretrieve(url, file_name)
-        _shell(["tar", "xf", f_name], workingdir=t)
+        _shell(["tar", "xf", f_name, "--strip-components=1"], workingdir=p)
         f_dir = os.path.join(t, file_definition.name)
         temp_sh = os.path.join(t, _NAME + ".sh")
         replaces = {}
