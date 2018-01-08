@@ -1,7 +1,7 @@
 naaman
 ===
 
-N(ot) A(nother) A(UR) Man(ager) or more like "nah"-"man"
+N(ot) A(nother) A(UR) Man(ager) or more like "nah"-"man" just another AUR helper. The general list of other Arch AUR helpers is [here](https://wiki.archlinux.org/index.php/AUR_helpers) if naaman isn't for you
 
 naaman is focused on providing a pacman-ish interface to dealing with AUR packages.
 
