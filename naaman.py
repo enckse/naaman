@@ -779,6 +779,7 @@ def _rpc_search(package_name, exact, context):
     logger.debug(url)
     factory = None
     caching = None
+    found = False
     if exact and context.rpc_cache > 0 and not context.force_refresh:
         logger.debug("rpc cache enabled")
         context.lock()
@@ -812,6 +813,7 @@ def _rpc_search(package_name, exact, context):
                         name = _get_segment(result, _AUR_NAME)
                         desc = _get_segment(result, _AUR_DESC)
                         vers = _get_segment(result, _AUR_VERS)
+                        found = True
                         if exact:
                             if name == package_name:
                                 deps = None
@@ -878,6 +880,8 @@ def _rpc_search(package_name, exact, context):
     except Exception as e:
         logger.error("error calling AUR search")
         logger.error(e)
+    if not found and context.info_verbose:
+        _console_error("no exact matches for {}".format(package_name))
 
 
 def _terminal_output(input_str, terminal_width, first_string, output_string):
