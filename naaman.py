@@ -963,6 +963,7 @@ def _gone(context):
 
 def _querying(context, gone):
     """Querying for package information."""
+    matched = False
     for q in _do_query(context):
         if gone:
             found = _rpc_search(q.name, True, context)
@@ -973,6 +974,9 @@ def _querying(context, gone):
         else:
             output = "{} {}"
         logger.info(output.format(q.name, q.version))
+        matched = True
+    if not matched and not context.quiet:
+        logger.info("no packages found")
 
 
 def _is_aur_pkg(pkg, sync_packages):
