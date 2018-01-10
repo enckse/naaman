@@ -3,7 +3,7 @@ trap '' 2
 cd {DIRECTORY}
 makepkg {MAKEPKG}
 exit_code=$?
-if [ $(ls *.pkg.tar.xz | wc -l) -gt 0 ]; then
+if [ $(ls | grep "\.pkg\.tar\.xz$" | wc -l) -gt 0 ]; then
     for d in $(echo '{}'); do
         {SUDO} cp *.pkg.tar.xz $d
     done
