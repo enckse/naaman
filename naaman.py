@@ -388,7 +388,7 @@ def _clean(context):
         os.remove(f[1])
 
 
-def _confirm(context, message, package_names):
+def _confirm(context, message, package_names, default_yes=True):
     """Confirm package changes."""
     if not context.confirm:
         logger.debug("no confirmation needed.")
@@ -397,11 +397,19 @@ def _confirm(context, message, package_names):
     for p in package_names:
         logger.info("  -> {}".format(p))
     logger.info("")
-    msg = " ===> {}, (Y/n)? ".format(message)
+    defaulting = "Y/n"
+    if not default_yes:
+        defaulting = "y/N"
+    msg = " ===> {}, ({})? ".format(message, defaulting)
     logger.trace(msg)
     c = input(msg)
     logger.trace(c)
-    if c == "n":
+    exiting = False
+    if default_yes and c == "n":
+        exiting = True
+    if not default_yes and c != "y":
+        exiting = True
+    if exiting:
         _console_error("user cancelled")
         context.exiting(1)
 
@@ -679,7 +687,10 @@ def _syncing(context, is_install, targets, updating):
                         continue
                     next_pkgs.append(e.name)
                 if len(next_pkgs) > 0:
-                    _confirm(context, "attempt to continue", next_pkgs)
+                    _confirm(context,
+                             "attempt to continue",
+                             next_pkgs,
+                             default_yes=False)
     except Exception as e:
         logger.error("unexpected install error")
         logger.error(e)
