@@ -230,12 +230,15 @@ class Context(object):
         logger.trace(returncode)
         return returncode == 0
 
-    def check_pkgcache(self, name):
+    def check_pkgcache(self, name, version):
         """Check the pkgcache."""
         if self._pkgcaching is None:
             self._pkgcaching = self.get_packages()
         for pkg in self.db.pkgcache:
             if pkg.name == name:
+                if version is not None:
+                    if pkg.version < version:
+                        continue
                 return True
         return False
 
@@ -772,7 +775,17 @@ def _handle_deps(root_package, context, dependencies):
     logger.debug("resolving deps")
     missing = False
     syncpkgs = context.get_packages()
-    for d in dependencies:
+    for dep in dependencies:
+        d = dep
+        d_version = None
+        d_compare = None
+        for compare in [">=", "<=", ">", "<", "="]:
+            c_idx = d.rfind(compare)
+            if c_idx >= 0:
+                d_compare = compare
+                d_version = d[c_idx + len(compare):len(d)]
+                d = d[0:c_idx]
+                break
         logger.debug(d)
         if context.targets and d in context.targets:
             logger.debug("installing it")
@@ -794,10 +807,13 @@ def _handle_deps(root_package, context, dependencies):
         if search is None:
             logger.debug("not aur")
             continue
-        if context.check_pkgcache(d):
+        if context.check_pkgcache(d, d_version):
             logger.debug("installed")
             continue
-        _console_error("unmet AUR dependency: {}".format(d))
+        show_version = ""
+        if d_version is not None:
+            show_version = " ({}{})".format(d_compare, d_version)
+        _console_error("unmet AUR dependency: {}{}".format(d, show_version))
         missing = True
     if missing:
         context.exiting(1)
