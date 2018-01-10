@@ -390,27 +390,28 @@ def _clean(context):
 
 def _confirm(context, message, package_names, default_yes=True):
     """Confirm package changes."""
-    if not context.confirm:
-        logger.debug("no confirmation needed.")
-        return
-    logger.info("")
-    for p in package_names:
-        logger.info("  -> {}".format(p))
-    logger.info("")
-    defaulting = "Y/n"
-    if not default_yes:
-        defaulting = "y/N"
-    msg = " ===> {}, ({})? ".format(message, defaulting)
-    logger.trace(msg)
-    c = input(msg)
-    logger.trace(c)
-    exiting = False
-    if default_yes and c == "n":
-        exiting = True
-    if not default_yes and c != "y":
-        exiting = True
-    if exiting:
-        _console_error("user cancelled")
+    exiting = None
+    if context.confirm:
+        logger.info("")
+        for p in package_names:
+            logger.info("  -> {}".format(p))
+        logger.info("")
+        defaulting = "Y/n"
+        if not default_yes:
+            defaulting = "y/N"
+        msg = " ===> {}, ({})? ".format(message, defaulting)
+        logger.trace(msg)
+        c = input(msg)
+        logger.trace(c)
+        if (default_yes and c == "n") or (not default_yes and c != "y"):
+            exiting = "user "
+    else:
+        if default_yes:
+            logger.debug("no confirmation needed.")
+            return
+        exiting = ""
+    if exiting is not None:
+        _console_error("{}cancelled".format(exiting))
         context.exiting(1)
 
 
