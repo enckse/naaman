@@ -669,6 +669,17 @@ def _syncing(context, is_install, targets, updating):
                             context.build_dir,
                             context.use_git):
                 _console_error("error installing package: {}".format(i.name))
+                next_pkgs = []
+                after = False
+                for e in do_install:
+                    if e.name == i.name:
+                        after = True
+                        continue
+                    if not after:
+                        continue
+                    next_pkgs.append(e.name)
+                if len(next_pkgs) > 0:
+                    _confirm(context, "attempt to continue", next_pkgs)
     except Exception as e:
         logger.error("unexpected install error")
         logger.error(e)
