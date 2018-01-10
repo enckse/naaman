@@ -21,12 +21,7 @@ git clone this repo
 
 install dependencies
 ```
-sudo make dependencies
-```
-
-install naaman
-```
-sudo make install
+sudo make build
 ```
 
 ## Usage

@@ -38,6 +38,11 @@ analyze:
 dependencies:
 	pacman -S python-xdg pyalpm bash-completion
 
+optdepends:
+	pacman -S help2man
+
+build: optdepends dependencies install
+
 install: completions manpages
 	install -Dm755 naaman.py $(INSTALL)/usr/bin/naaman
 	install -Dm644 LICENSE $(INSTALL)/usr/share/license/naaman/LICENSE
