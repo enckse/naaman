@@ -27,6 +27,9 @@ manpages: clean
 	./scripts/naaman-conf.sh
 	cat scripts/$(MAN5) | sed "s/<Month Year>/$(MONTH_YEAR)/g"  > $(MANPAGE5)
 	help2man $(NAAMAN_SH) --output="$(MANPAGE8)" --name="Not Another Aur MANager"
+	@sed -i -n '/.SH "SEE ALSO"/q;p' $(MANPAGE8)
+	@echo '.SH "SEE ALSO"' >> $(MANPAGE8)
+	@echo ".B man naaman.conf" >> $(MANPAGE8)
 	cd $(BIN) && gzip $(MAN8)
 	cd $(BIN) && gzip $(MAN5)
 
