@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 from xdg import BaseDirectory
 from pycman import config
 
-_VERSION = "0.2.3"
+_VERSION = "0.3.0"
 _NAME = "naaman"
 _CONFIG = _NAME + ".conf"
 logger = logging.getLogger(_NAME)
