@@ -42,7 +42,7 @@ dependencies:
 	pacman -S python-xdg pyalpm bash-completion
 
 makedepends:
-	pacman -S help2man python-pip
+	pacman -S help2man python-pip git
 
 build: optdepends dependencies install
 

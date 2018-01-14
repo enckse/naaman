@@ -64,11 +64,13 @@ _DOWNLOADS = [_DOWNLOAD_GIT, _DOWNLOAD_TAR]
 _SPLIT_SKIP = "skip"
 _SPLIT_NONE = "nothing"
 _SPLIT_ERR = "error"
-_SPLITS = [_SPLIT_SKIP,  _SPLIT_NONE, _SPLIT_ERR]
+_SPLIT_SPLIT = "split"
+_SPLITS = [_SPLIT_SKIP,  _SPLIT_NONE, _SPLIT_ERR, _SPLIT_SPLIT]
 _PKGNAME = ['@', '.', '_', '+', '-']
 _SPLIT_SKIPPED = 2
 _SPLIT_NOOP = 0
 _SPLIT_ERRORED = 1
+_SPLIT_DONE = 3
 
 
 def _console_output(string, prefix="", callback=logger.info):
@@ -142,7 +144,9 @@ class Context(object):
             logger.debug(e)
         self.skip_split = args.on_split == _SPLIT_SKIP
         self.error_split = args.on_split == _SPLIT_ERR
-        if self.use_git and (self.skip_split or self.error_split):
+        self.do_split = args.on_split == _SPLIT_SPLIT
+        if self.use_git and \
+           (self.skip_split or self.error_split or self.do_split):
             _console_error("split package options not available for git")
             self.exiting(1)
 
@@ -452,12 +456,15 @@ def _shell(command, suppress_error=False, workingdir=None):
     return out
 
 
-def _splitting(pkgbuild, pkgname, skip, error):
+def _splitting(pkgbuild, pkgname, skip, error, split):
     """Package splitting."""
     splits = []
+    all_lines = []
     with open(pkgbuild, 'r') as f:
         in_pkg = False
         for line in f.readlines():
+            if split:
+                all_lines.append(line)
             if in_pkg:
                 current = line.strip()
                 for c in current:
@@ -502,6 +509,18 @@ def _splitting(pkgbuild, pkgname, skip, error):
     if skip:
         _console_output("skipping (split package)")
         return _SPLIT_SKIPPED
+    if split:
+        _console_output("splitting package")
+        has_done = False
+        with open(pkgbuild, 'w') as f:
+            for line in all_lines:
+                if line in lines:
+                    if not has_done:
+                        f.write("pkgname={}\n".format(pkgname))
+                        has_done = True
+                    continue
+                f.write(line)
+        return _SPLIT_DONE
     raise Exception("unexpected split settings")
 
 
@@ -533,7 +552,7 @@ def _install(file_definition, makepkg, cache_dirs, context):
             logger.debug(file_name)
             urllib.request.urlretrieve(url, file_name)
             _shell(["tar", "xf", f_name, "--strip-components=1"], workingdir=p)
-            if context.skip_split or context.error_split:
+            if context.skip_split or context.error_split or context.do_split:
                 logger.debug("handling split packages")
                 pkgbuild = os.path.join(f_dir, "PKGBUILD")
                 logger.trace(pkgbuild)
@@ -543,7 +562,8 @@ def _install(file_definition, makepkg, cache_dirs, context):
                 split_result = _splitting(pkgbuild,
                                           file_definition.name,
                                           context.skip_split,
-                                          context.error_split)
+                                          context.error_split,
+                                          context.do_split)
                 if split_result == _SPLIT_ERRORED:
                     return False
                 elif split_result == _SPLIT_SKIPPED:
@@ -1434,8 +1454,8 @@ the AUR repository. 'git' will (attempt, if git is installed) to git clone.
     parser.add_argument("--on-split",
                         help="""select what naaman should do when it encounters
 a split package. 'skip' will not install split packages, 'error' will cause
-naaman to error and stop, package, and 'nothing' will not process the package
-at all before install (default).""",
+naaman to error and stop, package, 'split' will attempt to split the package,
+and 'nothing' will not process the package at all before install (default).""",
                         default=_SPLIT_NONE,
                         choices=_SPLITS,
                         type=str)
