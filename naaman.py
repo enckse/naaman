@@ -64,7 +64,8 @@ _DOWNLOADS = [_DOWNLOAD_GIT, _DOWNLOAD_TAR]
 _SPLIT_SKIP = "skip"
 _SPLIT_SPLIT = "split"
 _SPLIT_NONE = "nothing"
-_SPLITS = [_SPLIT_SKIP, _SPLIT_SPLIT, _SPLIT_NONE]
+_SPLIT_ERR = "error"
+_SPLITS = [_SPLIT_SKIP, _SPLIT_SPLIT, _SPLIT_NONE, _SPLIT_ERR]
 
 
 def _console_output(string, prefix="", callback=logger.info):
@@ -136,6 +137,7 @@ class Context(object):
         except Exception as e:
             logger.debug("unable to determine tty column size")
             logger.debug(e)
+        args.skip_split = args.on_split == _SPLIT_SKIP
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
@@ -1225,8 +1227,8 @@ def _load_config(args, config_file):
                     else:
                         val = value
                     key_checks = {}
-                    key_checks = "DOWNLOAD" = _DOWNLOADS
-                    key_checks = "ON_SPLIT" = _SPLITS
+                    key_checks["DOWNLOAD"] = _DOWNLOADS
+                    key_checks["ON_SPLIT"] = _SPLITS
                     if key in key_checks.keys():
                         if val not in key_checks[key]:
                             raise Exception("unknown {} type".format(key))
@@ -1361,9 +1363,10 @@ the AUR repository. 'git' will (attempt, if git is installed) to git clone.
                         type=str)
     parser.add_argument("--on-split",
                         help="""select what naaman should do when it encounters
-a split package. 'skip' will not install split packages (error), 'split' will
-attempt to install the specified split package, and 'nothing' will not process
-the package at all before install (default).""",
+a split package. 'skip' will not install split packages, 'error' will cause
+naaman to error and stop, 'split' will attempt to install the specified split
+package, and 'nothing' will not process the package at all before install
+(default).""",
                         default=_SPLIT_NONE,
                         choices=_SPLITS,
                         type=str)
