@@ -138,6 +138,8 @@ class Context(object):
             logger.debug("unable to determine tty column size")
             logger.debug(e)
         args.skip_split = args.on_split == _SPLIT_SKIP
+        args.error_split = args.on_split == _SPLIT_ERR
+        args.do_split = args.on_split == _SPLIT_SPLIT
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
