@@ -1448,7 +1448,7 @@ will move where makepkg operations are performed in the system.""",
                         help="""specifies how to retrieve AUR packages from
 the AUR repository. 'git' will (attempt, if git is installed) to git clone.
 'tar' will download the tarball.""",
-                        default=_DOWNLOAD_TAR,
+                        default=_DOWNLOAD_GIT,
                         choices=_DOWNLOADS,
                         type=str)
     parser.add_argument("--on-split",
