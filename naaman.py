@@ -66,6 +66,11 @@ _SPLIT_SPLIT = "split"
 _SPLIT_NONE = "nothing"
 _SPLIT_ERR = "error"
 _SPLITS = [_SPLIT_SKIP, _SPLIT_SPLIT, _SPLIT_NONE, _SPLIT_ERR]
+_PKGNAME = ['@', '.', '_', '+', '-']
+_SPLIT_SKIPPED = 2
+_SPLIT_NOOP = 0
+_SPLIT_CHANGED = 1
+_SPLIT_ERRORED = 3
 
 
 def _console_output(string, prefix="", callback=logger.info):
@@ -137,9 +142,9 @@ class Context(object):
         except Exception as e:
             logger.debug("unable to determine tty column size")
             logger.debug(e)
-        args.skip_split = args.on_split == _SPLIT_SKIP
-        args.error_split = args.on_split == _SPLIT_ERR
-        args.do_split = args.on_split == _SPLIT_SPLIT
+        self.skip_split = args.on_split == _SPLIT_SKIP
+        self.error_split = args.on_split == _SPLIT_ERR
+        self.do_split = args.on_split == _SPLIT_SPLIT
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
@@ -447,7 +452,59 @@ def _shell(command, suppress_error=False, workingdir=None):
     return out
 
 
-def _install(file_definition, makepkg, context):
+def _splitting(pkgbuild, pkgname, skip, error, change):
+    """Package splitting."""
+    splits = []
+    with open(pkgbuild, 'r') as f:
+        in_pkg = False
+        for line in f.readlines():
+            if in_pkg:
+                current = line.strip()
+                for c in current:
+                    if c.isalnum():
+                        continue
+                    if c in _PKGNAME:
+                        continue
+                    in_pkg = False
+            if line.startswith("pkgname="):
+                in_pkg = True
+            if in_pkg:
+                splits.append(line)
+    logger.trace(splits)
+    lines = " ".join(splits)
+    new_entry = ""
+    entries = []
+    in_section = False
+    for c in lines:
+        if c not in _PKGNAME and not c.isalnum():
+            if c in "=":
+                in_section = True
+            new_entry = new_entry.strip()
+            if len(new_entry) > 0:
+                entries.append(new_entry)
+            new_entry = ""
+            continue
+        if in_section:
+            new_entry += c
+    new_entry = new_entry.strip()
+    if len(new_entry) > 0:
+        entries.append(new_entry)
+    logger.trace(lines)
+    if len(entries) == 1:
+        logger.debug('not a split package')
+        return _SPLIT_NOOP
+    if error:
+        _console_error("split package detected but disabled")
+        return _SPLIT_ERRORED
+    if skip:
+        _console_output("skipping (split package)")
+        return _SPLIT_SKIPPED
+    if change:
+        _console_output("updating for split package")
+        return _SPLIT_CHANGED
+
+
+def _install(file_definition, makepkg, cache_dirs, context):
     """Install a package."""
     can_sudo = context.can_sudo
     script_text = context.load_script("makepkg")
@@ -461,6 +518,7 @@ def _install(file_definition, makepkg, context):
     with new_file() as t:
         p = os.path.join(t, file_definition.name)
         os.makedirs(p)
+        f_dir = os.path.join(t, file_definition.name)
         if use_git:
             _shell(["git",
                     "clone",
@@ -474,7 +532,23 @@ def _install(file_definition, makepkg, context):
             logger.debug(file_name)
             urllib.request.urlretrieve(url, file_name)
             _shell(["tar", "xf", f_name, "--strip-components=1"], workingdir=p)
-        f_dir = os.path.join(t, file_definition.name)
+        if context.skip_split or context.error_split or context.do_split:
+            logger.debug("handling split packages")
+            pkgbuild = os.path.join(f_dir, "PKGBUILD")
+            logger.trace(pkgbuild)
+            if not os.path.exists(pkgbuild):
+                _console_error("no pkgbuild found: {}".format(pkgbuild))
+                context.exiting(1)
+            split_result = _splitting(pkgbuild,
+                                      file_definition.name,
+                                      context.skip_split,
+                                      context.error_split,
+                                      context.do_split)
+            if split_result == _SPLIT_ERRORED:
+                return False
+            elif split_result == _SPLIT_SKIPPED:
+                return True
+        context.exiting(1)
         temp_sh = os.path.join(t, _NAME + ".sh")
         replaces = {}
         replaces["DIRECTORY"] = f_dir
