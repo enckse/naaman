@@ -200,4 +200,4 @@ These items are known and are not currently planned to be solved
 * Complicated/multi-AUR package dependency resolution
 * Replicating all conceivable pacman args that _might_ be useful for AUR wrappers
 * VCS packages are complicated, you have options to mitigate that
-* Split packages
+* Split packages: there are options to mitigate it (`-on-split`) but dependencies and complex PKGBUILDs will not be handled
