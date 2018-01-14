@@ -41,8 +41,8 @@ analyze:
 dependencies:
 	pacman -S python-xdg pyalpm bash-completion
 
-optdepends:
-	pacman -S help2man
+makedepends:
+	pacman -S help2man python-pip
 
 build: optdepends dependencies install
 
