@@ -121,6 +121,7 @@ class Context(object):
                 _console_error("unable to use git")
                 logger.error(e)
                 self.exiting(1)
+
         self.builds = args.builds
         if self.builds:
             if not os.path.isdir(self.builds):
@@ -1223,9 +1224,12 @@ def _load_config(args, config_file):
                         val = int(value)
                     else:
                         val = value
-                    if key in ["DOWNLOAD"]:
-                        if val not in _DOWNLOADS:
-                            raise Exception("unknown download type")
+                    key_checks = {}
+                    key_checks = "DOWNLOAD" = _DOWNLOADS
+                    key_checks = "ON_SPLIT" = _SPLITS
+                    if key in key_checks.keys():
+                        if val not in key_checks[key]:
+                            raise Exception("unknown {} type".format(key))
                 except Exception as e:
                     logger.error("unable to read value")
                     logger.error(e)
@@ -1419,9 +1423,6 @@ the package at all before install (default).""",
         g = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
         arg_groups[group.title] = argparse.Namespace(**g)
     logger.trace(arg_groups)
-    if args.on_split not in _SPLITS:
-        _console_error("invalid split options ({})".format(_SPLIT))
-        exit(1)
     _validate_options(args, unknown, arg_groups)
 
 
