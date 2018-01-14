@@ -62,15 +62,13 @@ _DOWNLOAD_TAR = "tar"
 _DOWNLOADS = [_DOWNLOAD_GIT, _DOWNLOAD_TAR]
 
 _SPLIT_SKIP = "skip"
-_SPLIT_SPLIT = "split"
 _SPLIT_NONE = "nothing"
 _SPLIT_ERR = "error"
-_SPLITS = [_SPLIT_SKIP, _SPLIT_SPLIT, _SPLIT_NONE, _SPLIT_ERR]
+_SPLITS = [_SPLIT_SKIP,  _SPLIT_NONE, _SPLIT_ERR]
 _PKGNAME = ['@', '.', '_', '+', '-']
 _SPLIT_SKIPPED = 2
 _SPLIT_NOOP = 0
-_SPLIT_CHANGED = 1
-_SPLIT_ERRORED = 3
+_SPLIT_ERRORED = 1
 
 
 def _console_output(string, prefix="", callback=logger.info):
@@ -144,7 +142,9 @@ class Context(object):
             logger.debug(e)
         self.skip_split = args.on_split == _SPLIT_SKIP
         self.error_split = args.on_split == _SPLIT_ERR
-        self.do_split = args.on_split == _SPLIT_SPLIT
+        if self.use_git and (self.skip_split or self.error_split):
+            _console_error("split package options not available for git")
+            self.exiting(1)
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
@@ -452,14 +452,12 @@ def _shell(command, suppress_error=False, workingdir=None):
     return out
 
 
-def _splitting(pkgbuild, pkgname, skip, error, change):
+def _splitting(pkgbuild, pkgname, skip, error):
     """Package splitting."""
     splits = []
-    all_lines = []
     with open(pkgbuild, 'r') as f:
         in_pkg = False
         for line in f.readlines():
-            all_lines.append(line)
             if in_pkg:
                 current = line.strip()
                 for c in current:
@@ -504,20 +502,6 @@ def _splitting(pkgbuild, pkgname, skip, error, change):
     if skip:
         _console_output("skipping (split package)")
         return _SPLIT_SKIPPED
-    if change:
-        _console_output("updating for split package")
-        set_to = "pkgname={}".format(pkgname)
-        logger.trace(set_to)
-        updated = False
-        with open(pkgbuild, 'w') as f:
-            for l in all_lines:
-                if l in splits:
-                    if not updated:
-                        f.write("{}\n".format(set_to))
-                        updated = True
-                    continue
-                f.write(l)
-        return _SPLIT_CHANGED
     raise Exception("unexpected split settings")
 
 
@@ -549,22 +533,21 @@ def _install(file_definition, makepkg, cache_dirs, context):
             logger.debug(file_name)
             urllib.request.urlretrieve(url, file_name)
             _shell(["tar", "xf", f_name, "--strip-components=1"], workingdir=p)
-        if context.skip_split or context.error_split or context.do_split:
-            logger.debug("handling split packages")
-            pkgbuild = os.path.join(f_dir, "PKGBUILD")
-            logger.trace(pkgbuild)
-            if not os.path.exists(pkgbuild):
-                _console_error("no pkgbuild found: {}".format(pkgbuild))
-                context.exiting(1)
-            split_result = _splitting(pkgbuild,
-                                      file_definition.name,
-                                      context.skip_split,
-                                      context.error_split,
-                                      context.do_split)
-            if split_result == _SPLIT_ERRORED:
-                return False
-            elif split_result == _SPLIT_SKIPPED:
-                return True
+            if context.skip_split or context.error_split:
+                logger.debug("handling split packages")
+                pkgbuild = os.path.join(f_dir, "PKGBUILD")
+                logger.trace(pkgbuild)
+                if not os.path.exists(pkgbuild):
+                    _console_error("no pkgbuild found: {}".format(pkgbuild))
+                    context.exiting(1)
+                split_result = _splitting(pkgbuild,
+                                          file_definition.name,
+                                          context.skip_split,
+                                          context.error_split)
+                if split_result == _SPLIT_ERRORED:
+                    return False
+                elif split_result == _SPLIT_SKIPPED:
+                    return True
         temp_sh = os.path.join(t, _NAME + ".sh")
         replaces = {}
         replaces["DIRECTORY"] = f_dir
@@ -1451,9 +1434,8 @@ the AUR repository. 'git' will (attempt, if git is installed) to git clone.
     parser.add_argument("--on-split",
                         help="""select what naaman should do when it encounters
 a split package. 'skip' will not install split packages, 'error' will cause
-naaman to error and stop, 'split' will attempt to install the specified split
-package, and 'nothing' will not process the package at all before install
-(default).""",
+naaman to error and stop, package, and 'nothing' will not process the package
+at all before install (default).""",
                         default=_SPLIT_NONE,
                         choices=_SPLITS,
                         type=str)
