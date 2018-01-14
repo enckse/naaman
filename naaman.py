@@ -455,9 +455,11 @@ def _shell(command, suppress_error=False, workingdir=None):
 def _splitting(pkgbuild, pkgname, skip, error, change):
     """Package splitting."""
     splits = []
+    all_lines = []
     with open(pkgbuild, 'r') as f:
         in_pkg = False
         for line in f.readlines():
+            all_lines.append(line)
             if in_pkg:
                 current = line.strip()
                 for c in current:
@@ -493,6 +495,9 @@ def _splitting(pkgbuild, pkgname, skip, error, change):
     if len(entries) == 1:
         logger.debug('not a split package')
         return _SPLIT_NOOP
+    if pkgname not in entries:
+        _console_error("unable to find {} in split package".format(pkgname))
+        return _SPLIT_ERRORED
     if error:
         _console_error("split package detected but disabled")
         return _SPLIT_ERRORED
@@ -501,7 +506,19 @@ def _splitting(pkgbuild, pkgname, skip, error, change):
         return _SPLIT_SKIPPED
     if change:
         _console_output("updating for split package")
+        set_to = "pkgname={}".format(pkgname)
+        logger.trace(set_to)
+        updated = False
+        with open(pkgbuild, 'w') as f:
+            for l in all_lines:
+                if l in splits:
+                    if not updated:
+                        f.write("{}\n".format(set_to))
+                        updated = True
+                    continue
+                f.write(l)
         return _SPLIT_CHANGED
+    raise Exception("unexpected split settings")
 
 
 def _install(file_definition, makepkg, cache_dirs, context):
@@ -548,7 +565,6 @@ def _install(file_definition, makepkg, cache_dirs, context):
                 return False
             elif split_result == _SPLIT_SKIPPED:
                 return True
-        context.exiting(1)
         temp_sh = os.path.join(t, _NAME + ".sh")
         replaces = {}
         replaces["DIRECTORY"] = f_dir
