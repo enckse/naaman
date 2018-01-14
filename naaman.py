@@ -61,6 +61,11 @@ _DOWNLOAD_GIT = "git"
 _DOWNLOAD_TAR = "tar"
 _DOWNLOADS = [_DOWNLOAD_GIT, _DOWNLOAD_TAR]
 
+_SPLIT_SKIP = "skip"
+_SPLIT_SPLIT = "split"
+_SPLIT_NONE = "nothing"
+_SPLITS = [_SPLIT_SKIP, _SPLIT_SPLIT, _SPLIT_NONE]
+
 
 def _console_output(string, prefix="", callback=logger.info):
     """console/pretty output."""
@@ -1191,6 +1196,7 @@ def _load_config(args, config_file):
                        "MAKEPKG",
                        "NO_VCS",
                        "BUILDS",
+                       "ON_SPLIT",
                        "NO_SUDO",
                        "VCS_IGNORE"]:
                 val = None
@@ -1349,6 +1355,14 @@ the AUR repository. 'git' will (attempt, if git is installed) to git clone.
                         default=_DOWNLOAD_TAR,
                         choices=_DOWNLOADS,
                         type=str)
+    parser.add_argument("--on-split",
+                        help="""select what naaman should do when it encounters
+a split package. 'skip' will not install split packages (error), 'split' will
+attempt to install the specified split package, and 'nothing' will not process
+the package at all before install (default).""",
+                        default=_SPLIT_NONE,
+                        choices=_SPLITS,
+                        type=str)
     _sync_up_options(parser)
     _query_options(parser)
     args, unknown = parser.parse_known_args()
@@ -1405,6 +1419,9 @@ the AUR repository. 'git' will (attempt, if git is installed) to git clone.
         g = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
         arg_groups[group.title] = argparse.Namespace(**g)
     logger.trace(arg_groups)
+    if args.on_split not in _SPLITS:
+        _console_error("invalid split options ({})".format(_SPLIT))
+        exit(1)
     _validate_options(args, unknown, arg_groups)
 
 
