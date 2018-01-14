@@ -59,7 +59,8 @@ _CACHE_FILES = [_CACHE_FILE, _LOCKS]
 
 _DOWNLOAD_GIT = "git"
 _DOWNLOAD_TAR = "tar"
-_DOWNLOADS = [_DOWNLOAD_GIT, _DOWNLOAD_TAR]
+_DOWNLOAD_DETECT = "detect"
+_DOWNLOADS = [_DOWNLOAD_GIT, _DOWNLOAD_TAR, _DOWNLOAD_DETECT]
 
 _SPLIT_SKIP = "skip"
 _SPLIT_NONE = "nothing"
@@ -118,16 +119,20 @@ class Context(object):
         self.timestamp = self.now.timestamp()
         self.terminal_width = 0
         self.use_git = False
-        if args.download and args.download == _DOWNLOAD_GIT:
+        if args.download and args.download in [_DOWNLOAD_GIT,
+                                               _DOWNLOAD_DETECT]:
             try:
+                logger.debug("checking for git")
                 with open("/dev/null", "w") as null:
                     subprocess.Popen("git", stdout=null, stderr=null)
                     self.use_git = True
             except Exception as e:
-                _console_error("unable to use git")
-                logger.error(e)
-                self.exiting(1)
-
+                if args.download == _DOWNLOAD_DETECT:
+                    logger.debug("detected not-git")
+                else:
+                    _console_error("unable to use git")
+                    logger.error(e)
+                    self.exiting(1)
         self.builds = args.builds
         if self.builds:
             if not os.path.isdir(self.builds):
