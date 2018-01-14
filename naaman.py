@@ -447,14 +447,12 @@ def _shell(command, suppress_error=False, workingdir=None):
     return out
 
 
-def _install(file_definition,
-             makepkg,
-             cache_dirs,
-             can_sudo,
-             script_text,
-             new_file,
-             use_git):
+def _install(file_definition, makepkg, context):
     """Install a package."""
+    can_sudo = context.can_sudo
+    script_text = context.load_script("makepkg")
+    new_file = context.build_dir
+    use_git = context.use_git
     sudo = ""
     if can_sudo:
         sudo = "sudo"
@@ -686,10 +684,7 @@ def _syncing(context, is_install, targets, updating):
             if not _install(i,
                             makepkg,
                             cache_dirs,
-                            context.can_sudo,
-                            context.load_script("makepkg"),
-                            context.build_dir,
-                            context.use_git):
+                            context):
                 _console_error("error installing package: {}".format(i.name))
                 next_pkgs = []
                 after = False
