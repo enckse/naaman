@@ -549,7 +549,7 @@ def _install(file_definition, makepkg, cache_dirs, context):
                     "clone",
                     "--depth=1",
                     _AUR_GIT.format(file_definition.name),
-                    "."], workingdir=p)
+                    "."], suppress_error=True, workingdir=p)
         else:
             logger.debug("using tar")
             f_name = file_definition.name + ".tar.gz"
