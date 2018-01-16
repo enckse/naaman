@@ -16,6 +16,7 @@ import string
 import signal
 import tempfile
 import subprocess
+import shutil
 import time
 from datetime import datetime, timedelta
 from xdg import BaseDirectory
@@ -56,6 +57,7 @@ _AUR_TARGET_LEN = 4
 _CACHE_FILE = ".cache"
 _LOCKS = ".lck"
 _CACHE_FILES = [_CACHE_FILE, _LOCKS]
+_TMP_PREFIX = "naaman."
 
 _DOWNLOAD_GIT = "git"
 _DOWNLOAD_TAR = "tar"
@@ -168,7 +170,7 @@ class Context(object):
         if self.builds:
             dir_name = self.builds
         logger.debug("using {}".format(dir_name))
-        return tempfile.TemporaryDirectory(dir=dir_name)
+        return tempfile.TemporaryDirectory(dir=dir_name, prefix=_TMP_PREFIX)
 
     def get_custom_arg(self, name):
         """Get custom args."""
@@ -206,6 +208,21 @@ class Context(object):
             name, ext = os.path.splitext(f)
             if ext in _CACHE_FILES:
                 yield (f, os.path.join(self._cache_dir, f))
+
+    def get_cache_dirs(self):
+        """Get cache directories for any builds."""
+        if self.builds:
+            def remove_fail(func, path, err):
+                logger.debug("failed on removal")
+                logger.debug(path)
+                logger.debug(err)
+                _console_error("unable to cleanup {}".format(path))
+            for f in os.listdir(self.builds):
+                b_dir = os.path.join(self.builds, f)
+                if not os.path.isdir(b_dir):
+                    continue
+                logger.debug(b_dir)
+                yield b_dir
 
     def cache_file(self, file_name, ext=_CACHE_FILE):
         """Get a cache file."""
@@ -407,12 +424,25 @@ def _clean(context):
     logger.debug("cleaning requested")
     files = [x for x in context.get_cache_files()]
     if len(files) == 0:
-        _console_output("nothing to cleanup")
-        return
-    _confirm(context, "clear cache files", [x[0] for x in files])
-    for f in files:
-        _console_output("removing {}".format(f[0]))
-        os.remove(f[1])
+        _console_output("no files to cleanup")
+    else:
+        _confirm(context, "clear cache files", [x[0] for x in files])
+        for f in files:
+            _console_output("removing {}".format(f[0]))
+            os.remove(f[1])
+    dirs = [x for x in context.get_cache_dirs()]
+    if len(dirs) == 0:
+        _console_output("no directories to cleanup")
+    else:
+        _confirm(context, "clear cache directories", [x for x in dirs])
+
+        def remove_fail(func, path, err):
+            logger.debug("failed on removal")
+            logger.debug(path)
+            logger.debug(err)
+            _console_error("unable to cleanup {}".format(path))
+        for d in dirs:
+            shutil.rmtree(d, onerror=remove_fail)
 
 
 def _confirm(context, message, package_names, default_yes=True):
@@ -562,8 +592,7 @@ def _install(file_definition, makepkg, cache_dirs, context):
                 pkgbuild = os.path.join(f_dir, "PKGBUILD")
                 logger.trace(pkgbuild)
                 if not os.path.exists(pkgbuild):
-                    _console_error("no pkgbuild found: {}".format(pkgbuild))
-                    context.exiting(1)
+                    raise Exception("unable to find PKGBUILD")
                 split_result = _splitting(pkgbuild,
                                           file_definition.name,
                                           context.skip_split,
