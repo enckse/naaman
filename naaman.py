@@ -1309,11 +1309,12 @@ but will present as much information as possible to the user about the result
 package set. passing multiple i parameters will increase verbose (e.g. -ii)""",
                        action="count")
     group.add_argument("--vcs-install-only",
-                       help="""by default when attempting a force update
-naaman will attemp to download/clone the package and determine the version for
-vcs packages. by settings this flag when force updating naaman will skip this
-check and force-install the current version of the vcs package regardless of
-what is currently installed.""",
+                       help="""by default when attempting a force update (-yy)
+naaman will attempt to download/clone the package and determine the version for
+vcs packages. by settings this flag when force updating naaman will skip the
+vcs version check and force-install the current version of the vcs package
+regardless of what is currently installed. disabling this would save bandwidth
+""",
                        action="store_true")
 
 
