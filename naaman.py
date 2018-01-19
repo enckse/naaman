@@ -40,6 +40,7 @@ _DEFAULT_OPTS[_CUSTOM_REMOVAL] = []
 _DEFAULT_OPTS[_CUSTOM_MAKEPKG] = ["-sri"]
 _DEFAULT_OPTS[_CUSTOM_SCRIPTS] = "/usr/share/naaman/"
 
+_MAKEPKG_VCS = ["-od"]
 _AUR = "https://aur.archlinux.org{}"
 _AUR_GIT = _AUR.format("/{}.git")
 _RESULT_JSON = 'results'
@@ -115,6 +116,7 @@ class Context(object):
         self.rpc_cache = args.rpc_cache
         self._lock_file = os.path.join(self._cache_dir, "file" + _LOCKS)
         self.force_refresh = args.force_refresh
+        self.vcs_force = args.vcs_install_only
         self._custom_args = self.groups[_CUSTOM_ARGS]
         self._script_dir = self.get_custom_arg(_CUSTOM_SCRIPTS)
         self.now = datetime.now()
@@ -559,7 +561,7 @@ def _splitting(pkgbuild, pkgname, skip, error, split):
     raise Exception("unexpected split settings")
 
 
-def _install(file_definition, makepkg, cache_dirs, context):
+def _install(file_definition, makepkg, cache_dirs, context, version):
     """Install a package."""
     can_sudo = context.can_sudo
     script_text = context.load_script("makepkg")
@@ -569,7 +571,10 @@ def _install(file_definition, makepkg, cache_dirs, context):
     if can_sudo:
         sudo = "sudo"
     url = _AUR.format(file_definition.url)
-    _console_output("installing: {}".format(file_definition.name))
+    action = "installing"
+    if version is not None:
+        action = "checking version"
+    _console_output("{}: {}".format(action, file_definition.name))
     with new_file() as t:
         p = os.path.join(t, file_definition.name)
         os.makedirs(p)
@@ -603,10 +608,14 @@ def _install(file_definition, makepkg, cache_dirs, context):
                 elif split_result == _SPLIT_SKIPPED:
                     return True
         temp_sh = os.path.join(t, _NAME + ".sh")
+        use_version = ""
+        if version is not None:
+            use_version = version
         replaces = {}
         replaces["DIRECTORY"] = f_dir
         replaces["MAKEPKG"] = " ".join(makepkg)
         replaces["SUDO"] = sudo
+        replaces["VERSION"] = use_version
         script = script_text
         for r in replaces:
             script = script.replace("{" + r + "}", replaces[r])
@@ -667,6 +676,11 @@ def _check_vcs_ignore(context, threshold):
         with open(cache_check, 'w') as f:
             f.write(str(current_time))
     return result
+
+
+def _check_vcs(package, context, version):
+    """Check current vcs version."""
+    return _install(package, _MAKEPKG_VCS, None, context,  version)
 
 
 def _ignore_for(context, ignore_for, ignored):
@@ -751,11 +765,20 @@ def _syncing(context, is_install, targets, updating):
         if name in ignored:
             _console_output("{} is ignored".format(name))
             continue
-        if no_vcs and _is_vcs(name):
+        vcs = _is_vcs(name)
+        if no_vcs and vcs:
             logger.debug("skipping vcs package {}".format(name))
             continue
         package = _rpc_search(name, True, context)
         if package:
+            if vcs and not context.vcs_force and args.force_refresh:
+                logger.debug("checking vcs version")
+                pkg = context.db.get_pkg(package.name)
+                if pkg:
+                    if not _check_vcs(package, context, pkg.version):
+                        continue
+                else:
+                    logger.debug("unable to find installed package...")
             check_inst.append(package)
         else:
             _console_error("unknown AUR package: {}".format(name))
@@ -811,7 +834,8 @@ def _syncing(context, is_install, targets, updating):
             if not _install(i,
                             makepkg,
                             cache_dirs,
-                            context):
+                            context,
+                            None):
                 _console_error("error installing package: {}".format(i.name))
                 next_pkgs = []
                 after = False
@@ -1281,6 +1305,13 @@ when searching for information in the AUR. this is only used during a search
 but will present as much information as possible to the user about the result
 package set. passing multiple i parameters will increase verbose (e.g. -ii)""",
                        action="count")
+    group.add_argument("--vcs-install-only",
+                       help="""by default when attempting a force update
+naaman will attemp to download/clone the package and determine the version for
+vcs packages. by settings this flag when force updating naaman will skip this
+check and force-install the current version of the vcs package regardless of
+what is currently installed.""",
+                       action="store_true")
 
 
 def _load_config(args, config_file):
@@ -1319,6 +1350,7 @@ def _load_config(args, config_file):
                        "REMOVAL",
                        "DOWNLAOD",
                        "SCRIPTS",
+                       "VCS_INSTALL_ONLY",
                        "IGNORE_FOR",
                        "MAKEPKG",
                        "NO_VCS",
