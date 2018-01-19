@@ -683,7 +683,7 @@ def _check_vcs(package, context, version):
     """Check current vcs version."""
     result = _install(package, _MAKEPKG_VCS, None, context,  version)
     if not result:
-        _console_output("up-to-date: up-to-date".format(package.name))
+        _console_output("up-to-date: {}".format(package.name))
     return result
 
 
