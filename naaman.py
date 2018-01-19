@@ -619,6 +619,7 @@ def _install(file_definition, makepkg, cache_dirs, context, version):
         script = script_text
         for r in replaces:
             script = script.replace("{" + r + "}", replaces[r])
+        logger.trace(script)
         with open(temp_sh, 'w') as f:
             f.write(script)
         result = subprocess.call("/bin/bash --rcfile {}".format(temp_sh),
