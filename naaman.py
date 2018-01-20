@@ -116,7 +116,7 @@ class Context(object):
         self.rpc_cache = args.rpc_cache
         self._lock_file = os.path.join(self._cache_dir, "file" + _LOCKS)
         self.force_refresh = args.force_refresh
-        self.vcs_force = args.vcs_install_only
+        self.vcs_install = args.vcs_install_only
         self._custom_args = self.groups[_CUSTOM_ARGS]
         self._script_dir = self.get_custom_arg(_CUSTOM_SCRIPTS)
         self.now = datetime.now()
@@ -775,7 +775,7 @@ def _syncing(context, is_install, targets, updating):
             continue
         package = _rpc_search(name, True, context)
         if package:
-            if vcs and not context.vcs_force and args.force_refresh:
+            if vcs and not context.vcs_install and args.force_refresh:
                 logger.debug("checking vcs version")
                 pkg = context.db.get_pkg(package.name)
                 if pkg:
