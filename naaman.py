@@ -743,10 +743,11 @@ def _syncing(context, is_install, targets, updating):
     no_vcs = False
     if args.no_vcs or (args.refresh and not skip_filters):
         no_vcs = True
-    if args.vcs_ignore > 0 and not skip_filters:
+    if not no_vcs and args.vcs_ignore > 0 and not skip_filters:
         context.lock()
         try:
             if _check_vcs_ignore(context, args.vcs_ignore) is not None:
+                logger.trace("vcs ignore threshold met")
                 no_vcs = True
         except Exception as e:
             logger.error("unexpected vcs error")
@@ -774,7 +775,10 @@ def _syncing(context, is_install, targets, updating):
             continue
         package = _rpc_search(name, True, context)
         if package:
-            if vcs and not args.vcs_install_only and args.force_refresh:
+            if vcs and \
+               not args.vcs_install_only and \
+               args.force_refresh and \
+               not args.force_force_refresh:
                 logger.debug("checking vcs version")
                 pkg = context.db.get_pkg(package.name)
                 if pkg:
@@ -1316,6 +1320,11 @@ vcs version check and force-install the current version of the vcs package
 regardless of what is currently installed. disabling this would save bandwidth
 """,
                        action="store_true")
+    group.add_argument('-yyy', '--force-force-refresh',
+                       help="""similar to -yy but will force force refresh over
+any speciality checking (e.g. --vcs-install-only). Use this flag to update all
+AUR packages on the system""",
+                       action='store_true')
 
 
 def _load_config(args, config_file):
@@ -1408,17 +1417,23 @@ def _multi_args(value):
     """Handle specifying a multi-count arg."""
     val = False
     multi = False
+    triple = False
     if value and value > 0:
         val = True
         if value > 1:
             multi = True
-    return val, multi
+        if value > 2:
+            triple = True
+    return val, multi, triple
 
 
 def _manual_args(args):
     """Manual arg parse."""
-    args.refresh, args.force_refresh = _multi_args(args.refresh)
-    args.info, args.info_verbose = _multi_args(args.info)
+    r, fr, ffr = _multi_args(args.refresh)
+    args.refresh = r
+    args.force_refresh = fr
+    args.force_force_refresh = ffr
+    args.info, args.info_verbose, _ = _multi_args(args.info)
 
 
 def main():
