@@ -11,7 +11,6 @@ if [ ! -z "$CUR_VERSION" ]; then
     PKG_VERSION=$(_section "pkgver")
     PKG_REL=$(_section "pkgrel")
     if [[ "$PKG_VERSION-$PKG_REL" == "$CUR_VERSION" ]]; then
-        echo " => no change to version ($CUR_VERSION)"
         exit 1
     else
         exit 0
