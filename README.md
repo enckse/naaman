@@ -24,6 +24,23 @@ install dependencies
 sudo make build
 ```
 
+## Ahem
+
+**Before you begin using naaman**
+
+naaman is not:
+* a dependency solver, it's a pyalpm/makepkg wrapper for AUR to _help_ you
+* doing everything for you
+* pacman, though it does use _some wonky_ overlap on nomenclature
+* verifying AURs are safe before you use them
+* fool proof and is capable of being tricked/fooled/skipped
+
+These items are known and are not currently planned to be solved
+* Complicated/multi-AUR package dependency resolution
+* Replicating all conceivable pacman args that _might_ be useful for AUR wrappers
+* VCS packages are complicated, you have options to mitigate that
+* Split packages: there are options to mitigate it (`-on-split`) but dependencies and complex PKGBUILDs will not be handled
+
 ## Usage
 
 naaman relies on being similar to pacman while having to do special things for itself
@@ -185,19 +202,3 @@ Specify flags to pass to makepkg
 MAKEPKG="-sri"
 MAKEPKG="-f"
 ```
-
-## Known issues
-
-naaman is:
-* not a dependency solver, it's a pyalpm/makepkg wrapper for AUR to _help_ you
-* not doing everything for you
-* not pacman
-* relying on you to check and verify AURs are safe before you use them
-* uses some nomenclature strangely due to trying to act like pacman
-* capable of being tricked/fooled/skipped
-
-These items are known and are not currently planned to be solved
-* Complicated/multi-AUR package dependency resolution
-* Replicating all conceivable pacman args that _might_ be useful for AUR wrappers
-* VCS packages are complicated, you have options to mitigate that
-* Split packages: there are options to mitigate it (`-on-split`) but dependencies and complex PKGBUILDs will not be handled
