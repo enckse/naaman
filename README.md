@@ -28,14 +28,14 @@ sudo make build
 
 **Before you begin using naaman**
 
-naaman is not:
+**naaman is not:**
 * a dependency solver, it's a pyalpm/makepkg wrapper for AUR to _help_ you
 * doing everything for you
 * pacman, though it does use _some wonky_ overlap on nomenclature
 * verifying AURs are safe before you use them
 * fool proof and is capable of being tricked/fooled/skipped
 
-These items are known and are not currently planned to be solved
+**These items are known and are not currently planned to be solved:**
 * Complicated/multi-AUR package dependency resolution
 * Replicating all conceivable pacman args that _might_ be useful for AUR wrappers
 * VCS packages are complicated, you have options to mitigate that
