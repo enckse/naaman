@@ -41,6 +41,8 @@ sudo make build
 * VCS packages are complicated, you have options to mitigate that
 * Split packages: there are options to mitigate it (`-on-split`) but dependencies and complex PKGBUILDs will not be handled
 
+naaman is not meant to complete to be the best aur helper/manager/wrapper, it is just one of many [options](https://wiki.archlinux.org/index.php/AUR_helpers)
+
 ## Usage
 
 naaman relies on being similar to pacman while having to do special things for itself
