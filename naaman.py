@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 from xdg import BaseDirectory
 from pycman import config
 
-_VERSION = "0.4.1"
+_VERSION = "0.4.2"
 _NAME = "naaman"
 _CONFIG = _NAME + ".conf"
 logger = logging.getLogger(_NAME)
@@ -1533,8 +1533,9 @@ will move where makepkg operations are performed in the system.""",
     parser.add_argument('--download',
                         help="""specifies how to retrieve AUR packages from
 the AUR repository. 'git' will (attempt, if git is installed) to git clone.
-'tar' will download the tarball.""",
-                        default=_DOWNLOAD_GIT,
+'tar' will download the tarball. 'detect' will try 'git' and fallback to
+'tar'""",
+                        default=_DOWNLOAD_DETECT,
                         choices=_DOWNLOADS,
                         type=str)
     parser.add_argument("--on-split",
