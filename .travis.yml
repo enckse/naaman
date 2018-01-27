@@ -7,3 +7,8 @@ before_install:
   - sudo apt-get install -y help2man
 
 script: make travis
+
+notifications:
+    email:
+        on_success: change
+        on_failure: change
