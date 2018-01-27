@@ -615,6 +615,7 @@ def _install(file_definition, makepkg, cache_dirs, context, version):
         replaces["MAKEPKG"] = " ".join(makepkg)
         replaces["SUDO"] = sudo
         replaces["VERSION"] = use_version
+        replaces["CACHE"] = cache_dirs
         script = script_text
         for r in replaces:
             script = script.replace("{" + r + "}", replaces[r])

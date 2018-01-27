@@ -18,7 +18,7 @@ if [ ! -z "$CUR_VERSION" ]; then
 fi
 if [ $exit_code -eq 0 ]; then
     if [ $(ls | grep "\.pkg\.tar\.xz$" | wc -l) -gt 0 ]; then
-        for d in $(echo '{}'); do
+        for d in $(echo '{CACHE}'); do
             {SUDO} cp *.pkg.tar.xz $d
         done
     fi
