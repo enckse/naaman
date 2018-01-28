@@ -210,6 +210,10 @@ class Context(object):
             if ext in _CACHE_FILES:
                 yield (f, os.path.join(self._cache_dir, f))
 
+    def get_cache_pkgs(self):
+        """Get the cache pkgs location."""
+        return os.path.join(self._cache_dir, "pkg")
+
     def get_cache_dirs(self):
         """Get cache directories for any builds."""
         if self.builds:
@@ -831,11 +835,17 @@ def _syncing(context, is_install, targets, updating):
     cache = context.handle.cachedirs
     cache_dirs = ""
     if not args.no_cache and cache and len(cache) > 0:
+        use_caches = []
         for c in cache:
             if " " in c:
                 logger.warn("cache dir with space is skipped ({})".format(c))
                 continue
-        cache_dirs = " ".join(['{}'.format(x) for x in cache if " " not in x])
+            use_caches.append(c)
+        naaman_pkg = context.get_cache_pkgs()
+        if not os.path.exists(naaman_pkg):
+            os.makedirs(naaman_pkg)
+        use_caches.append(naaman_pkg)
+        cache_dirs = " ".join(['{}'.format(x) for x in use_caches])
     context.lock()
     try:
         for i in do_install:
