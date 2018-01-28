@@ -442,12 +442,12 @@ def _load_deps(depth, packages, context, resolved, last_report):
     timed = datetime.now()
     if last_report is not None:
         seconds = (timed - last_report).total_seconds()
-        if seconds > 15:
+        if seconds > 5:
             _console_output('still working...')
         else:
             timed = last_report
     if packages is None or len(packages) == 0:
-        return
+        return timed
     for p in packages:
         matched = [x for x in resolved if x[1] == p]
         if len(matched) > 0:
@@ -460,8 +460,9 @@ def _load_deps(depth, packages, context, resolved, last_report):
         d_ver, _ = _deps_compare(p)
         if context.check_pkgcache(p, d_ver):
             continue
-        _load_deps(depth + 1, pkg.deps, context, resolved, timed)
+        timed = _load_deps(depth + 1, pkg.deps, context, resolved, timed)
         resolved.append((depth, p))
+    return timed
 
 
 def _deps(context):
