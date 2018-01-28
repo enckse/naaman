@@ -44,7 +44,7 @@ dependencies:
 makedepends:
 	pacman -S help2man python-pip git
 
-build: optdepends dependencies install
+build: makedepends dependencies install
 
 install: completions manpages
 	install -Dm755 naaman.py $(INSTALL)/usr/bin/naaman
