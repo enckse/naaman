@@ -228,6 +228,9 @@ class Context(object):
                     continue
                 logger.debug(b_dir)
                 yield b_dir
+        cache_dir = self.get_cache_pkgs()
+        if os.path.exists(cache_dir):
+            yield self.get_cache_pkgs()
 
     def cache_file(self, file_name, ext=_CACHE_FILE):
         """Get a cache file."""
