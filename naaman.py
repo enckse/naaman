@@ -335,7 +335,7 @@ def _validate_options(args, unknown, groups):
     if args.sync:
         call_on("sync")
         valid_count += 1
-        if args.upgrades or args.search or args.clean:
+        if args.upgrades or args.search or args.clean or args.deps:
             sub_count = 0
             sub_command = None
             if args.upgrades:
@@ -346,13 +346,18 @@ def _validate_options(args, unknown, groups):
                 sub_count += 1
             if args.search:
                 sub_count += 1
+            if args.deps:
+                sub_count += 1
+                sub_command = "deps"
             if sub_count == 1:
                 if sub_command is not None:
                     call_on("sync: {}".format(sub_command))
             else:
                 _console_error("cannot perform multiple sub-options")
                 invalid = True
-        if args.search or (not args.upgrades and not args.clean):
+        if args.search or args.deps or (not args.upgrades and
+                                        not args.clean and
+                                        not args.deps):
             need_targets = True
 
     if args.remove:
@@ -412,8 +417,13 @@ def _validate_options(args, unknown, groups):
             callback = _upgrades
         if args.clean:
             callback = _clean
+        if args.deps:
+            callback = _deps
         if args.sync:
-            if not args.search and not args.upgrades and not args.clean:
+            if not args.search and \
+               not args.upgrades and \
+               not args.clean and \
+               not args.deps:
                 callback = _sync
         if args.remove:
             callback = _remove
@@ -425,6 +435,48 @@ def _validate_options(args, unknown, groups):
     if invalid:
         ctx.exiting(1)
     callback(ctx)
+
+
+def _load_deps(depth, packages, context, resolved):
+    """Load dependencies for a package."""
+    if packages is None or len(packages) == 0:
+        return
+    for p in packages:
+        matched = [x for x in resolved if x[1] == p]
+        if len(matched) > 0:
+            continue
+        _console_output("resolving dependencies level {}, {}".format(depth, p))
+        pkg = _rpc_search(p, True, context, include_deps=True)
+        if pkg is None:
+            logger.debug("non-aur {}".format(p))
+            continue
+        _load_deps(depth + 1, pkg.deps, context, resolved)
+        resolved.append((depth, p))
+
+
+def _deps(context):
+    """Handle dependency resolution."""
+    logger.debug("attempt dependency resolution")
+    context.deps = False
+    targets = context.targets
+    for target in targets:
+        resolved = []
+        logger.debug("resolving {}".format(target))
+        pkg = _rpc_search(target, True, context, include_deps=True)
+        if pkg is None:
+            _console_error("unable to find package: {}".format(target))
+            continue
+        if pkg.deps is not None and len(pkg.deps) > 0:
+            _load_deps(1, pkg.deps, context, resolved)
+            resolved.append((0, target))
+            actual = reversed(sorted(resolved, key=lambda x: x[0]))
+            logger.debug(actual)
+            context.targets = [x[1] for x in actual]
+        else:
+            logger.debug("no deps...")
+            context.targets = [target]
+        logger.trace(resolved)
+        _sync(context)
 
 
 def _clean(context):
@@ -940,11 +992,12 @@ def _get_segment(j, key):
 class AURPackage(object):
     """AUR package object."""
 
-    def __init__(self, name, version, url):
+    def __init__(self, name, version, url, deps):
         """Init the instance."""
         self.name = name
         self.version = version
         self.url = url
+        self.deps = deps
 
 
 def _handle_deps(root_package, context, dependencies):
@@ -1033,7 +1086,7 @@ def _rpc_caching(package_name, context):
     return return_cache, return_factory
 
 
-def _rpc_search(package_name, exact, context):
+def _rpc_search(package_name, exact, context, include_deps=False):
     """Search for a package in the aur."""
     if exact and context.check_repos(package_name):
         logger.debug("in repos")
@@ -1084,17 +1137,21 @@ def _rpc_search(package_name, exact, context):
                         if exact:
                             if name == package_name:
                                 deps = None
-                                if context.deps:
+                                if context.deps or include_deps:
                                     if _AUR_DEPS in result:
                                         _aur_deps = result[_AUR_DEPS]
-                                        _handle_deps(package_name,
-                                                     context,
-                                                     _aur_deps)
+                                        if context.deps:
+                                            _handle_deps(package_name,
+                                                         context,
+                                                         _aur_deps)
+                                        if include_deps:
+                                            deps = _aur_deps
                                 else:
                                     logger.debug("no dependency checks")
                                 return AURPackage(name,
                                                   vers,
-                                                  result[_AUR_URLP])
+                                                  result[_AUR_URLP],
+                                                  deps)
                         else:
                             ind = ""
                             if not name or not desc or not vers:
@@ -1483,6 +1540,11 @@ a package with a name or description matching this input string""",
                         help="""clean the cache. this will clean the naaman
 cache area of any cache files. this can be used to invalidate/remove old cache
 information for deprecated packages or to reset duration caching options.""",
+                        action="store_true")
+    parser.add_argument('-d', '--deps',
+                        help="""naaman will attempt to build a dependency chain
+for the seperately  for each package specified. upon completion naaman will
+attempt to install (after confirmation) the determined dependency chain.""",
                         action="store_true")
     parser.add_argument('--version',
                         help="display version information about naaman",
