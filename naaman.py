@@ -437,20 +437,30 @@ def _validate_options(args, unknown, groups):
     callback(ctx)
 
 
-def _load_deps(depth, packages, context, resolved):
+def _load_deps(depth, packages, context, resolved, last_report):
     """Load dependencies for a package."""
+    timed = datetime.now()
+    if last_report is not None:
+        seconds = (timed - last_report).total_seconds()
+        if seconds > 15:
+            _console_output('still working...')
+        else:
+            timed = last_report
     if packages is None or len(packages) == 0:
         return
     for p in packages:
         matched = [x for x in resolved if x[1] == p]
         if len(matched) > 0:
             continue
-        _console_output("resolving dependencies level {}, {}".format(depth, p))
+        logger.debug("resolving dependencies level {}, {}".format(depth, p))
         pkg = _rpc_search(p, True, context, include_deps=True)
         if pkg is None:
             logger.debug("non-aur {}".format(p))
             continue
-        _load_deps(depth + 1, pkg.deps, context, resolved)
+        d_ver, _ = _deps_compare(p)
+        if context.check_pkgcache(p, d_ver):
+            continue
+        _load_deps(depth + 1, pkg.deps, context, resolved, timed)
         resolved.append((depth, p))
 
 
@@ -467,7 +477,7 @@ def _deps(context):
             _console_error("unable to find package: {}".format(target))
             continue
         if pkg.deps is not None and len(pkg.deps) > 0:
-            _load_deps(1, pkg.deps, context, resolved)
+            _load_deps(1, pkg.deps, context, resolved, None)
             resolved.append((0, target))
             actual = reversed(sorted(resolved, key=lambda x: x[0]))
             logger.debug(actual)
@@ -1000,6 +1010,20 @@ class AURPackage(object):
         self.deps = deps
 
 
+def _deps_compare(package):
+    """Compare deps versions."""
+    d_compare = None
+    d_version = None
+    for compare in [">=", "<=", ">", "<", "="]:
+        c_idx = package.rfind(compare)
+        if c_idx >= 0:
+            d_compare = compare
+            d_version = d[c_idx + len(compare):len(d)]
+            d = d[0:c_idx]
+            break
+    return d_version, d_compare
+
+
 def _handle_deps(root_package, context, dependencies):
     """Handle dependencies resolution."""
     logger.debug("resolving deps")
@@ -1007,15 +1031,7 @@ def _handle_deps(root_package, context, dependencies):
     syncpkgs = context.get_packages()
     for dep in dependencies:
         d = dep
-        d_version = None
-        d_compare = None
-        for compare in [">=", "<=", ">", "<", "="]:
-            c_idx = d.rfind(compare)
-            if c_idx >= 0:
-                d_compare = compare
-                d_version = d[c_idx + len(compare):len(d)]
-                d = d[0:c_idx]
-                break
+        d_version, d_compare = _deps_compare(d)
         logger.debug(d)
         if context.targets and d in context.targets:
             logger.debug("installing it")
