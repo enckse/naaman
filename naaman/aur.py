@@ -8,17 +8,19 @@ import urllib.request
 import string
 import json
 import os
+import naaman.consts as cst
 import naaman.logger as log
+import naaman.shell as sh
 from datetime import datetime
 
 _PRINTABLE = set(string.printable)
 
-AUR = "https://aur.archlinux.org{}"
-AUR_GIT = AUR.format("/{}.git")
+_AUR = "https://aur.archlinux.org{}"
+_AUR_GIT = _AUR.format("/{}.git")
 _RESULT_JSON = 'results'
 _AUR_NAME = "Name"
 _AUR_DESC = "Description"
-_AUR_RAW_URL = AUR.format("/rpc?v=5&type={}&arg{}")
+_AUR_RAW_URL = _AUR.format("/rpc?v=5&type={}&arg{}")
 _AUR_INFO = _AUR_RAW_URL.format("info", "[]={}")
 _AUR_SEARCH = _AUR_RAW_URL.format("search&by=name-desc", "={}")
 _AUR_VERS = "Version"
@@ -309,3 +311,63 @@ def _handle_deps(root_package, context, dependencies):
         missing = True
     if missing:
         context.exiting(1)
+
+
+def install(file_definition, makepkg, cache_dirs, context, version):
+    """Install a package."""
+    can_sudo = context.can_sudo
+    script_text = context.load_script("makepkg")
+    new_file = context.build_dir
+    use_git = context.use_git
+    sudo = ""
+    if can_sudo:
+        sudo = "sudo"
+    url = _AUR.format(file_definition.url)
+    action = "installing"
+    if version is not None:
+        action = "checking version"
+    log.console_output("{}: {}".format(action, file_definition.name))
+    with new_file() as t:
+        p = os.path.join(t, file_definition.name)
+        os.makedirs(p)
+        f_dir = os.path.join(t, file_definition.name)
+        if use_git:
+            sh.shell(["git",
+                      "clone",
+                      "--depth=1",
+                      _AUR_GIT.format(file_definition.name),
+                      "."], suppress_error=True, workingdir=p)
+        else:
+            log.debug("using tar")
+            f_name = file_definition.name + ".tar.gz"
+            file_name = os.path.join(p, f_name)
+            log.debug(file_name)
+            urllib.request.urlretrieve(url, file_name)
+            sh.shell(["tar", "xf", f_name, "--strip-components=1"],
+                     workingdir=p)
+            if context.skip_split or context.error_split or context.do_split:
+                log.debug("handling split packages")
+                pkgbuild = os.path.join(f_dir, "PKGBUILD")
+                log.trace(pkgbuild)
+                if not os.path.exists(pkgbuild):
+                    raise Exception("unable to find PKGBUILD")
+                split_result = pkgbld.splitting(pkgbuild,
+                                                file_definition.name,
+                                                context.skip_split,
+                                                context.error_split,
+                                                context.do_split)
+                if split_result == pkgbld.SPLIT_ERRORED:
+                    return False
+                elif split_result == pkgbld.SPLIT_SKIPPED:
+                    return True
+        temp_sh = os.path.join(t, cst.NAME + ".sh")
+        use_version = ""
+        if version is not None:
+            use_version = version
+        replaces = {}
+        replaces["DIRECTORY"] = f_dir
+        replaces["MAKEPKG"] = " ".join(makepkg)
+        replaces["SUDO"] = sudo
+        replaces["VERSION"] = use_version
+        replaces["CACHE"] = cache_dirs
+        return sh.template_script(script_text, replaces, temp_sh)
