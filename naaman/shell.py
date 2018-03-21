@@ -3,15 +3,19 @@ import subprocess
 import naaman.logger as log
 
 
-def has_git():
+def has_git(required):
     """Check if we have git installed."""
     log.debug("checking for git")
     try:
         with open("/dev/null", "w") as null:
             subprocess.Popen("git", stdout=null, stderr=null)
-        raise Exception("BLUR")
+        return True
     except Exception as e:
-        return e
+        if required:
+            log.console_error("unable to use git")
+            log.error(e)
+            return None
+        return False
 
 
 def shell(command, suppress_error=False, workingdir=None):

@@ -113,16 +113,11 @@ class Context(object):
         self.use_git = False
         if args.download and args.download in [_DOWNLOAD_GIT,
                                                _DOWNLOAD_DETECT]:
-            git_error = sh.has_git()
-            if git_error is None:
-                self.use_git = True
+            git = sh.has_git(args.download != _DOWNLOAD_DETECT)
+            if git is not None:
+                self.use_git = git
             else:
-                if args.download == _DOWNLOAD_DETECT:
-                    logger.debug("detected not-git")
-                else:
-                    log.console_error("unable to use git")
-                    logger.error(git_error)
-                    self.exiting(1)
+                self.exiting(1)
         self.builds = args.builds
         if self.builds:
             if not os.path.isdir(self.builds):
