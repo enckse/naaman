@@ -31,21 +31,6 @@ def get_deps():
         exit(1)
 
 
-def get_segment():
-    """Segment testing."""
-    obj = {}
-    obj['non'] = "aÂb"
-    obj['null'] = None
-    s = aur.get_segment(obj, 'non')
-    if s != 'ab':
-        print("non-ascii characters not dropped")
-        exit(1)
-    s = aur.get_segment(obj, 'null')
-    if s != '':
-        print("should be empty")
-        exit(1)
-
-
 def is_vcs():
     """Check if vcs."""
     v = aur.is_vcs("test-git")
@@ -77,7 +62,6 @@ def deps_compare():
 
 def main():
     """Main-entry harness."""
-    get_segment()
     is_vcs()
     deps_compare()
     get_deps()
