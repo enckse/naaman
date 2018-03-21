@@ -28,3 +28,17 @@ def get_segment(j, key):
     if len(inputs) != len(res):
         log.debug("dropped non-ascii characters")
     return res
+
+def is_vcs(name):
+    """Check if vcs package."""
+    for t in ['-git',
+              '-nightly',
+              '-hg',
+              '-bzr',
+              '-cvs',
+              '-darcs',
+              '-svn']:
+        if name.endswith(t):
+            log.debug("tagged as {}".format(t))
+            return "latest (vcs version)"
+

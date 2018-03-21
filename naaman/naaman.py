@@ -692,20 +692,6 @@ def _sync(context):
     _syncing(context, True, context.targets, False)
 
 
-def _is_vcs(name):
-    """Check if vcs package."""
-    for t in ['-git',
-              '-nightly',
-              '-hg',
-              '-bzr',
-              '-cvs',
-              '-darcs',
-              '-svn']:
-        if name.endswith(t):
-            logger.debug("tagged as {}".format(t))
-            return "latest (vcs version)"
-
-
 def _get_deltahours(input_str, now):
     """Get a timedelta in hours."""
     logger.debug("timedelta (hours)")
@@ -831,7 +817,7 @@ def _syncing(context, is_install, targets, updating):
         if name in ignored:
             log.console_output("{} is ignored".format(name))
             continue
-        vcs = _is_vcs(name)
+        vcs = aur.is_vcs(name)
         if no_vcs and vcs:
             logger.debug("skipping vcs package {}".format(name))
             continue
@@ -868,7 +854,7 @@ def _syncing(context, is_install, targets, updating):
         pkg = context.db.get_pkg(i.name)
         vers = i.version
         tag = ""
-        vcs = _is_vcs(i.name)
+        vcs = aur.is_vcs(i.name)
         if pkg:
             if pkg.version == i.version or vcs:
                 if not vcs and updating:
@@ -1174,7 +1160,7 @@ def _rpc_search(package_name, exact, context, include_deps=False):
                                 continue
                             if context.db.get_pkg(name) is not None:
                                 ind = " [installed]"
-                            if _is_vcs(name):
+                            if aur.is_vcs(name):
                                 ind += " [vcs]"
                             logger.info("aur/{} {}{}".format(name, vers, ind))
                             if not desc or len(desc) == 0:
