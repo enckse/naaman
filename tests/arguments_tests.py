@@ -1,5 +1,5 @@
 """Argument handling."""
-import naaman.arguments as arg
+import naaman.arguments.utils as arg
 
 
 class MockArgs(object):
