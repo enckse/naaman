@@ -443,8 +443,9 @@ def _load_deps(depth, packages, context, resolved, last_report):
         if len(matched) > 0:
             continue
         logger.debug("resolving dependencies level {}, {}".format(depth, p))
-        d_ver, _, p = _deps_compare(p)
-        if context.check_pkgcache(p, d_ver):
+        dependency = aur.deps_compare(p)
+        p = dependency.pkg
+        if context.check_pkgcache(p, dependency.version):
             continue
         pkg = _rpc_search(p, True, context, include_deps=True)
         if pkg is None:
@@ -967,20 +968,6 @@ def _remove(context):
     log.console_output("packages removed")
 
 
-def _deps_compare(package):
-    """Compare deps versions."""
-    d_compare = None
-    d_version = None
-    for compare in [">=", "<=", ">", "<", "="]:
-        c_idx = package.rfind(compare)
-        if c_idx >= 0:
-            d_compare = compare
-            d_version = package[c_idx + len(compare):len(package)]
-            package = package[0:c_idx]
-            break
-    return d_version, d_compare, package
-
-
 def _handle_deps(root_package, context, dependencies):
     """Handle dependencies resolution."""
     logger.debug("resolving deps")
@@ -988,7 +975,8 @@ def _handle_deps(root_package, context, dependencies):
     syncpkgs = context.get_packages()
     for dep in dependencies:
         d = dep
-        d_version, d_compare, d = _deps_compare(d)
+        dependency = aur.deps_compare(d)
+        d = dependency.pkg
         logger.debug(d)
         if context.targets and d in context.targets:
             logger.debug("installing it")
@@ -1010,12 +998,12 @@ def _handle_deps(root_package, context, dependencies):
         if search is None:
             logger.debug("not aur")
             continue
-        if context.check_pkgcache(d, d_version):
+        if context.check_pkgcache(d, dependency.version):
             logger.debug("installed")
             continue
         show_version = ""
-        if d_version is not None:
-            show_version = " ({}{})".format(d_compare, d_version)
+        if dependency.version is not None:
+            show_version = " ({}{})".format(dependency.op, dependency.version)
         log.console_error("unmet AUR dependency: {}{}".format(d, show_version))
         missing = True
     if missing:

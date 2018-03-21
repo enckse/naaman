@@ -29,6 +29,7 @@ def get_segment(j, key):
         log.debug("dropped non-ascii characters")
     return res
 
+
 def is_vcs(name):
     """Check if vcs package."""
     for t in ['-git',
@@ -42,3 +43,26 @@ def is_vcs(name):
             log.debug("tagged as {}".format(t))
             return "latest (vcs version)"
 
+
+class Deps(object):
+    """Dependency object."""
+
+    def __init__(self, vers, op, package):
+        """Init a new dependency object."""
+        self.version = vers
+        self.op = op
+        self.pkg = package
+
+
+def deps_compare(package):
+    """Compare deps versions."""
+    d_compare = None
+    d_version = None
+    for compare in [">=", "<=", ">", "<", "="]:
+        c_idx = package.rfind(compare)
+        if c_idx >= 0:
+            d_compare = compare
+            d_version = package[c_idx + len(compare):len(package)]
+            package = package[0:c_idx]
+            break
+    return Deps(d_version, d_compare, package)
