@@ -1140,10 +1140,10 @@ def _rpc_search(package_name, exact, context, include_deps=False):
                                         val = str(val)
                                     use_key = "{}   {}".format(k, spacing)
                                     use_key = use_key[0:max_key - 2] + ": "
-                                    _terminal_output(val,
-                                                     context.terminal_width,
-                                                     use_key,
-                                                     spacing)
+                                    log.terminal_output(val,
+                                                        context.terminal_width,
+                                                        use_key,
+                                                       spacing)
                                 logger.info("")
                                 continue
                             if context.db.get_pkg(name) is not None:
@@ -1153,10 +1153,10 @@ def _rpc_search(package_name, exact, context, include_deps=False):
                             logger.info("aur/{} {}{}".format(name, vers, ind))
                             if not desc or len(desc) == 0:
                                 desc = "no description"
-                            _terminal_output(desc,
-                                             context.terminal_width,
-                                             None,
-                                             "    ")
+                            log.terminal_output(desc,
+                                                context.terminal_width,
+                                                None,
+                                                "    ")
                     except Exception as e:
                         logger.error("unable to parse package")
                         logger.error(e)
@@ -1167,36 +1167,6 @@ def _rpc_search(package_name, exact, context, include_deps=False):
         logger.error(e)
     if not found and context.info_verbose:
         log.console_error("no exact matches for {}".format(package_name))
-
-
-def _terminal_output(input_str, terminal_width, first_string, output_string):
-    """Write multiple lines to output terminal with wrapper."""
-    lines = []
-    c_len = terminal_width
-    if c_len > 0:
-        c_len = c_len - len(output_string) - 4
-        cur = []
-        words = input_str.split(" ")
-        for c_idx in range(0, len(words)):
-            next_word = words[c_idx]
-            cur_len = sum([len(x) + 1 for x in cur])
-            next_len = cur_len + len(next_word) + 1
-            if next_len > c_len:
-                lines.append(" ".join(cur))
-                cur = []
-            else:
-                cur.append(next_word)
-        if len(cur) > 0:
-            lines.append(" ".join(cur))
-    else:
-        lines.append(input_str)
-    is_first = True
-    for l in lines:
-        out_string = output_string
-        if is_first and first_string is not None:
-            out_string = first_string
-            is_first = False
-        logger.info("{}{}".format(out_string, l))
 
 
 def _search(context):
