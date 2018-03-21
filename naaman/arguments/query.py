@@ -1,3 +1,6 @@
+"""AUR package querying."""
+
+
 def options(parser):
     """Get query options."""
     group = parser.add_argument_group("Query options")
