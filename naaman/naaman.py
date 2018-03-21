@@ -6,14 +6,9 @@ Is an AUR wrapper/manager that uses pacman as it's backing data store.
 """
 import argparse
 import os
-import getpass
-import pyalpm
 import urllib.request
 import urllib.parse
 import json
-import signal
-import tempfile
-import subprocess
 import shutil
 import naaman.arguments.common as common_args
 import naaman.arguments.config as config_args
@@ -22,14 +17,12 @@ import naaman.arguments.utils as util_args
 import naaman.arguments.query as query_args
 import naaman.arguments.syncup as sync_args
 import naaman.shell as sh
-import naaman.version as vers
 import naaman.aur as aur
 import naaman.context as nctx
 import naaman.logger as log
 import naaman.consts as cst
 import naaman.pkgbuild as pkgbld
 from datetime import datetime, timedelta
-from pycman import config
 
 logger = log.LOGGER
 
