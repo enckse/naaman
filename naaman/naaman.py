@@ -29,7 +29,6 @@ import naaman.logger as log
 import naaman.consts as cst
 import naaman.pkgbuild as pkgbld
 from datetime import datetime, timedelta
-from xdg import BaseDirectory
 from pycman import config
 
 logger = log.LOGGER
@@ -1076,9 +1075,8 @@ def _do_query(context):
 
 def main():
     """Entry point."""
-    cache_dir = BaseDirectory.xdg_cache_home
-    cache_dir = os.path.join(cache_dir, cst.NAME)
-    config_file = os.path.join(BaseDirectory.xdg_config_home, cst.CONFIG)
+    cache_dir = config_args.get_default_cache()
+    config_file = config_args.get_default_config()
     parser = common_args.build(config_file, cache_dir)
     sync_args.sync_up_options(parser)
     query_args.options(parser)

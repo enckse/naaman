@@ -1,9 +1,21 @@
 """Load the configuration file for argument adjustment."""
 
-import naaman.logger as log
 import os
+import naaman.logger as log
 import naaman.consts as cst
 import naaman.pkgbuild as pkgbld
+from xdg import BaseDirectory
+
+
+def get_default_cache():
+    """Get default cache path."""
+    cache_dir = BaseDirectory.xdg_cache_home
+    return os.path.join(cache_dir, cst.NAME)
+
+
+def get_default_config():
+    """Get default config path."""
+    return os.path.join(BaseDirectory.xdg_config_home, cst.CONFIG)
 
 
 def load_config(args, config_file):
