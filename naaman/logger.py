@@ -10,6 +10,16 @@ CONSOLE_FORMAT = logging.Formatter('%(message)s')
 FILE_FORMAT = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
 
+def trace(message):
+    """Write a trace message."""
+    LOGGER.trace(message)
+
+
+def error(message):
+    """Write an error message."""
+    LOGGER.error(message)
+
+
 def debug(message):
     """Write a simple debug message."""
     LOGGER.debug(message)

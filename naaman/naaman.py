@@ -17,6 +17,7 @@ import tempfile
 import subprocess
 import shutil
 import time
+import naaman.shell as sh
 import naaman.version as vers
 import naaman.aur as aur
 import naaman.logger as log
@@ -534,25 +535,6 @@ def _confirm(context, message, package_names, default_yes=True):
         context.exiting(1)
 
 
-def _shell(command, suppress_error=False, workingdir=None):
-    """Run a shell command."""
-    logger.debug("shell")
-    logger.trace(command)
-    logger.trace(workingdir)
-    sp = subprocess.Popen(command,
-                          cwd=workingdir,
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE)
-    out, err = sp.communicate()
-    logger.trace(out)
-    if suppress_error:
-        logger.trace(err)
-    else:
-        if err and len(err) > 0:
-            logger.error(err)
-    return out
-
-
 def _splitting(pkgbuild, pkgname, skip, error, split):
     """Package splitting."""
     splits = []
@@ -640,18 +622,19 @@ def _install(file_definition, makepkg, cache_dirs, context, version):
         os.makedirs(p)
         f_dir = os.path.join(t, file_definition.name)
         if use_git:
-            _shell(["git",
-                    "clone",
-                    "--depth=1",
-                    _AUR_GIT.format(file_definition.name),
-                    "."], suppress_error=True, workingdir=p)
+            sh.shell(["git",
+                      "clone",
+                      "--depth=1",
+                      _AUR_GIT.format(file_definition.name),
+                      "."], suppress_error=True, workingdir=p)
         else:
             logger.debug("using tar")
             f_name = file_definition.name + ".tar.gz"
             file_name = os.path.join(p, f_name)
             logger.debug(file_name)
             urllib.request.urlretrieve(url, file_name)
-            _shell(["tar", "xf", f_name, "--strip-components=1"], workingdir=p)
+            sh.shell(["tar", "xf", f_name, "--strip-components=1"],
+                     workingdir=p)
             if context.skip_split or context.error_split or context.do_split:
                 logger.debug("handling split packages")
                 pkgbuild = os.path.join(f_dir, "PKGBUILD")
@@ -1143,7 +1126,7 @@ def _rpc_search(package_name, exact, context, include_deps=False):
                                     log.terminal_output(val,
                                                         context.terminal_width,
                                                         use_key,
-                                                       spacing)
+                                                        spacing)
                                 logger.info("")
                                 continue
                             if context.db.get_pkg(name) is not None:
