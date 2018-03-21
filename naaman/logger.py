@@ -59,6 +59,11 @@ def debug(message):
     LOGGER.debug(message)
 
 
+def warn(message):
+    """Warning message."""
+    LOGGER.warn(message)
+
+
 def info(message):
     """Info output."""
     LOGGER.info(message)
