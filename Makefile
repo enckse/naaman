@@ -7,15 +7,22 @@ MANPAGE8=$(BIN)$(MAN8)
 MANPAGE5=$(BIN)$(MAN5)
 MONTH_YEAR=$(shell date +"%B %Y")
 DOC=docs/
-SRC=$(shell find naaman/ -type f -name "*\.py")
+SRC=$(shell find naaman/ -type f -name "*\.py") $(shell find tests/ -type f -name "*\.py")
 VERS=$(shell cat naaman/version.py | grep "^\_\_version\_\_" | cut -d "=" -f 2 | sed 's/ //g;s/"//g')
+TST=tests/
+TESTS=$(shell ls $(TST))
 
-all: analyze completions manpages
+all: test analyze completions manpages
 
 travis: ci all
 
+test: $(TESTS)
+
 ci:
 	pip install pyxdg pep257 pycodestyle
+
+$(TESTS):
+	PYTHONPATH=. python $(TST)$@
 
 clean:
 	rm -rf $(BIN)
