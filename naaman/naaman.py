@@ -5,7 +5,6 @@ N(ot) A(nother) A(UR) Man(ager).
 Is an AUR wrapper/manager that uses pacman as it's backing data store.
 """
 import argparse
-import logging
 import os
 import getpass
 import pyalpm
@@ -1327,28 +1326,7 @@ and 'nothing' will not process the package at all before install (default).""",
     sync_args.sync_up_options(parser)
     query_args.options(parser)
     args, unknown = parser.parse_known_args()
-    ch = logging.StreamHandler()
-    if not os.path.exists(args.cache_dir):
-        logger.debug("creating cache dir")
-        os.makedirs(args.cache_dir)
-    fh = logging.FileHandler(os.path.join(args.cache_dir, cst.NAME + '.log'))
-    fh.setFormatter(log.FILE_FORMAT)
-    if args.verbose:
-        ch.setFormatter(log.FILE_FORMAT)
-    else:
-        ch.setFormatter(log.CONSOLE_FORMAT)
-    for h in [ch, fh]:
-        logger.addHandler(h)
-    if args.verbose:
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)
-
-    if args.trace:
-        def trace_log(obj):
-            logger.debug(obj)
-        trace_call = trace_log
-        setattr(logger, "trace", trace_log)
+    log.init(args.verbose, args.trace, args.cache_dir)
     logger.trace("files/folders")
     logger.trace(args.cache_dir)
     logger.trace(args.config)

@@ -1,5 +1,6 @@
 """Logging for naaman."""
 
+import os
 import logging
 import naaman.consts as consts
 
@@ -13,8 +14,34 @@ def _noop(message):
 LOGGER = logging.getLogger(consts.NAME)
 LOGGER.trace = _noop
 
-CONSOLE_FORMAT = logging.Formatter('%(message)s')
-FILE_FORMAT = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+_CONSOLE_FORMAT = logging.Formatter('%(message)s')
+_FILE_FORMAT = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+
+def init(verbose, trace, cache_dir):
+    """Initialize logging."""
+    ch = logging.StreamHandler()
+    if not os.path.exists(cache_dir):
+        LOGGER.debug("creating cache dir")
+        os.makedirs(cache_dir)
+    fh = logging.FileHandler(os.path.join(cache_dir, consts.NAME + '.log'))
+    fh.setFormatter(_FILE_FORMAT)
+    if verbose:
+        ch.setFormatter(_FILE_FORMAT)
+    else:
+        ch.setFormatter(_CONSOLE_FORMAT)
+    for h in [ch, fh]:
+        LOGGER.addHandler(h)
+    if verbose:
+        LOGGER.setLevel(logging.DEBUG)
+    else:
+        LOGGER.setLevel(logging.INFO)
+
+    if trace:
+        def trace_log(obj):
+            LOGGER.debug(obj)
+        trace_call = trace_log
+        setattr(LOGGER, "trace", trace_log)
 
 
 def trace(message):
