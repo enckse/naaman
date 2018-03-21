@@ -10,7 +10,7 @@ DOC=docs/
 SRC=$(shell find naaman/ -type f -name "*\.py") $(shell find tests/ -type f -name "*\.py")
 VERS=$(shell cat naaman/version.py | grep "^\_\_version\_\_" | cut -d "=" -f 2 | sed 's/ //g;s/"//g')
 TST=tests/
-TESTS=$(shell ls $(TST))
+TESTS=$(shell ls $(TST) | grep "\.py$$")
 
 all: test analyze completions manpages
 
@@ -21,12 +21,15 @@ test: $(TESTS)
 ci:
 	pip install pyxdg pep257 pycodestyle
 
-$(TESTS):
+$(TESTS): clean
+	@echo $@
 	PYTHONPATH=. python $(TST)$@
 
 clean:
 	rm -rf $(BIN)
 	mkdir -p $(BIN)
+	rm -rf $(TST)$(BIN)
+	mkdir -p $(TST)$(BIN)
 
 completions: clean
 	cp $(DOC)bash.completions $(COMPLETION)

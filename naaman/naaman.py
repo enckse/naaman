@@ -25,6 +25,7 @@ import naaman.version as vers
 import naaman.aur as aur
 import naaman.logger as log
 import naaman.consts as cst
+import naaman.pkgbuild as pkgbld
 from datetime import datetime, timedelta
 from xdg import BaseDirectory
 from pycman import config
@@ -63,17 +64,6 @@ _DOWNLOAD_GIT = "git"
 _DOWNLOAD_TAR = "tar"
 _DOWNLOAD_DETECT = "detect"
 _DOWNLOADS = [_DOWNLOAD_GIT, _DOWNLOAD_TAR, _DOWNLOAD_DETECT]
-
-_SPLIT_SKIP = "skip"
-_SPLIT_NONE = "nothing"
-_SPLIT_ERR = "error"
-_SPLIT_SPLIT = "split"
-_SPLITS = [_SPLIT_SKIP,  _SPLIT_NONE, _SPLIT_ERR, _SPLIT_SPLIT]
-_PKGNAME = ['@', '.', '_', '+', '-']
-_SPLIT_SKIPPED = 2
-_SPLIT_NOOP = 0
-_SPLIT_ERRORED = 1
-_SPLIT_DONE = 3
 
 
 class Context(object):
@@ -132,9 +122,9 @@ class Context(object):
         except Exception as e:
             logger.debug("unable to determine tty column size")
             logger.debug(e)
-        self.skip_split = args.on_split == _SPLIT_SKIP
-        self.error_split = args.on_split == _SPLIT_ERR
-        self.do_split = args.on_split == _SPLIT_SPLIT
+        self.skip_split = args.on_split == pkgbld.SPLIT_SKIP
+        self.error_split = args.on_split == pkgbld.SPLIT_ERR
+        self.do_split = args.on_split == pkgbld.SPLIT_SPLIT
         if self.use_git and \
            (self.skip_split or self.error_split or self.do_split):
             log.console_error("split package options not available for git")
@@ -528,74 +518,6 @@ def _confirm(context, message, package_names, default_yes=True):
         context.exiting(1)
 
 
-def _splitting(pkgbuild, pkgname, skip, error, split):
-    """Package splitting."""
-    splits = []
-    all_lines = []
-    with open(pkgbuild, 'r') as f:
-        in_pkg = False
-        for line in f.readlines():
-            if split:
-                all_lines.append(line)
-            if in_pkg:
-                current = line.strip()
-                for c in current:
-                    if c.isalnum():
-                        continue
-                    if c in _PKGNAME:
-                        continue
-                    in_pkg = False
-            if line.startswith("pkgname="):
-                in_pkg = True
-            if in_pkg:
-                splits.append(line)
-    logger.trace(splits)
-    lines = " ".join(splits)
-    new_entry = ""
-    entries = []
-    in_section = False
-    for c in lines:
-        if c not in _PKGNAME and not c.isalnum():
-            if c in "=":
-                in_section = True
-            new_entry = new_entry.strip()
-            if len(new_entry) > 0:
-                entries.append(new_entry)
-            new_entry = ""
-            continue
-        if in_section:
-            new_entry += c
-    new_entry = new_entry.strip()
-    if len(new_entry) > 0:
-        entries.append(new_entry)
-    logger.trace(lines)
-    if len(entries) == 1:
-        logger.debug('not a split package')
-        return _SPLIT_NOOP
-    if pkgname not in entries:
-        log.console_error("unable to find {} in split package".format(pkgname))
-        return _SPLIT_ERRORED
-    if error:
-        log.console_error("split package detected but disabled")
-        return _SPLIT_ERRORED
-    if skip:
-        log.console_output("skipping (split package)")
-        return _SPLIT_SKIPPED
-    if split:
-        log.console_output("splitting package")
-        has_done = False
-        with open(pkgbuild, 'w') as f:
-            for line in all_lines:
-                if line in lines:
-                    if not has_done:
-                        f.write("pkgname={}\n".format(pkgname))
-                        has_done = True
-                    continue
-                f.write(line)
-        return _SPLIT_DONE
-    raise Exception("unexpected split settings")
-
-
 def _install(file_definition, makepkg, cache_dirs, context, version):
     """Install a package."""
     can_sudo = context.can_sudo
@@ -634,14 +556,14 @@ def _install(file_definition, makepkg, cache_dirs, context, version):
                 logger.trace(pkgbuild)
                 if not os.path.exists(pkgbuild):
                     raise Exception("unable to find PKGBUILD")
-                split_result = _splitting(pkgbuild,
-                                          file_definition.name,
-                                          context.skip_split,
-                                          context.error_split,
-                                          context.do_split)
-                if split_result == _SPLIT_ERRORED:
+                split_result = pkgbld.splitting(pkgbuild,
+                                                file_definition.name,
+                                                context.skip_split,
+                                                context.error_split,
+                                                context.do_split)
+                if split_result == pkgbld.SPLIT_ERRORED:
                     return False
-                elif split_result == _SPLIT_SKIPPED:
+                elif split_result == pkgbld.SPLIT_SKIPPED:
                     return True
         temp_sh = os.path.join(t, cst.NAME + ".sh")
         use_version = ""
@@ -1280,7 +1202,7 @@ def _load_config(args, config_file):
                         val = value
                     key_checks = {}
                     key_checks["DOWNLOAD"] = _DOWNLOADS
-                    key_checks["ON_SPLIT"] = _SPLITS
+                    key_checks["ON_SPLIT"] = pkgbld.SPLITS
                     if key in key_checks.keys():
                         if val not in key_checks[key]:
                             raise Exception("unknown {} type".format(key))
@@ -1407,8 +1329,8 @@ the AUR repository. 'git' will (attempt, if git is installed) to git clone.
 a split package. 'skip' will not install split packages, 'error' will cause
 naaman to error and stop, package, 'split' will attempt to split the package,
 and 'nothing' will not process the package at all before install (default).""",
-                        default=_SPLIT_NONE,
-                        choices=_SPLITS,
+                        default=pkgbld.SPLIT_NONE,
+                        choices=pkgbld.SPLITS,
                         type=str)
     sync_args.sync_up_options(parser)
     query_args.options(parser)
