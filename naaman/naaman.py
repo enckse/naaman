@@ -21,12 +21,11 @@ import naaman.shell as sh
 import naaman.version as vers
 import naaman.aur as aur
 import naaman.logger as log
+import naaman.consts as cst
 from datetime import datetime, timedelta
 from xdg import BaseDirectory
 from pycman import config
 
-_NAME = "naaman"
-_CONFIG = _NAME + ".conf"
 logger = log.LOGGER
 
 _CUSTOM_ARGS = "Custom options"
@@ -130,7 +129,7 @@ class Context(object):
             if not os.path.isdir(self.builds):
                 log.console_error("invalid build: {}".format(self.builds))
                 self.exiting(1)
-            self.builds = os.path.join(self.builds, _NAME)
+            self.builds = os.path.join(self.builds, cst.NAME)
             if not os.path.exists(self.builds):
                 os.makedirs(self.builds)
         try:
@@ -650,7 +649,7 @@ def _install(file_definition, makepkg, cache_dirs, context, version):
                     return False
                 elif split_result == _SPLIT_SKIPPED:
                     return True
-        temp_sh = os.path.join(t, _NAME + ".sh")
+        temp_sh = os.path.join(t, cst.NAME + ".sh")
         use_version = ""
         if version is not None:
             use_version = version
@@ -1424,8 +1423,8 @@ def _manual_args(args):
 def main():
     """Entry point."""
     cache_dir = BaseDirectory.xdg_cache_home
-    cache_dir = os.path.join(cache_dir, _NAME)
-    config_file = os.path.join(BaseDirectory.xdg_config_home, _CONFIG)
+    cache_dir = os.path.join(cache_dir, cst.NAME)
+    config_file = os.path.join(BaseDirectory.xdg_config_home, cst.CONFIG)
     parser = argparse.ArgumentParser()
     parser.add_argument('-S', '--sync',
                         help="""synchronize packages (install/update). a sync
@@ -1463,7 +1462,7 @@ attempt to install (after confirmation) the determined dependency chain.""",
     parser.add_argument('--version',
                         help="display version information about naaman",
                         action='version',
-                        version="{} ({})".format(_NAME, vers.__version__))
+                        version="{} ({})".format(cst.NAME, vers.__version__))
     parser.add_argument('--no-sudo',
                         help="""disable calling sudo. by default when naaman
 has to call pacman directly (e.g. -R), it will call with sudo if required.
@@ -1542,7 +1541,7 @@ and 'nothing' will not process the package at all before install (default).""",
     if not os.path.exists(args.cache_dir):
         logger.debug("creating cache dir")
         os.makedirs(args.cache_dir)
-    fh = logging.FileHandler(os.path.join(args.cache_dir, _NAME + '.log'))
+    fh = logging.FileHandler(os.path.join(args.cache_dir, cst.NAME + '.log'))
     fh.setFormatter(log.FILE_FORMAT)
     if args.verbose:
         ch.setFormatter(log.FILE_FORMAT)
@@ -1572,7 +1571,7 @@ and 'nothing' will not process the package at all before install (default).""",
         logger.debug("not loading config")
     else:
         loaded = []
-        for f in ["/etc/" + _CONFIG, config_file, args.config]:
+        for f in ["/etc/" + cst.CONFIG, config_file, args.config]:
             if f in loaded:
                 continue
             loaded.append(f)
