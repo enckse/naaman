@@ -1,4 +1,8 @@
-"""Argument processing/handling for naaman."""
+"""
+Utilities to help handle some more complex argument processing
+
+e.g. how to handle -Sy vs -Syy
+"""
 
 
 def _multi_args(value):

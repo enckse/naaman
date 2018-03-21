@@ -1,4 +1,9 @@
-"""Custom pass-thru arguments."""
+"""
+Custom pass-thru arguments.
+
+Some options in naaman (mainly script-based) need to support
+more 'variable' args and/or custom options
+"""
 
 CUSTOM_ARGS = "Custom options"
 CUSTOM_REMOVAL = "removal"

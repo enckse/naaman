@@ -1,4 +1,10 @@
-"""Load the configuration file for argument adjustment."""
+"""
+Load the configuration file for argument adjustment.
+
+First we get and parse the args and then we also have a config
+e.g. /etc/naaman.conf (system)
+We take the config and use it to supplement our args
+"""
 
 import os
 import naaman.logger as log

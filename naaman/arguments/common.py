@@ -1,4 +1,8 @@
-"""Common/core argument parsing."""
+"""
+Common/core argument parsing.
+
+These are the root-level options for argument parsing for naaman
+"""
 import argparse
 import naaman.consts as cst
 import naaman.version as vers

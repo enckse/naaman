@@ -1,4 +1,8 @@
-"""AUR package querying."""
+"""
+AUR package querying.
+
+Specifically as it relates to what the current system state is
+"""
 
 
 def options(parser):

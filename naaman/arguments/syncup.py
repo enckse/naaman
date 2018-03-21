@@ -1,4 +1,8 @@
-"""Sync/update/upgrade options."""
+"""
+Sync/update/upgrade options.
+
+Options for controlling (fine-grained) how a sync/update works
+"""
 
 SYNC_UP_OPTIONS = "Sync/Update options"
 
