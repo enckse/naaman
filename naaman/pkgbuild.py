@@ -17,6 +17,7 @@ SPLIT_SKIPPED = 2
 _SPLIT_NOOP = 0
 SPLIT_ERRORED = 1
 _SPLIT_DONE = 3
+MAKEPKG_VCS = ["-od"]
 
 
 def splitting(pkgbuild, pkgname, skip, error, split):

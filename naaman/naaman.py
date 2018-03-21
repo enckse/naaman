@@ -32,7 +32,6 @@ from pycman import config
 
 logger = log.LOGGER
 
-_MAKEPKG_VCS = ["-od"]
 _AUR = "https://aur.archlinux.org{}"
 _AUR_GIT = _AUR.format("/{}.git")
 _RESULT_JSON = 'results'
@@ -590,7 +589,7 @@ def _check_vcs_ignore(context, threshold):
 
 def _check_vcs(package, context, version):
     """Check current vcs version."""
-    result = _install(package, _MAKEPKG_VCS, None, context,  version)
+    result = _install(package, pkgbld.MAKEPKG_VCS, None, context,  version)
     if not result:
         log.console_output("up-to-date: {} ({})".format(package.name, version))
     return result
