@@ -37,11 +37,11 @@ sudo make build
 
 **These items are known and are not currently planned to be solved:**
 * Complicated/multi-AUR package dependency resolution
-* Replicating all conceivable pacman args that _might_ be useful for AUR wrappers
+* Replicating all conceivable pacman args that _might_ be useful for AUR management
 * VCS packages are complicated, you have options to mitigate that
 * Split packages: there are options to mitigate it (`-on-split`) but dependencies and complex PKGBUILDs will not be handled
 
-naaman is not meant to complete to be the best aur helper/manager/wrapper, it is just one of many [options](https://wiki.archlinux.org/index.php/AUR_helpers)
+naaman is not meant to complete to be the best aur helper/manager/wrapper/etc, it is just one of many [options](https://wiki.archlinux.org/index.php/AUR_helpers)
 
 ## Usage
 
