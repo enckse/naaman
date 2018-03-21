@@ -23,8 +23,6 @@ import naaman.consts as cst
 import naaman.pkgbuild as pkgbld
 from datetime import datetime, timedelta
 
-logger = log.LOGGER
-
 
 def _validate_options(args, unknown, groups):
     """Validate argument options."""
@@ -162,14 +160,14 @@ def _load_deps(depth, packages, context, resolved, last_report):
         matched = [x for x in resolved if x[1] == p]
         if len(matched) > 0:
             continue
-        logger.debug("resolving dependencies level {}, {}".format(depth, p))
+        log.debug("resolving dependencies level {}, {}".format(depth, p))
         dependency = aur.deps_compare(p)
         p = dependency.pkg
         if context.check_pkgcache(p, dependency.version):
             continue
         pkg = _rpc_search(p, True, context, include_deps=True)
         if pkg is None:
-            logger.debug("non-aur {}".format(p))
+            log.debug("non-aur {}".format(p))
             continue
         timed = _load_deps(depth + 1, pkg.deps, context, resolved, timed)
         resolved.append((depth, p))
@@ -178,12 +176,12 @@ def _load_deps(depth, packages, context, resolved, last_report):
 
 def _deps(context):
     """Handle dependency resolution."""
-    logger.debug("attempt dependency resolution")
+    log.debug("attempt dependency resolution")
     context.deps = False
     targets = context.targets
     for target in targets:
         resolved = []
-        logger.debug("resolving {}".format(target))
+        log.debug("resolving {}".format(target))
         pkg = _rpc_search(target, True, context, include_deps=True)
         if pkg is None:
             log.console_error("unable to find package: {}".format(target))
@@ -192,18 +190,18 @@ def _deps(context):
             _load_deps(1, pkg.deps, context, resolved, None)
             resolved.append((0, target))
             actual = reversed(sorted(resolved, key=lambda x: x[0]))
-            logger.debug(actual)
+            log.debug(actual)
             context.targets = [x[1] for x in actual]
         else:
-            logger.debug("no deps...")
+            log.debug("no deps...")
             context.targets = [target]
-        logger.trace(resolved)
+        log.trace(resolved)
         _sync(context)
 
 
 def _clean(context):
     """Clean cache files."""
-    logger.debug("cleaning requested")
+    log.debug("cleaning requested")
     files = [x for x in context.get_cache_files()]
     if len(files) == 0:
         log.console_output("no files to cleanup")
@@ -219,9 +217,9 @@ def _clean(context):
         _confirm(context, "clear cache directories", [x for x in dirs])
 
         def remove_fail(func, path, err):
-            logger.debug("failed on removal")
-            logger.debug(path)
-            logger.debug(err)
+            log.debug("failed on removal")
+            log.debug(path)
+            log.debug(err)
             log.console_error("unable to cleanup {}".format(path))
         for d in dirs:
             shutil.rmtree(d, onerror=remove_fail)
@@ -260,17 +258,17 @@ def _install(file_definition, makepkg, cache_dirs, context, version):
                       aur.AUR_GIT.format(file_definition.name),
                       "."], suppress_error=True, workingdir=p)
         else:
-            logger.debug("using tar")
+            log.debug("using tar")
             f_name = file_definition.name + ".tar.gz"
             file_name = os.path.join(p, f_name)
-            logger.debug(file_name)
+            log.debug(file_name)
             urllib.request.urlretrieve(url, file_name)
             sh.shell(["tar", "xf", f_name, "--strip-components=1"],
                      workingdir=p)
             if context.skip_split or context.error_split or context.do_split:
-                logger.debug("handling split packages")
+                log.debug("handling split packages")
                 pkgbuild = os.path.join(f_dir, "PKGBUILD")
-                logger.trace(pkgbuild)
+                log.trace(pkgbuild)
                 if not os.path.exists(pkgbuild):
                     raise Exception("unable to find PKGBUILD")
                 split_result = pkgbld.splitting(pkgbuild,
@@ -302,18 +300,18 @@ def _sync(context):
 
 def _get_deltahours(input_str, now):
     """Get a timedelta in hours."""
-    logger.debug("timedelta (hours)")
+    log.debug("timedelta (hours)")
     last = datetime.fromtimestamp(float(input_str))
     seconds = (now - last).total_seconds()
     minutes = seconds / 60
     hours = minutes / 60
-    logger.trace((last, seconds, minutes, hours))
+    log.trace((last, seconds, minutes, hours))
     return hours
 
 
 def _check_vcs_ignore(context, threshold):
     """VCS caching check."""
-    logger.debug("checking vcs ignore cache")
+    log.debug("checking vcs ignore cache")
     cache_check = context.cache_file("vcs")
     update_cache = True
     result = None
@@ -343,7 +341,7 @@ def _check_vcs(package, context, version):
 
 def _ignore_for(context, ignore_for, ignored):
     """Ignore for settings."""
-    logger.debug("checking ignored packages.")
+    log.debug("checking ignored packages.")
     ignore_file = context.cache_file("ignoring")
     ignore_definition = {}
     now = context.now
@@ -351,14 +349,14 @@ def _ignore_for(context, ignore_for, ignored):
     if os.path.exists(ignore_file):
         with open(ignore_file, 'r') as f:
             ignore_definition = json.loads(f.read())
-    logger.trace(ignore_definition)
+    log.trace(ignore_definition)
     for i in ignore_for:
         if "=" not in i:
-            logger.warn("invalid ignore definition {}".format(i))
+            log.warn("invalid ignore definition {}".format(i))
             continue
         parts = i.split("=")
         if len(parts) != 2:
-            logger.warn("invalid ignore format {}".format(i))
+            log.warn("invalid ignore format {}".format(i))
         package = parts[0]
         hours = 0
         try:
@@ -366,8 +364,8 @@ def _ignore_for(context, ignore_for, ignored):
             if hours < 1:
                 raise Exception("hour must be >= 1")
         except Exception as e:
-            logger.warn("invalid hour value {}".format(i))
-            logger.trace(e)
+            log.warn("invalid hour value {}".format(i))
+            log.trace(e)
             continue
         update = True
         if package in ignore_definition:
@@ -378,7 +376,7 @@ def _ignore_for(context, ignore_for, ignored):
         if update:
             ignore_definition[package] = str(current_time)
     with open(ignore_file, 'w') as f:
-        logger.debug("writing ignore definitions")
+        log.debug("writing ignore definitions")
         f.write(json.dumps(ignore_definition))
 
 
@@ -392,7 +390,7 @@ def _syncing(context, is_install, targets, updating):
     ignored = args.ignore
     skip_filters = False
     if args.force_refresh or is_install:
-        logger.debug('skip filtering options')
+        log.debug('skip filtering options')
         skip_filters = True
     if not ignored or skip_filters:
         ignored = []
@@ -403,23 +401,23 @@ def _syncing(context, is_install, targets, updating):
         context.lock()
         try:
             if _check_vcs_ignore(context, args.vcs_ignore) is not None:
-                logger.trace("vcs ignore threshold met")
+                log.trace("vcs ignore threshold met")
                 no_vcs = True
         except Exception as e:
-            logger.error("unexpected vcs error")
-            logger.error(e)
+            log.error("unexpected vcs error")
+            log.error(e)
         context.unlock()
-    logger.debug("novcs? {}".format(no_vcs))
+    log.debug("novcs? {}".format(no_vcs))
     if args.ignore_for and len(args.ignore_for) > 0 and not skip_filters:
-        logger.debug("handling ignorefors")
+        log.debug("handling ignorefors")
         context.lock()
         try:
             _ignore_for(context, args.ignore_for, ignored)
         except Exception as e:
-            logger.error("unexpected ignore_for error")
-            logger.error(e)
+            log.error("unexpected ignore_for error")
+            log.error(e)
         context.unlock()
-    logger.trace("ignoring {}".format(ignored))
+    log.trace("ignoring {}".format(ignored))
     check_inst = []
     for name in targets:
         if name in ignored:
@@ -427,7 +425,7 @@ def _syncing(context, is_install, targets, updating):
             continue
         vcs = aur.is_vcs(name)
         if no_vcs and vcs:
-            logger.debug("skipping vcs package {}".format(name))
+            log.debug("skipping vcs package {}".format(name))
             continue
         package = _rpc_search(name, True, context)
         if package:
@@ -435,13 +433,13 @@ def _syncing(context, is_install, targets, updating):
                not args.vcs_install_only and \
                args.force_refresh and \
                not args.force_force_refresh:
-                logger.debug("checking vcs version")
+                log.debug("checking vcs version")
                 pkg = context.db.get_pkg(package.name)
                 if pkg:
                     if not _check_vcs(package, context, pkg.version):
                         continue
                 else:
-                    logger.debug("unable to find installed package...")
+                    log.debug("unable to find installed package...")
             check_inst.append(package)
         else:
             log.console_error("unknown AUR package: {}".format(name))
@@ -455,7 +453,7 @@ def _syncing(context, is_install, targets, updating):
         obj = [x for x in inst if x.name == item.name]
         if len(obj) == 0:
             inst += [item]
-    logger.trace(inst)
+    log.trace(inst)
     report = []
     do_install = []
     for i in inst:
@@ -472,7 +470,7 @@ def _syncing(context, is_install, targets, updating):
             if not is_install:
                 log.console_error("{} not installed".format(i.name))
                 context.exiting(1)
-        logger.trace(i)
+        log.trace(i)
         if vcs:
             vers = vcs
         report.append("{} {}{}".format(i.name, vers, tag))
@@ -482,14 +480,14 @@ def _syncing(context, is_install, targets, updating):
         context.exiting(0)
     _confirm(context, "install packages", report)
     makepkg = context.get_custom_arg(csm_args.CUSTOM_MAKEPKG)
-    logger.debug("makepkg {}".format(makepkg))
+    log.debug("makepkg {}".format(makepkg))
     cache = context.handle.cachedirs
     cache_dirs = ""
     if not args.no_cache and cache and len(cache) > 0:
         use_caches = []
         for c in cache:
             if " " in c:
-                logger.warn("cache dir with space is skipped ({})".format(c))
+                log.warn("cache dir with space is skipped ({})".format(c))
                 continue
             use_caches.append(c)
         naaman_pkg = context.get_cache_pkgs()
@@ -522,8 +520,8 @@ def _syncing(context, is_install, targets, updating):
                              next_pkgs,
                              default_yes=False)
     except Exception as e:
-        logger.error("unexpected install error")
-        logger.error(e)
+        log.error("unexpected install error")
+        log.error(e)
     context.unlock()
 
 
@@ -568,10 +566,10 @@ def _search(context):
         log.console_error("please provide ONE target for search")
         context.exiting(1)
     for target in context.targets:
-        logger.debug("searching for {}".format(target))
+        log.debug("searching for {}".format(target))
         if len(target) < aur.AUR_TARGET_LEN:
             # NOTE: we are suppressing this ourselves
-            logger.debug("target name too short")
+            log.debug("target name too short")
             continue
         _rpc_search(target, False, context)
 
@@ -598,7 +596,7 @@ def _querying(context, gone):
             output = "{}"
         else:
             output = "{} {}"
-        logger.info(output.format(q.name, q.version))
+        log.info(output.format(q.name, q.version))
         matched = True
     if not matched and not context.quiet:
         log.console_output("no packages found")
@@ -636,11 +634,11 @@ def main():
     query_args.options(parser)
     args, unknown = parser.parse_known_args()
     log.init(args.verbose, args.trace, args.cache_dir)
-    logger.trace("files/folders")
-    logger.trace(args.cache_dir)
-    logger.trace(args.config)
+    log.trace("files/folders")
+    log.trace(args.cache_dir)
+    log.trace(args.config)
     if args.no_config:
-        logger.debug("not loading config")
+        log.debug("not loading config")
     else:
         loaded = []
         for f in ["/etc/" + cst.CONFIG, config_file, args.config]:
@@ -654,14 +652,14 @@ def main():
     custom_args = {}
     for k in csm_args.DEFAULT_OPTS:
         if k not in dirs:
-            logger.debug('setting default for {}'.format(k))
+            log.debug('setting default for {}'.format(k))
             setattr(args, k, csm_args.DEFAULT_OPTS[k])
         custom_args[k] = getattr(args, k)
     arg_groups[csm_args.CUSTOM_ARGS] = custom_args
     for group in parser._action_groups:
         g = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
         arg_groups[group.title] = argparse.Namespace(**g)
-    logger.trace(arg_groups)
+    log.trace(arg_groups)
     _validate_options(args, unknown, arg_groups)
 
 
