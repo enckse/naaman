@@ -1344,16 +1344,11 @@ and 'nothing' will not process the package at all before install (default).""",
     else:
         logger.setLevel(logging.INFO)
 
-    def noop_trace(obj):
-        """No-operation trace."""
-        pass
-
-    trace_call = noop_trace
     if args.trace:
         def trace_log(obj):
             logger.debug(obj)
         trace_call = trace_log
-    setattr(logger, "trace", trace_call)
+        setattr(logger, "trace", trace_log)
     logger.trace("files/folders")
     logger.trace(args.cache_dir)
     logger.trace(args.config)
