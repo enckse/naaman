@@ -17,7 +17,8 @@ import tempfile
 import subprocess
 import shutil
 import time
-import naaman.arguments as arguments
+import naaman.arguments.utils as util_args
+import naaman.arguments.query as query_args
 import naaman.shell as sh
 import naaman.version as vers
 import naaman.aur as aur
@@ -31,7 +32,6 @@ logger = log.LOGGER
 
 _CUSTOM_ARGS = "Custom options"
 _SYNC_UP_OPTIONS = "Sync/Update options"
-_QUERY_OPTIONS = "Query options"
 _CUSTOM_REMOVAL = "removal"
 _CUSTOM_SCRIPTS = "scripts"
 _CUSTOM_MAKEPKG = "makepkg"
@@ -1210,15 +1210,6 @@ def _do_query(context):
                 yield pkg
 
 
-def _query_options(parser):
-    """Get query options."""
-    group = parser.add_argument_group(_QUERY_OPTIONS)
-    group.add_argument('-g', "--gone",
-                       help="""specifying this option will check for packages
-installed from the AUR but are no longer in the AUR.""",
-                       action="store_true")
-
-
 def _sync_up_options(parser):
     """Sync/update options."""
     group = parser.add_argument_group(_SYNC_UP_OPTIONS)
@@ -1506,7 +1497,7 @@ and 'nothing' will not process the package at all before install (default).""",
                         choices=_SPLITS,
                         type=str)
     _sync_up_options(parser)
-    _query_options(parser)
+    query_args.options(parser)
     args, unknown = parser.parse_known_args()
     ch = logging.StreamHandler()
     if not os.path.exists(args.cache_dir):
@@ -1547,7 +1538,7 @@ and 'nothing' will not process the package at all before install (default).""",
                 continue
             loaded.append(f)
             args = _load_config(args, f)
-    arguments.manual_args(args)
+    util_args.manual_args(args)
     arg_groups = {}
     dirs = dir(args)
     custom_args = {}
