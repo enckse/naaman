@@ -13,3 +13,13 @@ FILE_FORMAT = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 def debug(message):
     """Write a simple debug message."""
     LOGGER.debug(message)
+
+
+def console_output(string, prefix="", callback=LOGGER.info):
+    """console/pretty output."""
+    callback("{} => {}".format(prefix, string))
+
+
+def console_error(string):
+    """Console error."""
+    _console_output(string, prefix="FAILURE", callback=LOGGER.error)

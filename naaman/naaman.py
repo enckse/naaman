@@ -75,16 +75,6 @@ _SPLIT_ERRORED = 1
 _SPLIT_DONE = 3
 
 
-def _console_output(string, prefix="", callback=logger.info):
-    """console/pretty output."""
-    callback("{} => {}".format(prefix, string))
-
-
-def _console_error(string):
-    """Console error."""
-    _console_output(string, prefix="FAILURE", callback=logger.error)
-
-
 class Context(object):
     """Context for operations."""
 
@@ -131,13 +121,13 @@ class Context(object):
                 if args.download == _DOWNLOAD_DETECT:
                     logger.debug("detected not-git")
                 else:
-                    _console_error("unable to use git")
+                    log.console_error("unable to use git")
                     logger.error(e)
                     self.exiting(1)
         self.builds = args.builds
         if self.builds:
             if not os.path.isdir(self.builds):
-                _console_error("invalid build: {}".format(self.builds))
+                log.console_error("invalid build: {}".format(self.builds))
                 self.exiting(1)
             self.builds = os.path.join(self.builds, _NAME)
             if not os.path.exists(self.builds):
@@ -153,12 +143,12 @@ class Context(object):
         self.do_split = args.on_split == _SPLIT_SPLIT
         if self.use_git and \
            (self.skip_split or self.error_split or self.do_split):
-            _console_error("split package options not available for git")
+            log.console_error("split package options not available for git")
             self.exiting(1)
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
-            _console_error("CTRL-C")
+            log.console_error("CTRL-C")
             self.exiting(1)
         signal.signal(signal.SIGINT, sigint_handler)
 
@@ -174,7 +164,7 @@ class Context(object):
     def get_custom_arg(self, name):
         """Get custom args."""
         if name not in self._custom_args:
-            _console_error("custom argument missing")
+            log.console_error("custom argument missing")
             self.exiting(1)
         return self._custom_args[name]
 
@@ -187,7 +177,7 @@ class Context(object):
         """Load a script file."""
         script = os.path.join(self._script_dir, name)
         if not os.path.exists(script):
-            _console_error("missing required script {}".format(script))
+            log.console_error("missing required script {}".format(script))
             self.exiting(1)
         if name not in self._scripts:
             logger.debug("loading script {}".format(name))
@@ -219,7 +209,7 @@ class Context(object):
                 logger.debug("failed on removal")
                 logger.debug(path)
                 logger.debug(err)
-                _console_error("unable to cleanup {}".format(path))
+                log.console_error("unable to cleanup {}".format(path))
             for f in os.listdir(self.builds):
                 b_dir = os.path.join(self.builds, f)
                 if not os.path.isdir(b_dir):
@@ -268,7 +258,7 @@ class Context(object):
             if self.can_sudo:
                 cmd.append("/usr/bin/sudo")
             else:
-                _console_error("sudo required but not allowed, re-run as root")
+                log.console_error("sudo required but not allowed, re-run as root")
                 self.exiting(1)
         cmd.append("/usr/bin/pacman")
         cmd = cmd + args
@@ -308,9 +298,9 @@ class Context(object):
                 logger.trace(obj)
                 f.write(json.dumps(obj))
             return
-        _console_error("lock file exists")
-        _console_error("only one instance of naaman may run at a time")
-        _console_error("delete {} if this is an error".format(self._lock_file))
+        log.console_error("lock file exists")
+        log.console_error("only one instance of naaman may run at a time")
+        log.console_error("delete {} if this is an error".format(self._lock_file))
         exit(1)
 
 
@@ -327,7 +317,7 @@ def _validate_options(args, unknown, groups):
         call_on = no_call
     else:
         def action(name):
-            _console_output("performing {}".format(name))
+            log.console_output("performing {}".format(name))
         call_on = action
 
     if args.sync:
@@ -351,7 +341,7 @@ def _validate_options(args, unknown, groups):
                 if sub_command is not None:
                     call_on("sync: {}".format(sub_command))
             else:
-                _console_error("cannot perform multiple sub-options")
+                log.console_error("cannot perform multiple sub-options")
                 invalid = True
         if args.search or args.deps or (not args.upgrades and
                                         not args.clean and
@@ -369,36 +359,36 @@ def _validate_options(args, unknown, groups):
 
     if not invalid:
         if valid_count > 1:
-            _console_error("multiple top-level arguments given")
+            log.console_error("multiple top-level arguments given")
         elif valid_count == 0:
-            _console_error("no valid top-level arguments given")
+            log.console_error("no valid top-level arguments given")
         if valid_count != 1:
             invalid = True
 
     if not invalid and (args.search or args.upgrades or args.clean):
         if not args.sync:
-            _console_error("search, upgrade, and clean are sync only")
+            log.console_error("search, upgrade, and clean are sync only")
             invalid = True
 
     if not invalid and args.info and not args.search:
-        _console_error("info only works with search")
+        log.console_error("info only works with search")
         invalid = True
 
     if not invalid and args.info and args.quiet:
-        _console_error("info and quiet do not work together")
+        log.console_error("info and quiet do not work together")
         invalid = True
 
     if not invalid and args.gone and not args.query:
-        _console_error("gone only works with query")
+        log.console_error("gone only works with query")
         invalid = True
 
     if not invalid and need_targets:
         if len(unknown) == 0:
-            _console_error("no targets specified")
+            log.console_error("no targets specified")
             invalid = True
 
     if not args.pacman or not os.path.exists(args.pacman):
-        _console_error("invalid config file")
+        log.console_error("invalid config file")
         invalid = True
 
     ctx = Context(unknown, groups, args)
@@ -427,7 +417,7 @@ def _validate_options(args, unknown, groups):
             callback = _remove
 
     if not invalid and callback is None:
-        _console_error("unable to find callback")
+        log.console_error("unable to find callback")
         invalid = True
 
     if invalid:
@@ -441,7 +431,7 @@ def _load_deps(depth, packages, context, resolved, last_report):
     if last_report is not None:
         seconds = (timed - last_report).total_seconds()
         if seconds > 5:
-            _console_output('still working...')
+            log.console_output('still working...')
         else:
             timed = last_report
     if packages is None or len(packages) == 0:
@@ -473,7 +463,7 @@ def _deps(context):
         logger.debug("resolving {}".format(target))
         pkg = _rpc_search(target, True, context, include_deps=True)
         if pkg is None:
-            _console_error("unable to find package: {}".format(target))
+            log.console_error("unable to find package: {}".format(target))
             continue
         if pkg.deps is not None and len(pkg.deps) > 0:
             _load_deps(1, pkg.deps, context, resolved, None)
@@ -493,15 +483,15 @@ def _clean(context):
     logger.debug("cleaning requested")
     files = [x for x in context.get_cache_files()]
     if len(files) == 0:
-        _console_output("no files to cleanup")
+        log.console_output("no files to cleanup")
     else:
         _confirm(context, "clear cache files", [x[0] for x in files])
         for f in files:
-            _console_output("removing {}".format(f[0]))
+            log.console_output("removing {}".format(f[0]))
             os.remove(f[1])
     dirs = [x for x in context.get_cache_dirs()]
     if len(dirs) == 0:
-        _console_output("no directories to cleanup")
+        log.console_output("no directories to cleanup")
     else:
         _confirm(context, "clear cache directories", [x for x in dirs])
 
@@ -509,7 +499,7 @@ def _clean(context):
             logger.debug("failed on removal")
             logger.debug(path)
             logger.debug(err)
-            _console_error("unable to cleanup {}".format(path))
+            log.console_error("unable to cleanup {}".format(path))
         for d in dirs:
             shutil.rmtree(d, onerror=remove_fail)
 
@@ -537,7 +527,7 @@ def _confirm(context, message, package_names, default_yes=True):
             return
         exiting = ""
     if exiting is not None:
-        _console_error("{}cancelled".format(exiting))
+        log.console_error("{}cancelled".format(exiting))
         context.exiting(1)
 
 
@@ -605,16 +595,16 @@ def _splitting(pkgbuild, pkgname, skip, error, split):
         logger.debug('not a split package')
         return _SPLIT_NOOP
     if pkgname not in entries:
-        _console_error("unable to find {} in split package".format(pkgname))
+        log.console_error("unable to find {} in split package".format(pkgname))
         return _SPLIT_ERRORED
     if error:
-        _console_error("split package detected but disabled")
+        log.console_error("split package detected but disabled")
         return _SPLIT_ERRORED
     if skip:
-        _console_output("skipping (split package)")
+        log.console_output("skipping (split package)")
         return _SPLIT_SKIPPED
     if split:
-        _console_output("splitting package")
+        log.console_output("splitting package")
         has_done = False
         with open(pkgbuild, 'w') as f:
             for line in all_lines:
@@ -641,7 +631,7 @@ def _install(file_definition, makepkg, cache_dirs, context, version):
     action = "installing"
     if version is not None:
         action = "checking version"
-    _console_output("{}: {}".format(action, file_definition.name))
+    log.console_output("{}: {}".format(action, file_definition.name))
     with new_file() as t:
         p = os.path.join(t, file_definition.name)
         os.makedirs(p)
@@ -741,7 +731,7 @@ def _check_vcs_ignore(context, threshold):
                 update_cache = False
                 result = True
     if update_cache:
-        _console_output("updating vcs last cache time")
+        log.console_output("updating vcs last cache time")
         with open(cache_check, 'w') as f:
             f.write(str(current_time))
     return result
@@ -751,7 +741,7 @@ def _check_vcs(package, context, version):
     """Check current vcs version."""
     result = _install(package, _MAKEPKG_VCS, None, context,  version)
     if not result:
-        _console_output("up-to-date: {} ({})".format(package.name, version))
+        log.console_output("up-to-date: {} ({})".format(package.name, version))
     return result
 
 
@@ -799,7 +789,7 @@ def _ignore_for(context, ignore_for, ignored):
 def _syncing(context, is_install, targets, updating):
     """Sync/install packages."""
     if context.root:
-        _console_error("can not run install/upgrades as root (uses makepkg)")
+        log.console_error("can not run install/upgrades as root (uses makepkg)")
         context.exiting(1)
     args = context.groups[_SYNC_UP_OPTIONS]
     ignored = args.ignore
@@ -836,7 +826,7 @@ def _syncing(context, is_install, targets, updating):
     check_inst = []
     for name in targets:
         if name in ignored:
-            _console_output("{} is ignored".format(name))
+            log.console_output("{} is ignored".format(name))
             continue
         vcs = _is_vcs(name)
         if no_vcs and vcs:
@@ -857,7 +847,7 @@ def _syncing(context, is_install, targets, updating):
                     logger.debug("unable to find installed package...")
             check_inst.append(package)
         else:
-            _console_error("unknown AUR package: {}".format(name))
+            log.console_error("unknown AUR package: {}".format(name))
             context.exiting(1)
     inst = []
     for item in context.reorders:
@@ -883,7 +873,7 @@ def _syncing(context, is_install, targets, updating):
                 tag = " [installed]"
         else:
             if not is_install:
-                _console_error("{} not installed".format(i.name))
+                log.console_error("{} not installed".format(i.name))
                 context.exiting(1)
         logger.trace(i)
         if vcs:
@@ -891,7 +881,7 @@ def _syncing(context, is_install, targets, updating):
         report.append("{} {}{}".format(i.name, vers, tag))
         do_install.append(i)
     if len(do_install) == 0:
-        _console_output("nothing to do")
+        log.console_output("nothing to do")
         context.exiting(0)
     _confirm(context, "install packages", report)
     makepkg = context.get_custom_arg(_CUSTOM_MAKEPKG)
@@ -918,7 +908,7 @@ def _syncing(context, is_install, targets, updating):
                             cache_dirs,
                             context,
                             None):
-                _console_error("error installing package: {}".format(i.name))
+                log.console_error("error installing package: {}".format(i.name))
                 next_pkgs = []
                 after = False
                 for e in do_install:
@@ -982,9 +972,9 @@ def _remove(context):
     call_with = call_with + [x.name for x in p]
     result = context.pacman(call_with)
     if not result:
-        _console_error("unable to remove packages")
+        log.console_error("unable to remove packages")
         context.exiting(1)
-    _console_output("packages removed")
+    log.console_output("packages removed")
 
 
 def _deps_compare(package):
@@ -1016,11 +1006,11 @@ def _handle_deps(root_package, context, dependencies):
             pos = context.targets.index(d)
             if pos > root:
                 if context.reorder_deps:
-                    _console_output("switching {} and {}".format(d,
+                    log.console_output("switching {} and {}".format(d,
                                                                  root_package))
                     context.reorders.append(d)
                 else:
-                    _console_error("verify order of target/deps")
+                    log.console_error("verify order of target/deps")
                     context.exiting(1)
             continue
         if context.known_dependency(d):
@@ -1036,7 +1026,7 @@ def _handle_deps(root_package, context, dependencies):
         show_version = ""
         if d_version is not None:
             show_version = " ({}{})".format(d_compare, d_version)
-        _console_error("unmet AUR dependency: {}{}".format(d, show_version))
+        log.console_error("unmet AUR dependency: {}{}".format(d, show_version))
         missing = True
     if missing:
         context.exiting(1)
@@ -1116,7 +1106,7 @@ def _rpc_search(package_name, exact, context, include_deps=False):
                     f.write(result)
             j = json.loads(result.decode("utf-8"))
             if "error" in j:
-                _console_error(j['error'])
+                log.console_error(j['error'])
             result_json = []
             if _RESULT_JSON in j:
                 result_json = j[_RESULT_JSON]
@@ -1198,7 +1188,7 @@ def _rpc_search(package_name, exact, context, include_deps=False):
         logger.error("error calling AUR search")
         logger.error(e)
     if not found and context.info_verbose:
-        _console_error("no exact matches for {}".format(package_name))
+        log.console_error("no exact matches for {}".format(package_name))
 
 
 def _terminal_output(input_str, terminal_width, first_string, output_string):
@@ -1234,7 +1224,7 @@ def _terminal_output(input_str, terminal_width, first_string, output_string):
 def _search(context):
     """Perform a search."""
     if len(context.targets) != 1:
-        _console_error("please provide ONE target for search")
+        log.console_error("please provide ONE target for search")
         context.exiting(1)
     for target in context.targets:
         logger.debug("searching for {}".format(target))
@@ -1270,7 +1260,7 @@ def _querying(context, gone):
         logger.info(output.format(q.name, q.version))
         matched = True
     if not matched and not context.quiet:
-        _console_output("no packages found")
+        log.console_output("no packages found")
 
 
 def _is_aur_pkg(pkg, sync_packages):
@@ -1288,7 +1278,7 @@ def _do_query(context):
             if pkg and _is_aur_pkg(pkg, syncpkgs):
                     yield pkg
             else:
-                _console_error("unknown package: {}".format(target))
+                log.console_error("unknown package: {}".format(target))
                 context.exiting(1)
     else:
         for pkg in context.db.pkgcache:
