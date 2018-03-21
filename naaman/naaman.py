@@ -12,14 +12,13 @@ import pyalpm
 import urllib.request
 import urllib.parse
 import json
-import string
 import signal
 import tempfile
 import subprocess
 import shutil
 import time
 import naaman.version as vers
-import naaman.aur_package as aurpkg
+import naaman.aur as aur
 from datetime import datetime, timedelta
 from xdg import BaseDirectory
 from pycman import config
@@ -53,7 +52,6 @@ _AUR_SEARCH = _AUR_RAW_URL.format("search&by=name-desc", "={}")
 _AUR_VERS = "Version"
 _AUR_URLP = "URLPath"
 _AUR_DEPS = "Depends"
-_PRINTABLE = set(string.printable)
 _AUR_TARGET_LEN = 4
 
 _CACHE_FILE = ".cache"
@@ -990,17 +988,6 @@ def _remove(context):
     _console_output("packages removed")
 
 
-def _get_segment(j, key):
-    """Get an ascii printable segment."""
-    inputs = j[key]
-    if inputs is None:
-        return ""
-    res = "".join([x for x in inputs if x in _PRINTABLE])
-    if len(inputs) != len(res):
-        logger.debug("dropped non-ascii characters")
-    return res
-
-
 def _deps_compare(package):
     """Compare deps versions."""
     d_compare = None
@@ -1137,9 +1124,9 @@ def _rpc_search(package_name, exact, context, include_deps=False):
             if len(result_json) > 0:
                 for result in result_json:
                     try:
-                        name = _get_segment(result, _AUR_NAME)
-                        desc = _get_segment(result, _AUR_DESC)
-                        vers = _get_segment(result, _AUR_VERS)
+                        name = aur.get_segment(result, _AUR_NAME)
+                        desc = aur.get_segment(result, _AUR_DESC)
+                        vers = aur.get_segment(result, _AUR_VERS)
                         found = True
                         if exact:
                             if name == package_name:
@@ -1155,10 +1142,10 @@ def _rpc_search(package_name, exact, context, include_deps=False):
                                             deps = _aur_deps
                                 else:
                                     logger.debug("no dependency checks")
-                                return aurpkg.AURPackage(name,
-                                                         vers,
-                                                         result[_AUR_URLP],
-                                                         deps)
+                                return aur.AURPackage(name,
+                                                      vers,
+                                                      result[_AUR_URLP],
+                                                      deps)
                         else:
                             ind = ""
                             if not name or not desc or not vers:
@@ -1178,7 +1165,7 @@ def _rpc_search(package_name, exact, context, include_deps=False):
                                     if isinstance(val, list):
                                         val = "  ".join(val)
                                     elif isinstance(val, str):
-                                        val = _get_segment(result, k)
+                                        val = aur.get_segment(result, k)
                                     elif val and k in ["FirstSubmitted",
                                                        "LastModified"]:
                                         val = str(datetime.fromtimestamp(val))
