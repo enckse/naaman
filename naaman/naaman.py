@@ -17,6 +17,7 @@ import tempfile
 import subprocess
 import shutil
 import time
+import naaman.arguments as arguments
 import naaman.shell as sh
 import naaman.version as vers
 import naaman.aur as aur
@@ -1397,29 +1398,6 @@ def _load_config(args, config_file):
     return args
 
 
-def _multi_args(value):
-    """Handle specifying a multi-count arg."""
-    val = False
-    multi = False
-    triple = False
-    if value and value > 0:
-        val = True
-        if value > 1:
-            multi = True
-        if value > 2:
-            triple = True
-    return val, multi, triple
-
-
-def _manual_args(args):
-    """Manual arg parse."""
-    r, fr, ffr = _multi_args(args.refresh)
-    args.refresh = r
-    args.force_refresh = fr
-    args.force_force_refresh = ffr
-    args.info, args.info_verbose, _ = _multi_args(args.info)
-
-
 def main():
     """Entry point."""
     cache_dir = BaseDirectory.xdg_cache_home
@@ -1576,7 +1554,7 @@ and 'nothing' will not process the package at all before install (default).""",
                 continue
             loaded.append(f)
             args = _load_config(args, f)
-    _manual_args(args)
+    arguments.manual_args(args)
     arg_groups = {}
     dirs = dir(args)
     custom_args = {}
