@@ -4,7 +4,9 @@ Defines AUR package information.
 Handles AUR data management, interfacing, processing
 """
 import string
+import naaman.logger as log
 _PRINTABLE = set(string.printable)
+
 
 class AURPackage(object):
     """AUR package object."""
@@ -24,5 +26,5 @@ def get_segment(j, key):
         return ""
     res = "".join([x for x in inputs if x in _PRINTABLE])
     if len(inputs) != len(res):
-        logger.debug("dropped non-ascii characters")
+        log.debug("dropped non-ascii characters")
     return res

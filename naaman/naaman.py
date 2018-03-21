@@ -19,15 +19,14 @@ import shutil
 import time
 import naaman.version as vers
 import naaman.aur as aur
+import naaman.logger as log
 from datetime import datetime, timedelta
 from xdg import BaseDirectory
 from pycman import config
 
 _NAME = "naaman"
 _CONFIG = _NAME + ".conf"
-logger = logging.getLogger(_NAME)
-console_format = logging.Formatter('%(message)s')
-file_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+logger = log.LOGGER
 
 _CUSTOM_ARGS = "Custom options"
 _SYNC_UP_OPTIONS = "Sync/Update options"
@@ -1623,11 +1622,11 @@ and 'nothing' will not process the package at all before install (default).""",
         logger.debug("creating cache dir")
         os.makedirs(args.cache_dir)
     fh = logging.FileHandler(os.path.join(args.cache_dir, _NAME + '.log'))
-    fh.setFormatter(file_format)
+    fh.setFormatter(log.FILE_FORMAT)
     if args.verbose:
-        ch.setFormatter(file_format)
+        ch.setFormatter(log.FILE_FORMAT)
     else:
-        ch.setFormatter(console_format)
+        ch.setFormatter(log.CONSOLE_FORMAT)
     for h in [ch, fh]:
         logger.addHandler(h)
     if args.verbose:
