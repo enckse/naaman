@@ -3,6 +3,7 @@ import naaman.aur as aur
 
 
 def get_segment():
+    """Segment testing."""
     obj = {}
     obj['non'] = "aÂb"
     obj['null'] = None
@@ -17,6 +18,7 @@ def get_segment():
 
 
 def is_vcs():
+    """Check if vcs."""
     v = aur.is_vcs("test-git")
     if v != "latest (vcs version)":
         print("did not detect vcs")
@@ -28,6 +30,7 @@ def is_vcs():
 
 
 def deps_compare():
+    """Dependency comparison parsing."""
     d = aur.deps_compare("test>=1")
     if d.version == "1" and d.pkg == "test" and d.op == ">=":
         d = aur.deps_compare("test=1.2.3-4")
@@ -42,7 +45,9 @@ def deps_compare():
     print("deps compare failed")
     exit(1)
 
+
 def main():
+    """Main-entry harness."""
     get_segment()
     is_vcs()
     deps_compare()
