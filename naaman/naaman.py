@@ -16,6 +16,7 @@ import tempfile
 import subprocess
 import shutil
 import time
+import naaman.arguments.common as common_args
 import naaman.arguments.custom as csm_args
 import naaman.arguments.utils as util_args
 import naaman.arguments.query as query_args
@@ -49,11 +50,6 @@ _CACHE_FILE = ".cache"
 _LOCKS = ".lck"
 _CACHE_FILES = [_CACHE_FILE, _LOCKS]
 _TMP_PREFIX = "naaman."
-
-_DOWNLOAD_GIT = "git"
-_DOWNLOAD_TAR = "tar"
-_DOWNLOAD_DETECT = "detect"
-_DOWNLOADS = [_DOWNLOAD_GIT, _DOWNLOAD_TAR, _DOWNLOAD_DETECT]
 
 
 class Context(object):
@@ -91,9 +87,9 @@ class Context(object):
         self.timestamp = self.now.timestamp()
         self.terminal_width = 0
         self.use_git = False
-        if args.download and args.download in [_DOWNLOAD_GIT,
-                                               _DOWNLOAD_DETECT]:
-            git = sh.has_git(args.download != _DOWNLOAD_DETECT)
+        if args.download and args.download in [cst.DOWNLOAD_GIT,
+                                               cst.DOWNLOAD_DETECT]:
+            git = sh.has_git(args.download != cst.DOWNLOAD_DETECT)
             if git is not None:
                 self.use_git = git
             else:
@@ -1146,7 +1142,7 @@ def _load_config(args, config_file):
                     else:
                         val = value
                     key_checks = {}
-                    key_checks["DOWNLOAD"] = _DOWNLOADS
+                    key_checks["DOWNLOAD"] = cst.DOWNLOADS
                     key_checks["ON_SPLIT"] = pkgbld.SPLITS
                     if key in key_checks.keys():
                         if val not in key_checks[key]:
@@ -1168,115 +1164,7 @@ def main():
     cache_dir = BaseDirectory.xdg_cache_home
     cache_dir = os.path.join(cache_dir, cst.NAME)
     config_file = os.path.join(BaseDirectory.xdg_config_home, cst.CONFIG)
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-S', '--sync',
-                        help="""synchronize packages (install/update). a sync
-operation will attempt to install and/or update packages. -S by itself will
-attempt to install a list of target packages.""",
-                        action="store_true")
-    parser.add_argument('-R', '--remove',
-                        help="""remove a package. this will call pacman on any
-AUR based packages and remove them if installed.""",
-                        action="store_true")
-    parser.add_argument('-Q', '--query',
-                        help="""query package database. this option is used to
-find out what AUR packages are currently installed on the system.""",
-                        action="store_true")
-    parser.add_argument('-u', '--upgrades',
-                        help="""perform an upgrade of installed packages on the
-the system. this will attempt to upgrade ALL AUR installed packages. a list of
-target packages may also be passed.""",
-                        action="store_true")
-    parser.add_argument('-s', '--search',
-                        help="""search for packages in the AUR. by passing a
-package name to search the AUR rpc endpoints will be called to attempt to find
-a package with a name or description matching this input string""",
-                        action="store_true")
-    parser.add_argument('-c', '--clean',
-                        help="""clean the cache. this will clean the naaman
-cache area of any cache files. this can be used to invalidate/remove old cache
-information for deprecated packages or to reset duration caching options.""",
-                        action="store_true")
-    parser.add_argument('-d', '--deps',
-                        help="""naaman will attempt to build a dependency chain
-for the seperately  for each package specified. upon completion naaman will
-attempt to install (after confirmation) the determined dependency chain.""",
-                        action="store_true")
-    parser.add_argument('--version',
-                        help="display version information about naaman",
-                        action='version',
-                        version="{} ({})".format(cst.NAME, vers.__version__))
-    parser.add_argument('--no-sudo',
-                        help="""disable calling sudo. by default when naaman
-has to call pacman directly (e.g. -R), it will call with sudo if required.
-passing this option will prevent naaman from using sudo.""",
-                        action='store_true')
-    parser.add_argument('--verbose',
-                        help="""verbose output. this setting will change the
-output formatting and enable DEBUG level output. use this to begin to debug
-naaman and to see more detail.""",
-                        action='store_true')
-    parser.add_argument('--trace',
-                        help="""trace debug logging. this option is useful to
-dump extensive naaman logging information for indepth troubleshooting or
-debugging purposes.""",
-                        action='store_true')
-    parser.add_argument('--pacman',
-                        help="""pacman config. when creating the pacman handle
-naaman passes a configuration file to pacman for initialization via pyalpm.
-this is NOT passed when calling pacman directly (e.g. -R).""",
-                        default='/etc/pacman.conf')
-    parser.add_argument('--config',
-                        help="""naaman config. specify the (optional) naaman
-configuration file to use. please use man naaman.conf for available options.
-naaman will read configs in the order of (all optional): /etc, XDG_CONFIG_HOME
-, and then --config""",
-                        default=config_file)
-    parser.add_argument('--no-confirm',
-                        help="""naaman will not ask for confirmation. when
-performing install, update, and remove operations naaman will ask for the user
-to confirm the operation. to disable these prompts pass this option. this
-option will not suppress makepkg or pacman prompts (use REMOVAL or MAKEPKG in
-the naaman.conf)""",
-                        action="store_true")
-    parser.add_argument('-q', '--quiet',
-                        help="""quiet various parts of naaman to display less.
-certain operations will display more AUR package information that will be quiet
-(displaying minimal package information) if this option is provided.""",
-                        action="store_true")
-    parser.add_argument('--cache-dir',
-                        help="""cache dir for naaman. naaman stores caching and
-logging information to this location. naaman will (attempt) to create this
-directory if it does not exist.""",
-                        default=cache_dir)
-    parser.add_argument('--no-config',
-                        help="""do not load the config file. to prevent naaman
-from loading the configuration file when running specify this option. this can
-allow running a specify instance of naaman without certain config options being
-loaded.""",
-                        action="store_true")
-    parser.add_argument('--builds',
-                        help="""the location where naaman will perform builds.
-if not set this will be in the temp (e.g. /tmp) area. specifying this option
-will move where makepkg operations are performed in the system.""",
-                        default=None,
-                        type=str)
-    parser.add_argument('--download',
-                        help="""specifies how to retrieve AUR packages from
-the AUR repository. 'git' will (attempt, if git is installed) to git clone.
-'tar' will download the tarball. 'detect' will try 'git' and fallback to
-'tar'""",
-                        default=_DOWNLOAD_DETECT,
-                        choices=_DOWNLOADS,
-                        type=str)
-    parser.add_argument("--on-split",
-                        help="""select what naaman should do when it encounters
-a split package. 'skip' will not install split packages, 'error' will cause
-naaman to error and stop, package, 'split' will attempt to split the package,
-and 'nothing' will not process the package at all before install (default).""",
-                        default=pkgbld.SPLIT_NONE,
-                        choices=pkgbld.SPLITS,
-                        type=str)
+    parser = common_args.build(config_file, cache_dir)
     sync_args.sync_up_options(parser)
     query_args.options(parser)
     args, unknown = parser.parse_known_args()
