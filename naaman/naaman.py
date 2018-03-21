@@ -113,17 +113,15 @@ class Context(object):
         self.use_git = False
         if args.download and args.download in [_DOWNLOAD_GIT,
                                                _DOWNLOAD_DETECT]:
-            try:
-                logger.debug("checking for git")
-                with open("/dev/null", "w") as null:
-                    subprocess.Popen("git", stdout=null, stderr=null)
-                    self.use_git = True
-            except Exception as e:
+            git_error = sh.has_git()
+            if git_error is None:
+                self.use_git = True
+            else:
                 if args.download == _DOWNLOAD_DETECT:
                     logger.debug("detected not-git")
                 else:
                     log.console_error("unable to use git")
-                    logger.error(e)
+                    logger.error(git_error)
                     self.exiting(1)
         self.builds = args.builds
         if self.builds:

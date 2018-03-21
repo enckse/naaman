@@ -3,9 +3,11 @@
 import logging
 import naaman.consts as consts
 
+
 def _noop(message):
     """Noop log call."""
     pass
+
 
 # NOTE & TODO: this should not be public
 LOGGER = logging.getLogger(consts.NAME)
