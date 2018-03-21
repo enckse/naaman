@@ -18,11 +18,11 @@ import tempfile
 import subprocess
 import shutil
 import time
+import version as vers
 from datetime import datetime, timedelta
 from xdg import BaseDirectory
 from pycman import config
 
-_VERSION = "0.5.1"
 _NAME = "naaman"
 _CONFIG = _NAME + ".conf"
 logger = logging.getLogger(_NAME)
@@ -1566,7 +1566,7 @@ attempt to install (after confirmation) the determined dependency chain.""",
     parser.add_argument('--version',
                         help="display version information about naaman",
                         action='version',
-                        version="{} ({})".format(_NAME, _VERSION))
+                        version="{} ({})".format(_NAME, vers.__version__))
     parser.add_argument('--no-sudo',
                         help="""disable calling sudo. by default when naaman
 has to call pacman directly (e.g. -R), it will call with sudo if required.
