@@ -19,6 +19,7 @@ import subprocess
 import shutil
 import time
 import naaman.version as vers
+import naaman.aur_package as aurpkg
 from datetime import datetime, timedelta
 from xdg import BaseDirectory
 from pycman import config
@@ -1000,17 +1001,6 @@ def _get_segment(j, key):
     return res
 
 
-class AURPackage(object):
-    """AUR package object."""
-
-    def __init__(self, name, version, url, deps):
-        """Init the instance."""
-        self.name = name
-        self.version = version
-        self.url = url
-        self.deps = deps
-
-
 def _deps_compare(package):
     """Compare deps versions."""
     d_compare = None
@@ -1165,10 +1155,10 @@ def _rpc_search(package_name, exact, context, include_deps=False):
                                             deps = _aur_deps
                                 else:
                                     logger.debug("no dependency checks")
-                                return AURPackage(name,
-                                                  vers,
-                                                  result[_AUR_URLP],
-                                                  deps)
+                                return aurpkg.AURPackage(name,
+                                                         vers,
+                                                         result[_AUR_URLP],
+                                                         deps)
                         else:
                             ind = ""
                             if not name or not desc or not vers:
