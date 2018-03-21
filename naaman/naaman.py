@@ -17,6 +17,7 @@ import tempfile
 import subprocess
 import shutil
 import time
+import naaman.arguments.custom as csm_args
 import naaman.arguments.utils as util_args
 import naaman.arguments.query as query_args
 import naaman.arguments.syncup as sync_args
@@ -31,15 +32,6 @@ from xdg import BaseDirectory
 from pycman import config
 
 logger = log.LOGGER
-
-_CUSTOM_ARGS = "Custom options"
-_CUSTOM_REMOVAL = "removal"
-_CUSTOM_SCRIPTS = "scripts"
-_CUSTOM_MAKEPKG = "makepkg"
-_DEFAULT_OPTS = {}
-_DEFAULT_OPTS[_CUSTOM_REMOVAL] = []
-_DEFAULT_OPTS[_CUSTOM_MAKEPKG] = ["-sri"]
-_DEFAULT_OPTS[_CUSTOM_SCRIPTS] = "/usr/share/naaman/"
 
 _MAKEPKG_VCS = ["-od"]
 _AUR = "https://aur.archlinux.org{}"
@@ -95,8 +87,8 @@ class Context(object):
         self.rpc_cache = args.rpc_cache
         self._lock_file = os.path.join(self._cache_dir, "file" + _LOCKS)
         self.force_refresh = args.force_refresh
-        self._custom_args = self.groups[_CUSTOM_ARGS]
-        self._script_dir = self.get_custom_arg(_CUSTOM_SCRIPTS)
+        self._custom_args = self.groups[csm_args.CUSTOM_ARGS]
+        self._script_dir = self.get_custom_arg(csm_args.CUSTOM_SCRIPTS)
         self.now = datetime.now()
         self.timestamp = self.now.timestamp()
         self.terminal_width = 0
@@ -772,7 +764,7 @@ def _syncing(context, is_install, targets, updating):
         log.console_output("nothing to do")
         context.exiting(0)
     _confirm(context, "install packages", report)
-    makepkg = context.get_custom_arg(_CUSTOM_MAKEPKG)
+    makepkg = context.get_custom_arg(csm_args.CUSTOM_MAKEPKG)
     logger.debug("makepkg {}".format(makepkg))
     cache = context.handle.cachedirs
     cache_dirs = ""
@@ -854,7 +846,7 @@ def _remove(context):
     _confirm(context,
              "remove packages",
              ["{} {}".format(x.name, x.version) for x in p])
-    removals = context.get_custom_arg(_CUSTOM_REMOVAL)
+    removals = context.get_custom_arg(csm_args.CUSTOM_REMOVAL)
     call_with = ['-R']
     if len(removals) > 0:
         call_with = call_with + removals
@@ -1378,12 +1370,12 @@ and 'nothing' will not process the package at all before install (default).""",
     arg_groups = {}
     dirs = dir(args)
     custom_args = {}
-    for k in _DEFAULT_OPTS:
+    for k in csm_args.DEFAULT_OPTS:
         if k not in dirs:
             logger.debug('setting default for {}'.format(k))
-            setattr(args, k, _DEFAULT_OPTS[k])
+            setattr(args, k, csm_args.DEFAULT_OPTS[k])
         custom_args[k] = getattr(args, k)
-    arg_groups[_CUSTOM_ARGS] = custom_args
+    arg_groups[csm_args.CUSTOM_ARGS] = custom_args
     for group in parser._action_groups:
         g = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
         arg_groups[group.title] = argparse.Namespace(**g)
