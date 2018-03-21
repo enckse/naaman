@@ -453,12 +453,12 @@ def _load_deps(depth, packages, context, resolved, last_report):
         if len(matched) > 0:
             continue
         logger.debug("resolving dependencies level {}, {}".format(depth, p))
+        d_ver, _, p = _deps_compare(p)
+        if context.check_pkgcache(p, d_ver):
+            continue
         pkg = _rpc_search(p, True, context, include_deps=True)
         if pkg is None:
             logger.debug("non-aur {}".format(p))
-            continue
-        d_ver, _ = _deps_compare(p)
-        if context.check_pkgcache(p, d_ver):
             continue
         timed = _load_deps(depth + 1, pkg.deps, context, resolved, timed)
         resolved.append((depth, p))
@@ -1022,7 +1022,7 @@ def _deps_compare(package):
             d_version = package[c_idx + len(compare):len(package)]
             package = package[0:c_idx]
             break
-    return d_version, d_compare
+    return d_version, d_compare, package
 
 
 def _handle_deps(root_package, context, dependencies):
@@ -1032,7 +1032,7 @@ def _handle_deps(root_package, context, dependencies):
     syncpkgs = context.get_packages()
     for dep in dependencies:
         d = dep
-        d_version, d_compare = _deps_compare(d)
+        d_version, d_compare, d = _deps_compare(d)
         logger.debug(d)
         if context.targets and d in context.targets:
             logger.debug("installing it")
