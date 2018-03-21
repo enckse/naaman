@@ -1019,8 +1019,8 @@ def _deps_compare(package):
         c_idx = package.rfind(compare)
         if c_idx >= 0:
             d_compare = compare
-            d_version = d[c_idx + len(compare):len(d)]
-            d = d[0:c_idx]
+            d_version = package[c_idx + len(compare):len(package)]
+            package = package[0:c_idx]
             break
     return d_version, d_compare
 
