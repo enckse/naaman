@@ -1,4 +1,8 @@
-"""Logging for naaman."""
+"""
+Logging for naaman.
+
+Wraps python logging to support verbose/trace outputs
+"""
 
 import os
 import logging

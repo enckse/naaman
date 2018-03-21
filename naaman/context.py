@@ -1,4 +1,12 @@
-"""Operating context for naaman operations."""
+"""
+Operating context for naaman operations.
+
+Handles things like:
+1. locking/unlocking instance
+2. user state (is root?)
+3. Caching information
+4. Backing package store/caching
+"""
 import os
 import getpass
 import json

@@ -1,7 +1,8 @@
 """
-Defines AUR package information.
-
-Handles AUR data management, interfacing, processing
+Handle AUR requests, information, packages
+1. rpc requests
+2. AUR package resolution
+3. (poor) dependency management
 """
 import urllib.parse
 import urllib.request
