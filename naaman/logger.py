@@ -59,6 +59,11 @@ def debug(message):
     LOGGER.debug(message)
 
 
+def info(message):
+    """Info output."""
+    LOGGER.info(message)
+
+
 def console_output(string, prefix="", callback=LOGGER.info):
     """console/pretty output."""
     callback("{} => {}".format(prefix, string))

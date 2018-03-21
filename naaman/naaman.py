@@ -482,31 +482,12 @@ def _clean(context):
             shutil.rmtree(d, onerror=remove_fail)
 
 
-def _confirm(context, message, package_names, default_yes=True):
+def _confirm(ctx, message, package_names, default_yes=True):
     """Confirm package changes."""
-    exiting = None
-    if context.confirm:
-        logger.info("")
-        for p in package_names:
-            logger.info("  -> {}".format(p))
-        logger.info("")
-        defaulting = "Y/n"
-        if not default_yes:
-            defaulting = "y/N"
-        msg = " ===> {}, ({})? ".format(message, defaulting)
-        logger.trace(msg)
-        c = input(msg)
-        logger.trace(c)
-        if (default_yes and c == "n") or (not default_yes and c != "y"):
-            exiting = "user "
-    else:
-        if default_yes:
-            logger.debug("no confirmation needed.")
-            return
-        exiting = ""
+    exiting = sh.confirm(message, package_names, default_yes, ctx.confirm)
     if exiting is not None:
         log.console_error("{}cancelled".format(exiting))
-        context.exiting(1)
+        ctx.exiting(1)
 
 
 def _install(file_definition, makepkg, cache_dirs, context, version):
@@ -566,15 +547,7 @@ def _install(file_definition, makepkg, cache_dirs, context, version):
         replaces["SUDO"] = sudo
         replaces["VERSION"] = use_version
         replaces["CACHE"] = cache_dirs
-        script = script_text
-        for r in replaces:
-            script = script.replace("{" + r + "}", replaces[r])
-        logger.trace(script)
-        with open(temp_sh, 'w') as f:
-            f.write(script)
-        result = subprocess.call("/bin/bash --rcfile {}".format(temp_sh),
-                                 shell=True)
-        return result == 0
+        return sh.template_script(script_text, replaces, temp_sh)
 
 
 def _sync(context):
