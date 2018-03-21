@@ -15,7 +15,6 @@ import signal
 import tempfile
 import subprocess
 import shutil
-import time
 import naaman.arguments.common as common_args
 import naaman.arguments.config as config_args
 import naaman.arguments.custom as csm_args
