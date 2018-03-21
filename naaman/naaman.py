@@ -18,7 +18,7 @@ import tempfile
 import subprocess
 import shutil
 import time
-import version as vers
+import naaman.version as vers
 from datetime import datetime, timedelta
 from xdg import BaseDirectory
 from pycman import config

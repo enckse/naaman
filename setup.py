@@ -9,8 +9,6 @@ __pkg_name__ = "naaman"
 with open(os.path.join(__pkg_name__, "version.py")) as v_file:
     exec(v_file.read())
 
-long_description = ""
-
 setup(
     author="Sean Enck",
     author_email="enckse@gmail.com",
