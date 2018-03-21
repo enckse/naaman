@@ -1,5 +1,7 @@
 """
-Handle AUR requests, information, packages
+Handle AUR requests, information, packages.
+
+e.g.
 1. rpc requests
 2. AUR package resolution
 3. (poor) dependency management

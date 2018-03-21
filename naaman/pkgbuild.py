@@ -1,4 +1,3 @@
-
 """
 Handles anything to do with looking at PKGBUILDs.
 

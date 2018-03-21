@@ -1,4 +1,9 @@
-"""Shell operations."""
+"""
+Shell operations.
+
+Output to the shell in certain formats, executing shell commands,
+getting response from the user in the shell (as needed)
+"""
 import subprocess
 import naaman.logger as log
 
