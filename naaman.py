@@ -1449,7 +1449,7 @@ def _load_config(args, config_file):
                        "SKIP_DEPS",
                        "NO_CACHE",
                        "REMOVAL",
-                       "DOWNLAOD",
+                       "DOWNLOAD",
                        "SCRIPTS",
                        "VCS_INSTALL_ONLY",
                        "IGNORE_FOR",
