@@ -41,12 +41,12 @@ def split():
     _writepkgbuild(f, "")
     result = pkgbuild.splitting(f, 'test', True, False, False)
     if result != 2:
-        print("should be error")
+        print("should be skip")
         exit(1)
     _writepkgbuild(f, "")
     result = pkgbuild.splitting(f, 'test', False, False, True)
     if result != 3:
-        print("should be error")
+        print("should be done")
         exit(1)
 
 
