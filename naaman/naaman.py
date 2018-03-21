@@ -258,7 +258,8 @@ class Context(object):
             if self.can_sudo:
                 cmd.append("/usr/bin/sudo")
             else:
-                log.console_error("sudo required but not allowed, re-run as root")
+                log.console_error(
+                    "sudo required but not allowed, re-run as root")
                 self.exiting(1)
         cmd.append("/usr/bin/pacman")
         cmd = cmd + args
@@ -300,7 +301,8 @@ class Context(object):
             return
         log.console_error("lock file exists")
         log.console_error("only one instance of naaman may run at a time")
-        log.console_error("delete {} if this is an error".format(self._lock_file))
+        log.console_error(
+            "delete {} if this is an error".format(self._lock_file))
         exit(1)
 
 
@@ -789,7 +791,8 @@ def _ignore_for(context, ignore_for, ignored):
 def _syncing(context, is_install, targets, updating):
     """Sync/install packages."""
     if context.root:
-        log.console_error("can not run install/upgrades as root (uses makepkg)")
+        log.console_error(
+            "can not run install/upgrades as root (uses makepkg)")
         context.exiting(1)
     args = context.groups[_SYNC_UP_OPTIONS]
     ignored = args.ignore
@@ -908,7 +911,8 @@ def _syncing(context, is_install, targets, updating):
                             cache_dirs,
                             context,
                             None):
-                log.console_error("error installing package: {}".format(i.name))
+                log.console_error(
+                    "error installing package: {}".format(i.name))
                 next_pkgs = []
                 after = False
                 for e in do_install:
@@ -1006,8 +1010,8 @@ def _handle_deps(root_package, context, dependencies):
             pos = context.targets.index(d)
             if pos > root:
                 if context.reorder_deps:
-                    log.console_output("switching {} and {}".format(d,
-                                                                 root_package))
+                    log.console_output(
+                        "switching {} and {}".format(d, root_package))
                     context.reorders.append(d)
                 else:
                     log.console_error("verify order of target/deps")

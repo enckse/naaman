@@ -22,4 +22,4 @@ def console_output(string, prefix="", callback=LOGGER.info):
 
 def console_error(string):
     """Console error."""
-    _console_output(string, prefix="FAILURE", callback=LOGGER.error)
+    console_output(string, prefix="FAILURE", callback=LOGGER.error)
