@@ -2,6 +2,35 @@
 import naaman.aur as aur
 
 
+class MockPkg(object):
+    """Mock package."""
+
+    def __init__(self):
+        """Init the mock."""
+        self.name = None
+        self.depends = []
+        self.optdepends = []
+
+
+def get_deps():
+    """Dependency resolution."""
+    p = MockPkg()
+    m = MockPkg()
+    m.name = "test2"
+    p.name = "test"
+    p.depends = ["test2"]
+    pkgs = [p, m]
+    d = aur.get_deps(pkgs)
+    if len(d) != 3:
+        print("invalid deps")
+        exit(1)
+    names = [x.name for x in d]
+    # test2 was after test but got 'promoted'
+    if names != ["test2", "test", "test2"]:
+        print("invalid order")
+        exit(1)
+
+
 def get_segment():
     """Segment testing."""
     obj = {}
@@ -51,6 +80,7 @@ def main():
     get_segment()
     is_vcs()
     deps_compare()
+    get_deps()
 
 
 if __name__ == "__main__":

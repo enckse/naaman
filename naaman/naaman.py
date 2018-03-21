@@ -782,28 +782,10 @@ def _syncing(context, is_install, targets, updating):
     context.unlock()
 
 
-def _get_deps(pkgs, name):
-    """Dependency resolution."""
-    # NOTE: This will fail at a complicated tree across a variety of packages
-    deps = []
-    logger.debug('getting deps')
-    logger.trace(name)
-    for p in pkgs:
-        if p.name == name or not name:
-            logger.debug('found package')
-            dependencies = p.depends + p.optdepends
-            for d in dependencies:
-                logger.debug('resolving {}'.format(d))
-                for c in _get_deps(pkgs, d):
-                    deps.append(c)
-            deps.append(p)
-    return deps
-
-
 def _upgrades(context):
     """Ordered upgrade."""
     pkgs = list(_do_query(context))
-    deps = _get_deps(pkgs, None)
+    deps = aur.get_deps(pkgs)
     names = []
     for d in deps:
         if d.name in names:

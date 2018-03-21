@@ -66,3 +66,26 @@ def deps_compare(package):
             package = package[0:c_idx]
             break
     return Deps(d_version, d_compare, package)
+
+
+def get_deps(pkgs):
+    """Get dependencies."""
+    return _get_deps(pkgs, None)
+
+
+def _get_deps(pkgs, name):
+    """Dependency resolution."""
+    # NOTE: This will fail at a complicated tree across a variety of packages
+    deps = []
+    log.debug('getting deps')
+    log.trace(name)
+    for p in pkgs:
+        if p.name == name or not name:
+            log.debug('found package')
+            dependencies = p.depends + p.optdepends
+            for d in dependencies:
+                log.debug('resolving {}'.format(d))
+                for c in _get_deps(pkgs, d):
+                    deps.append(c)
+            deps.append(p)
+    return deps
