@@ -10,15 +10,13 @@ function _naaman()
         opts="$top"
     else
         if [ $COMP_CWORD -gt 1 ]; then
-            cmd=${COMP_WORDS[1]}
-            case $cmd in
-                "--sync" | "-S")
-                    opts="$sync"
-                    ;;
-                "--query" | "-Q")
+            if echo "${COMP_WORDS[*]}" | grep -q -E "(\-S|\-\-sync)"; then
+                opts="$sync"
+            else
+                if echo "${COMP_WORDS[*]}" | grep -q -E "(\-Q|\--query)"; then
                     opts="$query"
-                    ;;
-            esac
+                fi
+            fi
         fi
     fi
     opts="$opts $cmn"
