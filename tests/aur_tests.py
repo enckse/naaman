@@ -66,11 +66,11 @@ def search_crit():
     if s:
         print("none is invalid")
         exit(1)
-    s = aur.can_package_search("123")
+    s = aur.can_package_search("1")
     if s:
         print("too short")
         exit(1)
-    s = aur.can_package_search("1234")
+    s = aur.can_package_search("12")
     if not s:
         print("just long enough")
         exit(1)
