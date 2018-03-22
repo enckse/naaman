@@ -29,11 +29,12 @@ sudo make build
 **Before you begin using naaman**
 
 **naaman is not:**
-* a dependency solver, it's a pyalpm/makepkg wrapper for AUR to _help_ you
-* doing everything for you
-* pacman, though it does use _some wonky_ overlap on nomenclature
+* a dependency solver, it's a pyalpm/makepkg wrapper for the AUR to _help_ you
+* going to do everything for you
+* pacman, though it does use _some wonky_ overlap on nomenclature (e.g. `-Syyu` looks similar but is _only_ for your AUR packages)
 * verifying AURs are safe before you use them
 * fool proof and is capable of being tricked/fooled/skipped
+* a `pacman` wrapper (it doesn't manage your system packages, just your AUR packages)
 
 **These items are known and are not currently planned to be solved:**
 * Complicated/multi-AUR package dependency resolution
@@ -41,15 +42,15 @@ sudo make build
 * VCS packages are complicated, you have options to mitigate that
 * Split packages are also complicated, if naaman cannot handle it for you, try using `--fetch <dir>` and building by hand
 
-naaman is not meant to complete to be the best aur helper/manager/wrapper/etc, it is just one of many [options](https://wiki.archlinux.org/index.php/AUR_helpers)
+naaman is not meant to compete to be the best aur helper/manager/wrapper/etc, it is just one of many [options](https://wiki.archlinux.org/index.php/AUR_helpers)
 
 ## Usage
 
-naaman relies on being similar to pacman while having to do special things for itself
+naaman relies on being similar (in terms of the cli) to pacman while having to do special things for itself
 
 ### naaman
 
-naaman supports the following special flags:
+naaman supports the following flags (worth noting here, many more in the manual):
 
 output the version
 ```
@@ -64,11 +65,6 @@ perform debug output/logging
 to output trace level outputs (for debugging)
 ```
 --trace
-```
-
-specify the pacman config (defaults to `/etc/pacman.conf`)
-```
---pacman
 ```
 
 specify the naaman config file (defaults to `~/.config/naaman.conf`)
