@@ -3,7 +3,7 @@ function _naaman()
     local cur opts 
     if [ $COMP_CWORD -eq 1 ]; then
         cur=${COMP_WORDS[COMP_CWORD]}
-        opts=$(echo "--builds --cache-dir -c --clean --config -d --deps -g --gone -h --help --ignore --ignore-for --ignore --ignore-for --vcs-ignore -i --info --no-cache --no-config --no-confirm --no-sudo --no-vcs --pacman -Q --query -q --quiet --reorder-deps --rpc-cache -R --remove --skip-deps -s --search -S --sync --trace -u --upgrades --vcs-ignore --vcs-install-only --verbose --version -y --refresh -yy --force-refresh -yyy --force-force-refresh")
+        opts=$(echo "--builds --cache-dir -c --clean --config -d --deps -g --gone -h --help --ignore --ignore-for --ignore --ignore-for --vcs-ignore -i --info --no-cache --no-config --no-confirm --no-sudo --no-vcs --pacman -Q --query -q --quiet --reorder-deps --rpc-cache -R --remove --skip-deps -s --search -S --sync --trace -u --upgrades --vcs-ignore --vcs-install-only --verbose --version -y --refresh -yy --force-refresh -yyy --force-force-refresh --fetch")
         COMPREPLY=( $(compgen -W "$opts" -- $cur) )
     fi
 }

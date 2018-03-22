@@ -7,7 +7,7 @@ usage: man.py [\-h] [\-S] [\-R] [\-Q] [\-u] [\-s] [\-c] [\-d] [\-\-version] [\-\
 .IP
 [\-\-verbose] [\-\-trace] [\-\-pacman PACMAN] [\-\-config CONFIG]
 [\-\-no\-confirm] [\-q] [\-\-cache\-dir CACHE_DIR] [\-\-no\-config]
-[\-\-builds BUILDS] [\-\-ignore\-for N [N ...]]
+[\-\-builds BUILDS] [\-\-ignore\-for N [N ...]] [\-\-fetch FETCH]
 [\-\-vcs\-ignore VCS_IGNORE] [\-\-no\-vcs] [\-y] [\-yy]
 [\-\-ignore N [N ...]] [\-\-no\-cache] [\-\-skip\-deps] [\-\-reorder\-deps]
 [\-\-rpc\-cache RPC_CACHE] [\-i] [\-\-vcs\-install\-only] [\-yyy] [\-g]
@@ -204,6 +204,14 @@ installed. disabling this would save bandwidth
 similar to \fB\-yy\fR but will force force refresh over any
 speciality checking (e.g. \fB\-\-vcs\-install\-only\fR). Use
 this flag to update all AUR packages on the system
+.TP
+\fB\-\-fetch\fR FETCH
+Normally naaman will manage source retrieval and package
+building without problem. Though this relies on knowing a 
+PKGBUILD issafe to use and install. Utilize this option to 
+tell naaman to fetch to a location and not manage the 
+files/perform the build. The user can then verify the 
+PKGBUILD and run makepkg manually.
 .SS "Query options:"
 .TP
 \fB\-g\fR, \fB\-\-gone\fR

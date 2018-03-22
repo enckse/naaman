@@ -91,3 +91,9 @@ regardless of what is currently installed. disabling this would save bandwidth
 any speciality checking (e.g. --vcs-install-only). Use this flag to update all
 AUR packages on the system""",
                        action='store_true')
+    group.add_argument("--fetch",
+                       help="""Normally naaman will manage source retrieval and
+package building without problem. Though this relies on knowing a PKGBUILD is
+safe to use and install. Utilize this option to tell naaman to fetch to a
+location and not manage the files/perform the build. The user can then verify
+the PKGBUILD and run makepkg manually.""")
