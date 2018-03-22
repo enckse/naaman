@@ -62,6 +62,15 @@ class Context(object):
         self.timestamp = self.now.timestamp()
         self.terminal_width = 0
         self.fetching = args.fetch
+        self.fetch_dir = "."
+        if args.fetch_dir and len(args.fetch_dir) > 0:
+            valid = os.path.isdir(args.fetch_dir) and \
+                    os.path.exists(args.fetch_dir)
+            if not valid:
+                log.console_error("invalid fetch directory")
+                self.exiting(1)
+            self.fetch_dir = args.fetch_dir
+            log.trace(self.fetch_dir)
         self.builds = args.builds
         if self.builds:
             if not os.path.isdir(self.builds):

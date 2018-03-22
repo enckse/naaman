@@ -64,6 +64,7 @@ def load_config(args, config_file):
                        "NO_VCS",
                        "BUILDS",
                        "NO_SUDO",
+                       "FETCH_DIR",
                        "VCS_IGNORE"]:
                 val = None
                 lowered = key.lower()

@@ -341,7 +341,7 @@ def install(file_definition, makepkg, cache_dirs, context, version):
     with new_file() as t:
         if context.fetching:
             clone_to = file_definition.name
-            p = "."
+            p = context.fetch_dir
         else:
             clone_to = "."
             p = os.path.join(t, file_definition.name)
