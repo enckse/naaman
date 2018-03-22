@@ -30,7 +30,7 @@ _AUR_VERS = "Version"
 _AUR_URLP = "URLPath"
 _AUR_DEPS = "Depends"
 _MAKEPKG_VCS = ["-od"]
-_AUR_TARGET_LEN = 4
+_AUR_TARGET_LEN = 2
 
 
 def can_package_search(package_name):
