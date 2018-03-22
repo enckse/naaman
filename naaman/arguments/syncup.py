@@ -3,6 +3,8 @@ Sync/update/upgrade options.
 
 Options for controlling (fine-grained) how a sync/update works
 """
+import naaman.aur as aur
+
 
 SYNC_UP_OPTIONS = "Sync/Update options"
 
@@ -102,3 +104,10 @@ the PKGBUILD and run makepkg manually.""")
                        help="""Specifies the location to store fetched
 (--fetch) packages on the file system. Whenever fetch is used this is the
 directory that naaman will write to.""")
+    group.add_argument('--rpc-field',
+                       help="""When querying the AUR RPC endpoint, naaman will
+use a default search field to search for packages. By setting this argument
+naaman will be instructed to, instead, search using the specified field when
+querying the RPC endpoint during a search.""",
+                       default=aur.RPC_NAME_DESC,
+                       choices=aur.RPC_FIELDS)

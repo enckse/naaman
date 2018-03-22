@@ -18,6 +18,10 @@ from datetime import datetime
 
 _PRINTABLE = set(string.printable)
 
+RPC_NAME_DESC = "name-desc"
+RPC_NAME = "name"
+RPC_MAINTAINER = "maintainer"
+RPC_FIELDS = [RPC_NAME_DESC, RPC_NAME, RPC_MAINTAINER]
 _AUR = "https://aur.archlinux.org{}"
 _AUR_GIT = _AUR.format("/{}.git")
 _RESULT_JSON = 'results'

@@ -7,7 +7,7 @@ usage: man.py [\-h] [\-S] [\-R] [\-Q] [\-u] [\-s] [\-c] [\-d] [\-f] [\-\-version
 .IP
 [\-\-verbose] [\-\-trace] [\-\-pacman PACMAN] [\-\-config CONFIG]
 [\-\-no\-confirm] [\-q] [\-\-cache\-dir CACHE_DIR] [\-\-no\-config]
-[\-\-builds BUILDS] [\-\-ignore\-for N [N ...]] [\-\-fetch]
+[\-\-builds BUILDS] [\-\-ignore\-for N [N ...]] [\-\-fetch] [\-\-rpc-field {name-desc,name,maintainer}]
 [\-\-vcs\-ignore VCS_IGNORE] [\-\-no\-vcs] [\-y] [\-yy] [\-\-fetch\-dir FETCH_DIR]
 [\-\-ignore N [N ...]] [\-\-no\-cache] [\-\-skip\-deps] [\-\-reorder\-deps]
 [\-\-rpc\-cache RPC_CACHE] [\-i] [\-\-vcs\-install\-only] [\-yyy] [\-g]
@@ -217,6 +217,12 @@ PKGBUILD and run makepkg manually.
 Specifies the location to store fetched (\fB\-\-fetch\fR)
 packages on the file system. Whenever fetch is used this
 is the directory that naaman will write to.
+.TP
+\fB\-\-rpc\-field\fR
+When querying the AUR RPC endpoint, naaman will
+use a default search field to search for packages. By setting this argument
+naaman will be instructed to, instead, search using the specified field when
+querying the RPC endpoint during a search.
 .SS "Query options:"
 .TP
 \fB\-g\fR, \fB\-\-gone\fR

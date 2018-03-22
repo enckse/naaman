@@ -63,6 +63,7 @@ def load_config(args, config_file):
                        "MAKEPKG",
                        "NO_VCS",
                        "BUILDS",
+                       "RPC_FIELD",
                        "NO_SUDO",
                        "FETCH_DIR",
                        "VCS_IGNORE"]:
