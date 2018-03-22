@@ -8,7 +8,7 @@ MANPAGE5=$(BIN)$(MAN5)
 MONTH_YEAR=$(shell date +"%B %Y")
 DOC=docs/
 SRC=$(shell find naaman/ -type f -name "*\.py") $(shell find tests/ -type f -name "*\.py")
-VERS=$(shell cat naaman/version.py | grep "^\_\_version\_\_" | cut -d "=" -f 2 | sed 's/ //g;s/"//g')
+VERS=$(shell cat naaman/consts.py | grep "^\_\_version\_\_" | cut -d "=" -f 2 | sed 's/ //g;s/"//g')
 TST=tests/
 TESTS=$(shell ls $(TST) | grep "\.py$$")
 
