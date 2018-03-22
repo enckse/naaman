@@ -339,18 +339,19 @@ def install(file_definition, makepkg, cache_dirs, context, version):
         action = "checking version"
     log.console_output("{}: {}".format(action, file_definition.name))
     with new_file() as t:
+        clone_to = "."
         p = os.path.join(t, file_definition.name)
         os.makedirs(p)
-        f_dir = os.path.join(t, file_definition.name)
         sh.shell(["git",
                   "clone",
                   "--depth=1",
                   _AUR_GIT.format(file_definition.name),
-                  "."], suppress_error=True, workingdir=p)
+                  clone_to], suppress_error=True, workingdir=p)
         temp_sh = os.path.join(t, cst.NAME + ".sh")
         use_version = ""
         if version is not None:
             use_version = version
+        f_dir = os.path.join(t, file_definition.name)
         replaces = {}
         replaces["DIRECTORY"] = f_dir
         replaces["MAKEPKG"] = " ".join(makepkg)

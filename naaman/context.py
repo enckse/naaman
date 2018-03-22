@@ -61,6 +61,7 @@ class Context(object):
         self.now = datetime.now()
         self.timestamp = self.now.timestamp()
         self.terminal_width = 0
+        self.fetching = args.fetch
         self.builds = args.builds
         if self.builds:
             if not os.path.isdir(self.builds):
