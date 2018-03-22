@@ -339,14 +339,21 @@ def install(file_definition, makepkg, cache_dirs, context, version):
         action = "checking version"
     log.console_output("{}: {}".format(action, file_definition.name))
     with new_file() as t:
-        clone_to = "."
-        p = os.path.join(t, file_definition.name)
-        os.makedirs(p)
+        if context.fetching:
+            clone_to = file_definition.name
+            p = "."
+        else:
+            clone_to = "."
+            p = os.path.join(t, file_definition.name)
+            os.makedirs(p)
         sh.shell(["git",
                   "clone",
                   "--depth=1",
                   _AUR_GIT.format(file_definition.name),
                   clone_to], suppress_error=True, workingdir=p)
+        if context.fetching:
+            log.console_output("{} was fetched".format(file_definition.name))
+            return True
         temp_sh = os.path.join(t, cst.NAME + ".sh")
         use_version = ""
         if version is not None:
