@@ -29,7 +29,7 @@ _AUR_SEARCH = _AUR_RAW_URL.format("search&by=name-desc", "={}")
 _AUR_VERS = "Version"
 _AUR_URLP = "URLPath"
 _AUR_DEPS = "Depends"
-MAKEPKG_VCS = ["-od"]
+_MAKEPKG_VCS = ["-od"]
 AUR_TARGET_LEN = 4
 
 
@@ -315,6 +315,14 @@ def _handle_deps(root_package, context, dependencies):
         missing = True
     if missing:
         context.exiting(1)
+
+
+def check_vcs(package, context, version):
+    """Check current vcs version."""
+    result = install(package, _MAKEPKG_VCS, None, context,  version)
+    if not result:
+        log.console_output("up-to-date: {} ({})".format(package.name, version))
+    return result
 
 
 def install(file_definition, makepkg, cache_dirs, context, version):

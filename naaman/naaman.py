@@ -269,14 +269,6 @@ def _check_vcs_ignore(context, threshold):
     return result
 
 
-def _check_vcs(package, context, version):
-    """Check current vcs version."""
-    result = aur.install(package, aur.MAKEPKG_VCS, None, context,  version)
-    if not result:
-        log.console_output("up-to-date: {} ({})".format(package.name, version))
-    return result
-
-
 def _ignore_for(context, ignore_for, ignored):
     """Ignore for settings."""
     log.debug("checking ignored packages.")
@@ -374,7 +366,7 @@ def _syncing(context, is_install, targets, updating):
                 log.debug("checking vcs version")
                 pkg = context.db.get_pkg(package.name)
                 if pkg:
-                    if not _check_vcs(package, context, pkg.version):
+                    if not aur.check_vcs(package, context, pkg.version):
                         continue
                 else:
                     log.debug("unable to find installed package...")
