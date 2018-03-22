@@ -7,8 +7,7 @@ usage: man.py [\-h] [\-S] [\-R] [\-Q] [\-u] [\-s] [\-c] [\-d] [\-\-version] [\-\
 .IP
 [\-\-verbose] [\-\-trace] [\-\-pacman PACMAN] [\-\-config CONFIG]
 [\-\-no\-confirm] [\-q] [\-\-cache\-dir CACHE_DIR] [\-\-no\-config]
-[\-\-builds BUILDS] [\-\-download {git,tar,detect}]
-[\-\-on\-split {skip,nothing,error,split}] [\-\-ignore\-for N [N ...]]
+[\-\-builds BUILDS] [\-\-ignore\-for N [N ...]]
 [\-\-vcs\-ignore VCS_IGNORE] [\-\-no\-vcs] [\-y] [\-yy]
 [\-\-ignore N [N ...]] [\-\-no\-cache] [\-\-skip\-deps] [\-\-reorder\-deps]
 [\-\-rpc\-cache RPC_CACHE] [\-i] [\-\-vcs\-install\-only] [\-yyy] [\-g]
@@ -119,20 +118,6 @@ the location where naaman will perform builds. if not
 set this will be in the temp (e.g. \fI\,/tmp\/\fP) area.
 specifying this option will move where makepkg
 operations are performed in the system.
-.TP
-\fB\-\-download\fR {git,tar,detect}
-specifies how to retrieve AUR packages from the AUR
-repository. 'git' will (attempt, if git is installed)
-to git clone. 'tar' will download the tarball.
-\&'detect' will try 'git' and fallback to 'tar'
-.TP
-\fB\-\-on\-split\fR {skip,nothing,error,split}
-select what naaman should do when it encounters a
-split package. 'skip' will not install split packages,
-\&'error' will cause naaman to error and stop, package,
-\&'split' will attempt to split the package, and
-\&'nothing' will not process the package at all before
-install (default).
 .SS "Sync/Update options:"
 .TP
 \fB\-\-ignore\-for\fR N [N ...]
