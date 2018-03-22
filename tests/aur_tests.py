@@ -60,28 +60,11 @@ def deps_compare():
     exit(1)
 
 
-def search_crit():
-    """Test search criteria."""
-    s = aur.can_package_search(None)
-    if s:
-        print("none is invalid")
-        exit(1)
-    s = aur.can_package_search("1")
-    if s:
-        print("too short")
-        exit(1)
-    s = aur.can_package_search("12")
-    if not s:
-        print("just long enough")
-        exit(1)
-
-
 def main():
     """Main-entry harness."""
     is_vcs()
     deps_compare()
     get_deps()
-    search_crit()
 
 
 if __name__ == "__main__":
