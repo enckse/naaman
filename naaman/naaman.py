@@ -503,8 +503,9 @@ def _search(context):
     for target in context.targets:
         log.debug("searching for {}".format(target))
         if not aur.can_package_search(target):
-            # NOTE: we are suppressing this ourselves
-            log.debug("target name too short")
+            # NOTE: only current requirements are not None and > length
+            log.console_error(
+                "'{}' is not long enough term for searching".format(target))
             continue
         _rpc_search(target, False, context)
 
