@@ -206,6 +206,13 @@ def rpc_search(package_name, exact, context, include_deps):
                         desc = _get_segment(result, _AUR_DESC)
                         vers = _get_segment(result, _AUR_VERS)
                         found = True
+                        if name and context.check_repos(name):
+                            log.debug("package in a repository db")
+                            # This is in the repos, abort displaying
+                            # you can't 'install' this anyway
+                            # ...using naaman
+                            log.debug("in repos")
+                            continue
                         if exact:
                             if name == package_name:
                                 deps = None
