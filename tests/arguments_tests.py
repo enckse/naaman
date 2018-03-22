@@ -12,7 +12,7 @@ LKEJFE
 
 A1LL:"_lkd=jd
 VCS_IGNORE=1
-DOWNLOAD=git
+PACMAN=/etc/pacman.conf
 """
 
 
@@ -34,7 +34,7 @@ def config_args():
     if args.no_vcs:
         print('invalid no_vcs/bool')
         exit(1)
-    if args.download != "git":
+    if args.pacman != "/etc/pacman.conf":
         print("invalid string selection")
         exit(1)
 
@@ -50,7 +50,7 @@ class MockArgs(object):
         self.force_refresh = None
         self.force_force_refresh = None
         self.no_vcs = None
-        self.download = None
+        self.pacman = None
         self.vcs_ignore = None
 
 
