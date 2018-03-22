@@ -31,7 +31,7 @@ sudo make build
 **naaman is not:**
 * a dependency solver, it's a pyalpm/makepkg wrapper for the AUR to _help_ you
 * going to do everything for you
-* pacman, though it does use _some wonky_ overlap on nomenclature (e.g. `-Syyu` looks similar but is _only_ for your AUR packages)
+* pacman, though it has some overlap on nomenclature (e.g. `-Syyu` looks similar but is _only_ for your AUR packages)
 * verifying AURs are safe before you use them
 * fool proof and is capable of being tricked/fooled/skipped
 * a `pacman` wrapper (it doesn't manage your system packages, just your AUR packages)
