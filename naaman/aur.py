@@ -29,7 +29,7 @@ _AUR_NAME = "Name"
 _AUR_DESC = "Description"
 _AUR_RAW_URL = _AUR.format("/rpc?v=5&type={}&arg{}")
 _AUR_INFO = _AUR_RAW_URL.format("info", "[]={}")
-_AUR_SEARCH = _AUR_RAW_URL.format("search&by=name-desc", "={}")
+_AUR_SEARCH = _AUR_RAW_URL.format("search&by={}", "{}")
 _AUR_VERS = "Version"
 _AUR_URLP = "URLPath"
 _AUR_DEPS = "Depends"
@@ -164,7 +164,10 @@ def rpc_search(package_name, exact, context, include_deps):
     if exact or context.info_verbose:
         url = _AUR_INFO
     else:
-        url = _AUR_SEARCH
+        if context.rpc_field not in RPC_FIELDS:
+            log.console_error("unknown rpc field {}".format(context.rpc_field))
+            context.exiting(1)
+        url = _AUR_SEARCH.format(context.rpc_field, "={}")
     url = url.format(urllib.parse.quote(package_name))
     log.debug(url)
     factory = None

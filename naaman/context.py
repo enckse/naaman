@@ -63,6 +63,7 @@ class Context(object):
         self.terminal_width = 0
         self.fetching = args.fetch
         self.fetch_dir = "."
+        self.rpc_field = args.rpc_field
         if args.fetch_dir and len(args.fetch_dir) > 0:
             valid = os.path.isdir(args.fetch_dir) and \
                     os.path.exists(args.fetch_dir)
