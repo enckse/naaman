@@ -18,8 +18,11 @@ travis: ci all
 
 test: $(TESTS)
 
-ci:
+ci: peps
 	pip install pyxdg pep257 pycodestyle
+
+peps:
+	pip install pep257 pycodestyle
 
 $(TESTS): clean
 	@echo $@
@@ -51,7 +54,7 @@ dependencies:
 makedepends:
 	pacman -S python-pip git
 
-build: makedepends dependencies install
+build: makedepends dependencies peps install
 
 install: completions manpages
 	python setup.py install
