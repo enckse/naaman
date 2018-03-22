@@ -32,7 +32,7 @@ sudo make build
 * a dependency solver, it's a pyalpm/makepkg wrapper for the AUR to _help_ you
 * going to do everything for you
 * pacman, though it has some overlap on nomenclature (e.g. `-Syyu` looks similar but is _only_ for your AUR packages)
-* verifying AURs are safe before you use them
+* verifying AURs are safe before you use them (use `--fetch <dir>` to verify/build by hand as needed)
 * fool proof and is capable of being tricked/fooled/skipped
 * a `pacman` wrapper (it doesn't manage your system packages, just your AUR packages)
 
