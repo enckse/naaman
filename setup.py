@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 import os
 
 __pkg_name__ = "naaman"
-with open(os.path.join(__pkg_name__, "version.py")) as v_file:
+with open(os.path.join(__pkg_name__, "consts.py")) as v_file:
     exec(v_file.read())
 
 setup(

@@ -5,7 +5,6 @@ These are the root-level options for argument parsing for naaman
 """
 import argparse
 import naaman.consts as cst
-import naaman.version as vers
 
 
 def build(config_file, cache_dir):
@@ -47,7 +46,7 @@ attempt to install (after confirmation) the determined dependency chain.""",
     parser.add_argument('--version',
                         help="display version information about naaman",
                         action='version',
-                        version="{} ({})".format(cst.NAME, vers.__version__))
+                        version="{} ({})".format(cst.NAME, cst.__version__))
     parser.add_argument('--no-sudo',
                         help="""disable calling sudo. by default when naaman
 has to call pacman directly (e.g. -R), it will call with sudo if required.
