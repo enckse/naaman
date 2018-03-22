@@ -92,6 +92,7 @@ any speciality checking (e.g. --vcs-install-only). Use this flag to update all
 AUR packages on the system""",
                        action='store_true')
     group.add_argument("--fetch",
+                       action='store_true',
                        help="""Normally naaman will manage source retrieval and
 package building without problem. Though this relies on knowing a PKGBUILD is
 safe to use and install. Utilize this option to tell naaman to fetch to a
