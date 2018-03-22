@@ -8,21 +8,6 @@ import subprocess
 import naaman.logger as log
 
 
-def has_git(required):
-    """Check if we have git installed."""
-    log.debug("checking for git")
-    try:
-        with open("/dev/null", "w") as null:
-            subprocess.Popen("git", stdout=null, stderr=null)
-        return True
-    except Exception as e:
-        if required:
-            log.console_error("unable to use git")
-            log.error(e)
-            return None
-        return False
-
-
 def template_script(script_text, replaces, temp_file):
     """Template and run a script."""
     script = script_text

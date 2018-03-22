@@ -103,12 +103,4 @@ if not set this will be in the temp (e.g. /tmp) area. specifying this option
 will move where makepkg operations are performed in the system.""",
                         default=None,
                         type=str)
-    parser.add_argument('--download',
-                        help="""specifies how to retrieve AUR packages from
-the AUR repository. 'git' will (attempt, if git is installed) to git clone.
-'tar' will download the tarball. 'detect' will try 'git' and fallback to
-'tar'""",
-                        default=cst.DOWNLOAD_DETECT,
-                        choices=cst.DOWNLOADS,
-                        type=str)
     return parser

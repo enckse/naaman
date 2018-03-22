@@ -322,7 +322,6 @@ def install(file_definition, makepkg, cache_dirs, context, version):
     can_sudo = context.can_sudo
     script_text = context.load_script("makepkg")
     new_file = context.build_dir
-    use_git = context.use_git
     sudo = ""
     if can_sudo:
         sudo = "sudo"
@@ -335,20 +334,11 @@ def install(file_definition, makepkg, cache_dirs, context, version):
         p = os.path.join(t, file_definition.name)
         os.makedirs(p)
         f_dir = os.path.join(t, file_definition.name)
-        if use_git:
-            sh.shell(["git",
-                      "clone",
-                      "--depth=1",
-                      _AUR_GIT.format(file_definition.name),
-                      "."], suppress_error=True, workingdir=p)
-        else:
-            log.debug("using tar")
-            f_name = file_definition.name + ".tar.gz"
-            file_name = os.path.join(p, f_name)
-            log.debug(file_name)
-            urllib.request.urlretrieve(url, file_name)
-            sh.shell(["tar", "xf", f_name, "--strip-components=1"],
-                     workingdir=p)
+        sh.shell(["git",
+                  "clone",
+                  "--depth=1",
+                  _AUR_GIT.format(file_definition.name),
+                  "."], suppress_error=True, workingdir=p)
         temp_sh = os.path.join(t, cst.NAME + ".sh")
         use_version = ""
         if version is not None:

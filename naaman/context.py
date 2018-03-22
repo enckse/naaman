@@ -61,14 +61,6 @@ class Context(object):
         self.now = datetime.now()
         self.timestamp = self.now.timestamp()
         self.terminal_width = 0
-        self.use_git = False
-        if args.download and args.download in [cst.DOWNLOAD_GIT,
-                                               cst.DOWNLOAD_DETECT]:
-            git = sh.has_git(args.download != cst.DOWNLOAD_DETECT)
-            if git is not None:
-                self.use_git = git
-            else:
-                self.exiting(1)
         self.builds = args.builds
         if self.builds:
             if not os.path.isdir(self.builds):

@@ -57,7 +57,6 @@ def load_config(args, config_file):
                        "SKIP_DEPS",
                        "NO_CACHE",
                        "REMOVAL",
-                       "DOWNLOAD",
                        "SCRIPTS",
                        "VCS_INSTALL_ONLY",
                        "IGNORE_FOR",
@@ -90,11 +89,6 @@ def load_config(args, config_file):
                         val = int(value)
                     else:
                         val = value
-                    key_checks = {}
-                    key_checks["DOWNLOAD"] = cst.DOWNLOADS
-                    if key in key_checks.keys():
-                        if val not in key_checks[key]:
-                            raise Exception("unknown {} type".format(key))
                 except Exception as e:
                     log.error("unable to read value")
                     log.error(e)
