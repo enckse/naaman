@@ -30,7 +30,12 @@ _AUR_VERS = "Version"
 _AUR_URLP = "URLPath"
 _AUR_DEPS = "Depends"
 _MAKEPKG_VCS = ["-od"]
-AUR_TARGET_LEN = 4
+_AUR_TARGET_LEN = 4
+
+
+def can_package_search(package_name):
+    """Check search criteria before a search."""
+    return package_name is not None and len(package_name) >= _AUR_TARGET_LEN
 
 
 class AURPackage(object):
