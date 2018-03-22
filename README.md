@@ -32,7 +32,7 @@ sudo make build
 * a dependency solver, it's a pyalpm/makepkg wrapper for the AUR to _help_ you
 * going to do everything for you
 * pacman, though it has some overlap on nomenclature (e.g. `-Syyu` looks similar but is _only_ for your AUR packages)
-* verifying AURs are safe before you use them (use `--fetch <dir>` to verify/build by hand as needed)
+* verifying AURs are safe before you use them (use `--fetch` to verify/build by hand as needed)
 * fool proof and is capable of being tricked/fooled/skipped
 * a `pacman` wrapper (it doesn't manage your system packages, just your AUR packages)
 
@@ -40,7 +40,7 @@ sudo make build
 * Complicated/multi-AUR package dependency resolution
 * Replicating all conceivable pacman args that _might_ be useful for AUR management
 * VCS packages are complicated, you have options to mitigate that
-* Split packages are also complicated, if naaman cannot handle it for you, try using `--fetch <dir>` and building by hand
+* Split packages are also complicated, if naaman cannot handle it for you, try using `--fetch` and building by hand
 
 naaman is not meant to compete to be the best aur helper/manager/wrapper/etc, it is just one of many [options](https://wiki.archlinux.org/index.php/AUR_helpers)
 

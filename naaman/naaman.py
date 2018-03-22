@@ -41,7 +41,8 @@ def _validate_options(args, unknown, groups):
     if args.sync:
         call_on("sync")
         valid_count += 1
-        if args.upgrades or args.search or args.clean or args.deps:
+        if args.upgrades or args.search or args.clean or \
+           args.deps or args.fetch:
             sub_count = 0
             sub_command = None
             if args.upgrades:
@@ -55,15 +56,17 @@ def _validate_options(args, unknown, groups):
             if args.deps:
                 sub_count += 1
                 sub_command = "deps"
+            if args.fetch:
+                sub_count += 1
+                sub_command = "fetch"
             if sub_count == 1:
                 if sub_command is not None:
                     call_on("sync: {}".format(sub_command))
             else:
                 log.console_error("cannot perform multiple sub-options")
                 invalid = True
-        if args.search or args.deps or (not args.upgrades and
-                                        not args.clean and
-                                        not args.deps):
+        if args.search or args.deps or args.fetch or \
+            (not args.upgrades and not args.clean and not args.deps):
             need_targets = True
 
     if args.remove:
@@ -83,9 +86,11 @@ def _validate_options(args, unknown, groups):
         if valid_count != 1:
             invalid = True
 
-    if not invalid and (args.search or args.upgrades or args.clean):
+    if not invalid and \
+       (args.search or args.upgrades or args.clean or args.fetch):
         if not args.sync:
-            log.console_error("search, upgrade, and clean are sync only")
+            log.console_error(
+                "search, upgrade, clean, and fetch are sync only")
             invalid = True
 
     if not invalid and args.info and not args.search:
