@@ -19,7 +19,6 @@ import naaman.aur as aur
 import naaman.context as nctx
 import naaman.logger as log
 import naaman.consts as cst
-import naaman.pkgbuild as pkgbld
 from datetime import datetime, timedelta
 
 
@@ -272,7 +271,7 @@ def _check_vcs_ignore(context, threshold):
 
 def _check_vcs(package, context, version):
     """Check current vcs version."""
-    result = aur.install(package, pkgbld.MAKEPKG_VCS, None, context,  version)
+    result = aur.install(package, aur.MAKEPKG_VCS, None, context,  version)
     if not result:
         log.console_output("up-to-date: {} ({})".format(package.name, version))
     return result

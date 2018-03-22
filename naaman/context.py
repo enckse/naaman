@@ -17,7 +17,6 @@ import naaman.arguments.custom as csm_args
 import naaman.shell as sh
 import naaman.logger as log
 import naaman.consts as cst
-import naaman.pkgbuild as pkgbld
 from datetime import datetime
 from pycman import config
 
@@ -84,13 +83,6 @@ class Context(object):
         except Exception as e:
             log.debug("unable to determine tty column size")
             log.debug(e)
-        self.skip_split = args.on_split == pkgbld.SPLIT_SKIP
-        self.error_split = args.on_split == pkgbld.SPLIT_ERR
-        self.do_split = args.on_split == pkgbld.SPLIT_SPLIT
-        if self.use_git and \
-           (self.skip_split or self.error_split or self.do_split):
-            log.console_error("split package options not available for git")
-            self.exiting(1)
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""

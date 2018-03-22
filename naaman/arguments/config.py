@@ -9,7 +9,6 @@ We take the config and use it to supplement our args
 import os
 import naaman.logger as log
 import naaman.consts as cst
-import naaman.pkgbuild as pkgbld
 from xdg import BaseDirectory
 
 
@@ -65,7 +64,6 @@ def load_config(args, config_file):
                        "MAKEPKG",
                        "NO_VCS",
                        "BUILDS",
-                       "ON_SPLIT",
                        "NO_SUDO",
                        "VCS_IGNORE"]:
                 val = None
@@ -94,7 +92,6 @@ def load_config(args, config_file):
                         val = value
                     key_checks = {}
                     key_checks["DOWNLOAD"] = cst.DOWNLOADS
-                    key_checks["ON_SPLIT"] = pkgbld.SPLITS
                     if key in key_checks.keys():
                         if val not in key_checks[key]:
                             raise Exception("unknown {} type".format(key))

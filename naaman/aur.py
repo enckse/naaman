@@ -29,6 +29,7 @@ _AUR_SEARCH = _AUR_RAW_URL.format("search&by=name-desc", "={}")
 _AUR_VERS = "Version"
 _AUR_URLP = "URLPath"
 _AUR_DEPS = "Depends"
+MAKEPKG_VCS = ["-od"]
 AUR_TARGET_LEN = 4
 
 
@@ -348,21 +349,6 @@ def install(file_definition, makepkg, cache_dirs, context, version):
             urllib.request.urlretrieve(url, file_name)
             sh.shell(["tar", "xf", f_name, "--strip-components=1"],
                      workingdir=p)
-            if context.skip_split or context.error_split or context.do_split:
-                log.debug("handling split packages")
-                pkgbuild = os.path.join(f_dir, "PKGBUILD")
-                log.trace(pkgbuild)
-                if not os.path.exists(pkgbuild):
-                    raise Exception("unable to find PKGBUILD")
-                split_result = pkgbld.splitting(pkgbuild,
-                                                file_definition.name,
-                                                context.skip_split,
-                                                context.error_split,
-                                                context.do_split)
-                if split_result == pkgbld.SPLIT_ERRORED:
-                    return False
-                elif split_result == pkgbld.SPLIT_SKIPPED:
-                    return True
         temp_sh = os.path.join(t, cst.NAME + ".sh")
         use_version = ""
         if version is not None:

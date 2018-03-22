@@ -6,7 +6,6 @@ These are the root-level options for argument parsing for naaman
 import argparse
 import naaman.consts as cst
 import naaman.version as vers
-import naaman.pkgbuild as pkgbld
 
 
 def build(config_file, cache_dir):
@@ -111,13 +110,5 @@ the AUR repository. 'git' will (attempt, if git is installed) to git clone.
 'tar'""",
                         default=cst.DOWNLOAD_DETECT,
                         choices=cst.DOWNLOADS,
-                        type=str)
-    parser.add_argument("--on-split",
-                        help="""select what naaman should do when it encounters
-a split package. 'skip' will not install split packages, 'error' will cause
-naaman to error and stop, package, 'split' will attempt to split the package,
-and 'nothing' will not process the package at all before install (default).""",
-                        default=pkgbld.SPLIT_NONE,
-                        choices=pkgbld.SPLITS,
                         type=str)
     return parser
