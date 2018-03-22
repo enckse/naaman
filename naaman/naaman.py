@@ -66,7 +66,7 @@ def _validate_options(args, unknown, groups):
                 log.console_error("cannot perform multiple sub-options")
                 invalid = True
         if args.search or args.deps or args.fetch or \
-            (not args.upgrades and not args.clean and not args.deps):
+           (not args.upgrades and not args.clean and not args.deps):
             need_targets = True
 
     if args.remove:
