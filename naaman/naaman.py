@@ -502,7 +502,7 @@ def _search(context):
         context.exiting(1)
     for target in context.targets:
         log.debug("searching for {}".format(target))
-        if not package_search(target):
+        if not aur.can_package_search(target):
             # NOTE: we are suppressing this ourselves
             log.debug("target name too short")
             continue
