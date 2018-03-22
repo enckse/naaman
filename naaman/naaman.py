@@ -377,8 +377,12 @@ def _syncing(context, is_install, targets, updating):
                     log.debug("unable to find installed package...")
             check_inst.append(package)
         else:
-            log.console_error("unknown AUR package: {}".format(name))
-            context.exiting(1)
+            if updating:
+                log.console_output(
+                    "untracked package: {} (ignored)".format(name))
+            else:
+                log.console_error("unknown AUR package: {}".format(name))
+                context.exiting(1)
     inst = []
     for item in context.reorders:
         obj = [x for x in check_inst if x.name == item]
