@@ -12,7 +12,10 @@ def template_script(script_text, replaces, temp_file):
     """Template and run a script."""
     script = script_text
     for r in replaces:
-        script = script.replace("{" + r + "}", replaces[r])
+        val = replaces[r]
+        if val is None:
+            val = ""
+        script = script.replace("{" + r + "}", val)
     log.trace(script)
     with open(temp_file, 'w') as f:
         f.write(script)
