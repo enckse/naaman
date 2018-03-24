@@ -100,6 +100,6 @@ loaded.""",
                         help="""the location where naaman will perform builds.
 if not set this will be in the temp (e.g. /tmp) area. specifying this option
 will move where makepkg operations are performed in the system.""",
-                        default=None,
+                        default=cache_dir,
                         type=str)
     return parser
