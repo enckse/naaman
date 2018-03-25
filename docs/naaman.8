@@ -25,7 +25,7 @@ of target packages.
 .TP
 \fB\-R\fR, \fB\-\-remove\fR
 remove a package. this will call pacman on any AUR
-based packages and remove them if installed.
+based packages and remove them (if installed).
 .TP
 \fB\-Q\fR, \fB\-\-query\fR
 query package database. this option is used to find
@@ -39,10 +39,10 @@ packages. a list of target packages may also be
 passed.
 .TP
 \fB\-s\fR, \fB\-\-search\fR
-search for packages in the AUR. by passing a package
-name to search the AUR rpc endpoints will be called to
-attempt to find a package with a name or description
-matching this input string
+search for packages in the AUR. the AUR rpc endpoints
+will be called to attempt to find a package with a
+name or description matching the input string (change
+fields using \fB\-\-rpc\-field\fR).
 .TP
 \fB\-c\fR, \fB\-\-clean\fR
 clean the cache. this will clean the naaman cache area
@@ -231,5 +231,5 @@ querying the RPC endpoint during a search.
 \fB\-g\fR, \fB\-\-gone\fR
 specifying this option will check for packages
 installed from the AUR but are no longer in the AUR.
--.SH "SEE ALSO"
--.B man naaman.conf
+.SH "SEE ALSO"
+.B man naaman.conf

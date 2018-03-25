@@ -17,7 +17,7 @@ attempt to install a list of target packages.""",
                         action="store_true")
     parser.add_argument('-R', '--remove',
                         help="""remove a package. this will call pacman on any
-AUR based packages and remove them if installed.""",
+AUR based packages and remove them (if installed).""",
                         action="store_true")
     parser.add_argument('-Q', '--query',
                         help="""query package database. this option is used to
@@ -29,9 +29,9 @@ the system. this will attempt to upgrade ALL AUR installed packages. a list of
 target packages may also be passed.""",
                         action="store_true")
     parser.add_argument('-s', '--search',
-                        help="""search for packages in the AUR. by passing a
-package name to search the AUR rpc endpoints will be called to attempt to find
-a package with a name or description matching this input string""",
+                        help="""search for packages in the AUR. the AUR rpc
+endpoints will be called to attempt to find a package with a name or
+description matching the input string (change fields using --rpc-field).""",
                         action="store_true")
     parser.add_argument('-c', '--clean',
                         help="""clean the cache. this will clean the naaman

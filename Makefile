@@ -11,7 +11,11 @@ SRC=$(shell find naaman/ -type f -name "*\.py") $(shell find tests/ -type f -nam
 VERS=$(shell cat naaman/consts.py | grep "^\_\_version\_\_" | cut -d "=" -f 2 | sed 's/ //g;s/"//g')
 TST=tests/
 TESTS=$(shell ls $(TST) | grep "\.py$$")
-NAAMAN_DEV=$(BIN)naaman.8.dev
+NAAMAN8_DEV=$(BIN)$(MAN8).template
+NAAMAN8_FOOTER=$(BIN)$(MAN8).footer
+NAAMAN8_HEADER=$(BIN)$(MAN8).header
+NAAMAN8_DOC=$(BIN)$(MAN8).doc
+DOC_MAN8=$(DOC)/$(MAN8)
 
 all: test version analyze completions manpages
 
@@ -39,8 +43,10 @@ completions: clean
 	cp $(DOC)bash.completions $(COMPLETION)
 
 manpages: clean
+	cat $(DOC_MAN8) | head -n 3 > $(NAAMAN8_HEADER)
+	cat $(DOC_MAN8) | tail -n 2 > $(NAAMAN8_FOOTER)
 	cat $(DOC)$(MAN5) | sed "s/<Month Year>/$(MONTH_YEAR)/g"  > $(MANPAGE5)
-	cat $(DOC)$(MAN8) | sed "s/<Month Year>/$(MONTH_YEAR)/g;s/<Version>/$(VERS)/g"  > $(MANPAGE8)
+	cat $(DOC_MAN8) | sed "s/<Month Year>/$(MONTH_YEAR)/g;s/<Version>/$(VERS)/g"  > $(MANPAGE8)
 	cd $(BIN) && gzip -k $(MAN8)
 	cd $(BIN) && gzip -k $(MAN5)
 
@@ -71,10 +77,12 @@ endef
 
 install: completions manpages
 	python setup.py install
-	help2man naaman > $(NAAMAN_DEV)
-	$(call diffman,$(NAAMAN_DEV))
-	$(call diffman,$(MANPAGE8))
-	diff -u $(NAAMAN_DEV) $(MANPAGE8)
+	help2man naaman > $(NAAMAN8_DEV)
+	$(call diffman,$(NAAMAN8_DEV))
+	@cat $(NAAMAN8_HEADER) > $(NAAMAN8_DOC)
+	@cat $(NAAMAN8_DEV) >> $(NAAMAN8_DOC)
+	@cat $(NAAMAN8_FOOTER) >> $(NAAMAN8_DOC)
+	diff -u $(DOC_MAN8) $(NAAMAN8_DOC)
 	install -Dm644 LICENSE $(INSTALL)/usr/share/license/naaman/LICENSE
 	install -Dm644 $(COMPLETION) $(INSTALL)/usr/share/bash-completion/completions/naaman
 	install -Dm644 scripts/makepkg $(INSTALL)/usr/share/naaman/makepkg
