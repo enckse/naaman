@@ -11,6 +11,7 @@ SRC=$(shell find naaman/ -type f -name "*\.py") $(shell find tests/ -type f -nam
 VERS=$(shell cat naaman/consts.py | grep "^\_\_version\_\_" | cut -d "=" -f 2 | sed 's/ //g;s/"//g')
 TST=tests/
 TESTS=$(shell ls $(TST) | grep "\.py$$")
+NAAMAN_DEV=$(BIN)naaman.8.dev
 
 all: test version analyze completions manpages
 
@@ -40,8 +41,8 @@ completions: clean
 manpages: clean
 	cat $(DOC)$(MAN5) | sed "s/<Month Year>/$(MONTH_YEAR)/g"  > $(MANPAGE5)
 	cat $(DOC)$(MAN8) | sed "s/<Month Year>/$(MONTH_YEAR)/g;s/<Version>/$(VERS)/g"  > $(MANPAGE8)
-	cd $(BIN) && gzip $(MAN8)
-	cd $(BIN) && gzip $(MAN5)
+	cd $(BIN) && gzip -k $(MAN8)
+	cd $(BIN) && gzip -k $(MAN5)
 
 version:
 	@echo $(VERS)
@@ -58,12 +59,22 @@ dependencies:
 	pacman -S python-xdg pyalpm bash-completion
 
 makedepends:
-	pacman -S python-pip git
+	pacman -S python-pip git help2man
 
 build: makedepends dependencies peps install
 
+define diffman =
+	sed -i '/^\.\\" DO NOT MODIFY THIS FILE/ d' $1;
+	sed -i -e '1,3d' $1;
+	sed -i -n '/.SH "SEE ALSO"/q;p' $1;
+endef
+
 install: completions manpages
 	python setup.py install
+	help2man naaman > $(NAAMAN_DEV)
+	$(call diffman,$(NAAMAN_DEV))
+	$(call diffman,$(MANPAGE8))
+	diff -u $(NAAMAN_DEV) $(MANPAGE8)
 	install -Dm644 LICENSE $(INSTALL)/usr/share/license/naaman/LICENSE
 	install -Dm644 $(COMPLETION) $(INSTALL)/usr/share/bash-completion/completions/naaman
 	install -Dm644 scripts/makepkg $(INSTALL)/usr/share/naaman/makepkg
