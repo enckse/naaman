@@ -10,5 +10,5 @@ def options(parser):
     group = parser.add_argument_group("Query options")
     group.add_argument('-g', "--gone",
                        help="""specifying this option will check for packages
-installed from the AUR but are no longer in the AUR.""",
+installed from the AUR but are no longer in the AUR (orphans).""",
                        action="store_true")
