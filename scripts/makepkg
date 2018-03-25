@@ -1,7 +1,7 @@
 #!/bin/bash
 trap '' 2
 function _section() {
-    cat .SRCINFO | grep "\s*$1" | cut -d "=" -f 2- | sed "s/^\s//g;s/\s$//g"
+    cat .SRCINFO | grep "\s*$1" | cut -d "=" -f 2- | sed "s/^\s//g;s/\s$//g" | head -n 1
 }
 cd {DIRECTORY}
 makepkg {MAKEPKG}
