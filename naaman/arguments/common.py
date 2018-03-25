@@ -98,8 +98,8 @@ loaded.""",
                         action="store_true")
     parser.add_argument('--builds',
                         help="""the location where naaman will perform builds.
-if not set this will be in the temp (e.g. /tmp) area. specifying this option
-will move where makepkg operations are performed in the system.""",
+if not set this will be in XDG_CACHE_HOME. specifying this option will move
+where makepkg operations are performed in the system.""",
                         default=cache_dir,
                         type=str)
     return parser
