@@ -34,7 +34,7 @@ system.
 .TP
 \fB\-u\fR, \fB\-\-upgrades\fR
 perform an upgrade of installed packages on the the
-system. this will attempt to upgrade ALL AUR installed
+system. this will attempt to upgrade all AUR installed
 packages. a list of target packages may also be
 passed.
 .TP
@@ -52,9 +52,9 @@ packages or to reset duration caching options.
 .TP
 \fB\-d\fR, \fB\-\-deps\fR
 naaman will attempt to build a dependency chain for
-the seperately for each package specified. upon
-completion naaman will attempt to install (after
-confirmation) the determined dependency chain.
+each package specified. upon completion naaman will
+attempt to install (after confirmation) the determined
+dependencies for the package.
 .TP
 \fB\-\-version\fR
 display version information about naaman
@@ -62,13 +62,14 @@ display version information about naaman
 \fB\-\-no\-sudo\fR
 disable calling sudo. by default when naaman has to
 call pacman directly (e.g. \fB\-R\fR), it will call with sudo
-if required. passing this option will prevent naaman
+(if required). passing this option will prevent naaman
 from using sudo.
 .TP
 \fB\-\-verbose\fR
 verbose output. this setting will change the output
 formatting and enable DEBUG level output. use this to
-begin to debug naaman and to see more detail.
+begin to debug naaman and to see more detail during
+operations.
 .TP
 \fB\-\-trace\fR
 trace debug logging. this option is useful to dump
@@ -76,16 +77,16 @@ extensive naaman logging information for indepth
 troubleshooting or debugging purposes.
 .TP
 \fB\-\-pacman\fR PACMAN
-pacman config. when creating the pacman handle naaman
-passes a configuration file to pacman for
-initialization via pyalpm. this is NOT passed when
-calling pacman directly (e.g. \fB\-R\fR).
+pacman config. when naaman passes a configuration file
+to pacman for initialization (via pyalpm) this
+requires a pacman configuration file. this is NOT
+passed when calling pacman directly (e.g. \fB\-R\fR).
 .TP
 \fB\-\-config\fR CONFIG
 naaman config. specify the (optional) naaman
-configuration file to use. please use man naaman.conf
-for available options. naaman will read configs in the
-order of (all optional): \fI\,/etc\/\fP, XDG_CONFIG_HOME , and
+configuration file to use. see naaman.conf for
+available options. naaman will read configs in the
+order of (all optional): \fI\,/etc\/\fP, XDG_CONFIG_HOME, and
 then \fB\-\-config\fR
 .TP
 \fB\-\-no\-confirm\fR
@@ -100,7 +101,8 @@ MAKEPKG in the naaman.conf)
 quiet various parts of naaman to display less. certain
 operations will display more AUR package information
 that will be quiet (displaying minimal package
-information) if this option is provided.
+information, e.g. just package name) if this option is
+provided.
 .TP
 \fB\-\-cache\-dir\fR CACHE_DIR
 cache dir for naaman. naaman stores caching and
@@ -111,14 +113,15 @@ exist.
 \fB\-\-no\-config\fR
 do not load the config file. to prevent naaman from
 loading the configuration file when running specify
-this option. this can allow running a specify instance
-of naaman without certain config options being loaded.
+this option. this can allow running a specific
+instance of naaman without certain config options
+being loaded.
 .TP
 \fB\-\-builds\fR BUILDS
 the location where naaman will perform builds. if not
 set this will be in XDG_CACHE_HOME. specifying this
 option will move where makepkg operations are
-performed in the system.
+performed on the system.
 .SS "Sync/Update options:"
 .TP
 \fB\-\-ignore\-for\fR N [N ...]

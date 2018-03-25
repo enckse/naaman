@@ -25,7 +25,7 @@ find out what AUR packages are currently installed on the system.""",
                         action="store_true")
     parser.add_argument('-u', '--upgrades',
                         help="""perform an upgrade of installed packages on the
-the system. this will attempt to upgrade ALL AUR installed packages. a list of
+the system. this will attempt to upgrade all AUR installed packages. a list of
 target packages may also be passed.""",
                         action="store_true")
     parser.add_argument('-s', '--search',
@@ -40,8 +40,8 @@ information for deprecated packages or to reset duration caching options.""",
                         action="store_true")
     parser.add_argument('-d', '--deps',
                         help="""naaman will attempt to build a dependency chain
-for the seperately  for each package specified. upon completion naaman will
-attempt to install (after confirmation) the determined dependency chain.""",
+for each package specified. upon completion naaman will attempt to install
+(after confirmation) the determined dependencies for the package.""",
                         action="store_true")
     parser.add_argument('--version',
                         help="display version information about naaman",
@@ -49,13 +49,13 @@ attempt to install (after confirmation) the determined dependency chain.""",
                         version="{} ({})".format(cst.NAME, cst.__version__))
     parser.add_argument('--no-sudo',
                         help="""disable calling sudo. by default when naaman
-has to call pacman directly (e.g. -R), it will call with sudo if required.
+has to call pacman directly (e.g. -R), it will call with sudo (if required).
 passing this option will prevent naaman from using sudo.""",
                         action='store_true')
     parser.add_argument('--verbose',
                         help="""verbose output. this setting will change the
 output formatting and enable DEBUG level output. use this to begin to debug
-naaman and to see more detail.""",
+naaman and to see more detail during operations.""",
                         action='store_true')
     parser.add_argument('--trace',
                         help="""trace debug logging. this option is useful to
@@ -63,15 +63,16 @@ dump extensive naaman logging information for indepth troubleshooting or
 debugging purposes.""",
                         action='store_true')
     parser.add_argument('--pacman',
-                        help="""pacman config. when creating the pacman handle
-naaman passes a configuration file to pacman for initialization via pyalpm.
-this is NOT passed when calling pacman directly (e.g. -R).""",
+                        help="""pacman config. when naaman passes a
+configuration file to pacman for initialization (via pyalpm) this requires a
+pacman configuration file. this is NOT passed when calling pacman directly
+(e.g. -R).""",
                         default='/etc/pacman.conf')
     parser.add_argument('--config',
                         help="""naaman config. specify the (optional) naaman
-configuration file to use. please use man naaman.conf for available options.
-naaman will read configs in the order of (all optional): /etc, XDG_CONFIG_HOME
-, and then --config""",
+configuration file to use. see naaman.conf for available options. naaman will
+read configs in the order of (all optional): /etc, XDG_CONFIG_HOME, and then
+--config""",
                         default=config_file)
     parser.add_argument('--no-confirm',
                         help="""naaman will not ask for confirmation. when
@@ -83,7 +84,8 @@ the naaman.conf)""",
     parser.add_argument('-q', '--quiet',
                         help="""quiet various parts of naaman to display less.
 certain operations will display more AUR package information that will be quiet
-(displaying minimal package information) if this option is provided.""",
+(displaying minimal package information, e.g. just package name) if this option
+is provided.""",
                         action="store_true")
     parser.add_argument('--cache-dir',
                         help="""cache dir for naaman. naaman stores caching and
@@ -93,13 +95,13 @@ directory if it does not exist.""",
     parser.add_argument('--no-config',
                         help="""do not load the config file. to prevent naaman
 from loading the configuration file when running specify this option. this can
-allow running a specify instance of naaman without certain config options being
-loaded.""",
+allow running a specific instance of naaman without certain config options
+being loaded.""",
                         action="store_true")
     parser.add_argument('--builds',
                         help="""the location where naaman will perform builds.
 if not set this will be in XDG_CACHE_HOME. specifying this option will move
-where makepkg operations are performed in the system.""",
+where makepkg operations are performed on the system.""",
                         default=cache_dir,
                         type=str)
     return parser
