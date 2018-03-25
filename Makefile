@@ -12,7 +12,7 @@ VERS=$(shell cat naaman/consts.py | grep "^\_\_version\_\_" | cut -d "=" -f 2 | 
 TST=tests/
 TESTS=$(shell ls $(TST) | grep "\.py$$")
 
-all: test analyze completions manpages
+all: test version analyze completions manpages
 
 travis: ci all
 
@@ -42,6 +42,12 @@ manpages: clean
 	cat $(DOC)$(MAN8) | sed "s/<Month Year>/$(MONTH_YEAR)/g;s/<Version>/$(VERS)/g"  > $(MANPAGE8)
 	cd $(BIN) && gzip $(MAN8)
 	cd $(BIN) && gzip $(MAN5)
+
+version:
+	@echo $(VERS)
+ifndef TRAVIS
+	@exit $(shell git tag -l | grep "^v$(VERS)" | wc -l)
+endif
 
 analyze:
 	@echo $(SRC)
