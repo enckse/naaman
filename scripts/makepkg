@@ -1,13 +1,14 @@
 #!/bin/bash
 trap '' 2
 function _section() {
-    cat PKGBUILD | grep "^$1=" | cut -d "=" -f 2 | sed "s/\"//g;s/'//g" | head -n 1
+    cat .SRCINFO | grep "\s*$1" | cut -d "=" -f 2- | sed "s/^\s//g;s/\s$//g"
 }
 cd {DIRECTORY}
 makepkg {MAKEPKG}
 exit_code=$?
 CUR_VERSION="{VERSION}"
 if [ ! -z "$CUR_VERSION" ]; then
+    makepkg --printsrcinfo > .SRCINFO
     PKG_VERSION=$(_section "pkgver")
     PKG_REL=$(_section "pkgrel")
     if [[ "$PKG_VERSION-$PKG_REL" == "$CUR_VERSION" ]]; then
