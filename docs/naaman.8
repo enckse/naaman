@@ -127,32 +127,32 @@ performed on the system.
 \fB\-\-ignore\-for\fR N [N ...]
 ignore packages for periods of time (hours).
 specifying this options allows for ignoring certain
-packages over time. this is specified as
+packages over a known duration. this is specified as
 <package>=<hours>, where <package> will only check for
 updates every <hours> period.
 .TP
 \fB\-\-vcs\-ignore\fR VCS_IGNORE
 time betweeen vcs update checks (hours). specifying
 this option will result in vcs\-based AUR packages to
-only be updated (they will always update) every <hour>
-threshold. default is 720 (30 days)
+only be updated every <hour> threshold. default is 720
+(30 days)
 .TP
 \fB\-\-no\-vcs\fR
 perform all sync operations but skip updating any vcs
 packages. this will allow for performing various sync
 operations without always having vcs packages
-updating.
+attempting to update.
 .TP
 \fB\-y\fR, \fB\-\-refresh\fR
 refresh non\-vcs packages if there are updates in the
 AUR for the package. packages with detected updates in
-the AUR will be refreshed (assumes \fB\-U\fR).
+the AUR will be refreshed.
 .TP
 \fB\-yy\fR, \fB\-\-force\-refresh\fR
 similar to \fB\-y\fR but will force refresh over any
 \fB\-\-ignore\fR, \fB\-\-ignore\-for\fR, \fB\-\-vcs\-ignore\fR and disable any
 rpc caching. Use this option to override the mentioned
-flags and force update or installing a package set.
+flags and force updating or installing a package set.
 .TP
 \fB\-\-ignore\fR N [N ...]
 ignore packages by name. packages ignored will be
@@ -185,15 +185,16 @@ then package1)
 enable rpc caching (minutes). instead of making a web
 rpc request to check for updated AUR package
 information, naaman will cache the last received
-information about a package for this duration of time
+information about a package for this duration of time.
+default is 60 minutes.
 .TP
 \fB\-i\fR, \fB\-\-info\fR
 display additional information about packages when
-searching for information in the AUR. this is only
+searching for information in the AUR. this can only be
 used during a search but will present as much
 information as possible to the user about the result
 package set. passing multiple i parameters will
-increase verbose (e.g. \fB\-ii\fR)
+increase verbosity (e.g. \fB\-ii\fR)
 .TP
 \fB\-\-vcs\-install\-only\fR
 by default when attempting a force update (\fB\-yy\fR) naaman
@@ -210,22 +211,23 @@ speciality checking (e.g. \fB\-\-vcs\-install\-only\fR). Use
 this flag to update all AUR packages on the system
 .TP
 \fB\-f\fR, \fB\-\-fetch\fR
-Normally naaman will manage source retrieval and
-package building without problem. Though this relies
+normally naaman will manage source retrieval and
+package building without problem. though this relies
 on knowing a PKGBUILD is safe to use and install.
-Utilize this option to tell naaman to fetch to a
+utilize this option to tell naaman to fetch to a
 location and not manage the files/perform the build.
-The user can then verify the PKGBUILD and run makepkg
+the user can then verify the PKGBUILD and run makepkg
 manually.
 .TP
 \fB\-\-fetch\-dir\fR FETCH_DIR
-Specifies the location to store fetched (\fB\-\-fetch\fR)
-packages on the file system. Whenever fetch is used
-this is the directory that naaman will write to.
+specifies the location to store fetched (\fB\-\-fetch\fR)
+packages on the file system. whenever fetch is used
+this is the directory that naaman will write to
+(defaults to '.').
 .TP
 \fB\-\-rpc\-field\fR {name\-desc,name,maintainer}
-When querying the AUR RPC endpoint, naaman will use a
-default search field to search for packages. By
+when querying the AUR RPC endpoint, naaman will use a
+default search field to search for packages. by
 setting this argument naaman will be instructed to,
 instead, search using the specified field when
 querying the RPC endpoint during a search.

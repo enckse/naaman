@@ -17,30 +17,29 @@ def sync_up_options(parser):
                        type=str,
                        nargs='+',
                        help="""ignore packages for periods of time (hours).
-specifying this options allows for ignoring certain packages over time.
-this is specified as <package>=<hours>, where <package> will only check
-for updates every <hours> period.""")
+specifying this options allows for ignoring certain packages over a known
+duration. this is specified as <package>=<hours>, where <package> will only
+check for updates every <hours> period.""")
     group.add_argument('--vcs-ignore',
                        type=int,
                        default=720,
                        help="""time betweeen vcs update checks (hours).
 specifying this option will result in vcs-based AUR packages to only be
-updated (they will always update) every <hour> threshold.
-default is 720 (30 days)""")
+updated every <hour> threshold. default is 720 (30 days)""")
     group.add_argument('--no-vcs',
                        help="""perform all sync operations but
 skip updating any vcs packages. this will allow for performing various
-sync operations without always having vcs packages updating.""",
+sync operations without always having vcs packages attempting to update.""",
                        action='store_true')
     group.add_argument('-y', '--refresh',
                        help="""refresh non-vcs packages if there are updates
 in the AUR for the package. packages with detected updates in the AUR will be
-refreshed (assumes -U).""",
+refreshed.""",
                        action='count')
     group.add_argument('-yy', '--force-refresh',
                        help="""similar to -y but will force refresh over any
 --ignore, --ignore-for, --vcs-ignore and disable any rpc caching. Use this
-option to override the mentioned flags and force update or installing a
+option to override the mentioned flags and force updating or installing a
 package set.""",
                        action='store_true')
     group.add_argument("--ignore",
@@ -70,15 +69,17 @@ package0 will change to install package0 and then package1)""",
     group.add_argument("--rpc-cache",
                        help="""enable rpc caching (minutes). instead of making
 a web rpc request to check for updated AUR package information, naaman will
-cache the last received information about a package for this duration of time
+cache the last received information about a package for this duration of time.
+default is 60 minutes.
 """,
                        type=int,
                        default=60)
     group.add_argument("-i", "--info",
                        help="""display additional information about packages
-when searching for information in the AUR. this is only used during a search
-but will present as much information as possible to the user about the result
-package set. passing multiple i parameters will increase verbose (e.g. -ii)""",
+when searching for information in the AUR. this can only be used during a
+search but will present as much information as possible to the user about the
+result package set. passing multiple i parameters will increase verbosity
+(e.g. -ii)""",
                        action="count")
     group.add_argument("--vcs-install-only",
                        help="""by default when attempting a force update (-yy)
@@ -95,18 +96,18 @@ AUR packages on the system""",
                        action='store_true')
     group.add_argument('-f', "--fetch",
                        action='store_true',
-                       help="""Normally naaman will manage source retrieval and
-package building without problem. Though this relies on knowing a PKGBUILD is
-safe to use and install. Utilize this option to tell naaman to fetch to a
-location and not manage the files/perform the build. The user can then verify
+                       help="""normally naaman will manage source retrieval and
+package building without problem. though this relies on knowing a PKGBUILD is
+safe to use and install. utilize this option to tell naaman to fetch to a
+location and not manage the files/perform the build. the user can then verify
 the PKGBUILD and run makepkg manually.""")
     group.add_argument('--fetch-dir',
-                       help="""Specifies the location to store fetched
-(--fetch) packages on the file system. Whenever fetch is used this is the
-directory that naaman will write to.""")
+                       help="""specifies the location to store fetched
+(--fetch) packages on the file system. whenever fetch is used this is the
+directory that naaman will write to (defaults to '.').""")
     group.add_argument('--rpc-field',
-                       help="""When querying the AUR RPC endpoint, naaman will
-use a default search field to search for packages. By setting this argument
+                       help="""when querying the AUR RPC endpoint, naaman will
+use a default search field to search for packages. by setting this argument
 naaman will be instructed to, instead, search using the specified field when
 querying the RPC endpoint during a search.""",
                        default=aur.RPC_NAME_DESC,
