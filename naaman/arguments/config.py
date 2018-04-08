@@ -66,11 +66,16 @@ def load_config(args, config_file):
                        "RPC_FIELD",
                        "NO_SUDO",
                        "FETCH_DIR",
+                       "DO_NOT_TRACK",
                        "VCS_IGNORE"]:
                 val = None
                 lowered = key.lower()
                 try:
-                    if key in ["IGNORE", "MAKEPKG", "REMOVAL", "IGNORE_FOR"]:
+                    if key in ["IGNORE",
+                               "MAKEPKG",
+                               "REMOVAL",
+                               "IGNORE_FOR"
+                               "DO_NOT_TRACK"]:
                         arr = None
                         if key in dirs:
                             arr = getattr(args, lowered)

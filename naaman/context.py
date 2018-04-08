@@ -53,6 +53,9 @@ class Context(object):
         self._scripts = {}
         self.reorder_deps = args.reorder_deps
         self.reorders = []
+        self.do_not_track = []
+        if args.do_not_track and len(args.do_not_track) > 0:
+            self.do_not_track = args.do_not_track
         self.rpc_cache = args.rpc_cache
         self._lock_file = os.path.join(self._cache_dir, "file" + _LOCKS)
         self.force_refresh = args.force_refresh

@@ -11,7 +11,8 @@ usage: naaman [\-h] [\-S] [\-R] [\-Q] [\-u] [\-s] [\-c] [\-d] [\-\-version] [\-\
 [\-\-ignore N [N ...]] [\-\-no\-cache] [\-\-skip\-deps] [\-\-reorder\-deps]
 [\-\-rpc\-cache RPC_CACHE] [\-i] [\-\-vcs\-install\-only] [\-yyy] [\-f]
 [\-\-fetch\-dir FETCH_DIR]
-[\-\-rpc\-field {name\-desc,name,maintainer}] [\-g]
+[\-\-rpc\-field {name\-desc,name,maintainer}]
+[\-\-do\-not\-track N [N ...]] [\-g]
 .SS "optional arguments:"
 .TP
 \fB\-h\fR, \fB\-\-help\fR
@@ -231,6 +232,12 @@ default search field to search for packages. by
 setting this argument naaman will be instructed to,
 instead, search using the specified field when
 querying the RPC endpoint during a search.
+.TP
+\fB\-\-do\-not\-track\fR N [N ...]
+specify package names (1 or more) that naaman is NOT
+responsible for tracking and should skip during
+processing. naaman will not attempt to process these
+packages at any point.
 .SS "Query options:"
 .TP
 \fB\-g\fR, \fB\-\-gone\fR

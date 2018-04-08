@@ -363,6 +363,9 @@ def _syncing(context, is_install, targets, updating):
             log.debug("skipping vcs package {}".format(name))
             continue
         package = _rpc_search(name, True, context)
+        if package and package.name in context.do_not_track:
+            log.debug("do not track: {}".format(package.name))
+            continue
         if package:
             if vcs and \
                not args.vcs_install_only and \

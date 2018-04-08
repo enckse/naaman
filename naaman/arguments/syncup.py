@@ -112,3 +112,10 @@ naaman will be instructed to, instead, search using the specified field when
 querying the RPC endpoint during a search.""",
                        default=aur.RPC_NAME_DESC,
                        choices=aur.RPC_FIELDS)
+    group.add_argument("--do-not-track",
+                       help="""specify package names (1 or more) that naaman
+is NOT responsible for tracking and should skip during processing. naaman will
+not attempt to process these packages at any point.""",
+                       metavar='N',
+                       type=str,
+                       nargs='+')
