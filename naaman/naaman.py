@@ -268,7 +268,7 @@ def _check_vcs_ignore(context, threshold):
                 update_cache = False
                 result = True
     if update_cache:
-        log.console_output("updating vcs last cache time")
+        log.debug("updating vcs last cache time")
         with open(cache_check, 'w') as f:
             f.write(str(current_time))
     return result
