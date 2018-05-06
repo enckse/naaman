@@ -17,7 +17,7 @@ NAAMAN8_HEADER=$(BIN)$(MAN8).header
 NAAMAN8_DOC=$(BIN)$(MAN8).doc
 DOC_MAN8=$(DOC)/$(MAN8)
 
-all: test version analyze completions manpages
+all: test analyze completions manpages
 
 travis: ci all
 
@@ -49,12 +49,6 @@ manpages: clean
 	cat $(DOC_MAN8) | sed "s/<Month Year>/$(MONTH_YEAR)/g;s/<Version>/$(VERS)/g"  > $(MANPAGE8)
 	cd $(BIN) && gzip -k $(MAN8)
 	cd $(BIN) && gzip -k $(MAN5)
-
-version:
-	@echo $(VERS)
-ifndef TRAVIS
-	@exit $(shell git tag -l | grep "^v$(VERS)" | wc -l)
-endif
 
 analyze:
 	@echo $(SRC)
