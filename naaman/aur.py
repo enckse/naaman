@@ -15,6 +15,7 @@ import naaman.consts as cst
 import naaman.logger as log
 import naaman.shell as sh
 from datetime import datetime
+from pycman import pkginfo
 
 _PRINTABLE = set(string.printable)
 
@@ -243,26 +244,15 @@ def rpc_search(package_name, exact, context, include_deps):
                             if context.info:
                                 keys = [k for k in result.keys()]
                                 max_key = max([len(k) for k in keys]) + 3
-                                spacing = ""
-                                for i in range(0, max_key):
-                                    spacing += " "
                                 for k in keys:
+                                    fmt = None
                                     val = result[k]
-                                    if isinstance(val, list):
-                                        val = "  ".join(val)
-                                    elif isinstance(val, str):
-                                        val = _get_segment(result, k)
-                                    elif val and k in ["FirstSubmitted",
-                                                       "LastModified"]:
-                                        val = str(datetime.fromtimestamp(val))
-                                    else:
-                                        val = str(val)
-                                    use_key = "{}   {}".format(k, spacing)
-                                    use_key = use_key[0:max_key - 2] + ": "
-                                    log.terminal_output(val,
-                                                        context.terminal_width,
-                                                        use_key,
-                                                        spacing)
+                                    if val and k in ["FirstSubmitted",
+                                                     "LastModified"]:
+                                        fmt = "time"
+                                    log.info(pkginfo.format_attr(k,
+                                                                 val,
+                                                                 format=fmt))
                                 log.info("")
                                 continue
                             if context.db.get_pkg(name) is not None:

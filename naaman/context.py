@@ -18,7 +18,7 @@ import naaman.shell as sh
 import naaman.logger as log
 import naaman.consts as cst
 from datetime import datetime
-from pycman import config
+from pycman import config, pkginfo
 
 
 _CACHE_FILE = ".cache"
@@ -63,7 +63,7 @@ class Context(object):
         self._script_dir = self.get_custom_arg(csm_args.CUSTOM_SCRIPTS)
         self.now = datetime.now()
         self.timestamp = self.now.timestamp()
-        self.terminal_width = 0
+        self.terminal_width = pkginfo.get_term_size()
         self.fetching = args.fetch
         self.fetch_dir = "."
         self.rpc_field = args.rpc_field
@@ -83,12 +83,6 @@ class Context(object):
             self.builds = os.path.join(self.builds, cst.NAME)
             if not os.path.exists(self.builds):
                 os.makedirs(self.builds)
-        try:
-            rows, columns = os.popen('stty size', 'r').read().split()
-            self.terminal_width = int(columns)
-        except Exception as e:
-            log.debug("unable to determine tty column size")
-            log.debug(e)
 
         def sigint_handler(signum, frame):
             """Handle ctrl-c."""
