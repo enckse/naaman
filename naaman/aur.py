@@ -14,6 +14,7 @@ import os
 import naaman.consts as cst
 import naaman.logger as log
 import naaman.shell as sh
+import textwrap
 from datetime import datetime
 from pycman import pkginfo
 
@@ -35,6 +36,7 @@ _AUR_VERS = "Version"
 _AUR_URLP = "URLPath"
 _AUR_DEPS = "Depends"
 _MAKEPKG_VCS = ["-od"]
+_INDENT = "    "
 
 
 class AURPackage(object):
@@ -372,28 +374,10 @@ def install(file_definition, makepkg, cache_dirs, context, version):
 def _terminal_output(input_str, width):
     """Write formatted output to terminal."""
     output_string = "    "
-    for l in _terminal_output_builder(input_str, width, output_string):
-        out_string = output_string
-        log.info("{}{}".format(out_string, l))
-
-
-def _terminal_output_builder(input_str, terminal_width, output_string):
-    """Write multiple lines to output terminal with wrapper."""
-    c_len = terminal_width
-    if c_len > 0:
-        c_len = c_len - len(output_string) - 4
-        cur = []
-        words = input_str.split(" ")
-        for c_idx in range(0, len(words)):
-            next_word = words[c_idx]
-            cur_len = sum([len(x) + 1 for x in cur])
-            next_len = cur_len + len(next_word) + 1
-            if next_len > c_len:
-                yield " ".join(cur)
-                cur = []
-            else:
-                cur.append(next_word)
-        if len(cur) > 0:
-            yield " ".join(cur)
-    else:
-        yield input_str
+    wrapped = textwrap.fill(input_str,
+                            width=width,
+                            initial_indent=_INDENT,
+                            subsequent_indent=_INDENT,
+                            break_on_hyphens=False,
+                            break_long_words=False)
+    log.info(wrapped)
