@@ -153,7 +153,7 @@ def _load_deps(depth, packages, context, resolved, last_report):
     timed = datetime.now()
     if last_report is not None:
         seconds = (timed - last_report).total_seconds()
-        if seconds > 5:
+        if seconds > 15:
             log.console_output('still working...')
         else:
             timed = last_report
