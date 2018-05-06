@@ -18,7 +18,6 @@ import naaman.shell as sh
 import naaman.logger as log
 import naaman.consts as cst
 from datetime import datetime
-from pycman import config
 
 
 _CACHE_FILE = ".cache"
@@ -32,6 +31,7 @@ class Context(object):
 
     def __init__(self, targets, groups, args):
         """Init the context."""
+        from pycman import config
         self.root = "root" == getpass.getuser()
         self.targets = []
         if targets and len(targets) > 0:
