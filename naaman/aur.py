@@ -33,6 +33,7 @@ _AUR_SEARCH = _AUR_RAW_URL.format("search&by={}", "{}")
 _AUR_VERS = "Version"
 _AUR_URLP = "URLPath"
 _AUR_DEPS = "Depends"
+_AUR_MAKEDEPS = "MakeDepends"
 _MAKEPKG_VCS = ["-od"]
 
 
@@ -218,8 +219,14 @@ def rpc_search(package_name, exact, context, include_deps):
                             if name == package_name:
                                 deps = None
                                 if context.deps or include_deps:
+                                    raw_deps = []
                                     if _AUR_DEPS in result:
-                                        _aur_deps = result[_AUR_DEPS]
+                                        raw_deps += result[_AUR_DEPS]
+                                    if context.makedeps:
+                                        if _AUR_MAKEDEPS in result:
+                                            raw_deps += result[_AUR_MAKEDEPS]
+                                    if len(raw_deps) > 0:
+                                        _aur_deps = raw_deps
                                         if context.deps:
                                             _handle_deps(package_name,
                                                          context,

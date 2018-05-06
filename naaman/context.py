@@ -65,6 +65,7 @@ class Context(object):
         self.now = datetime.now()
         self.timestamp = self.now.timestamp()
         self.fetching = args.fetch
+        self.makedeps = args.makedeps
         self.fetch_dir = "."
         self.rpc_field = args.rpc_field
         if args.fetch_dir and len(args.fetch_dir) > 0:

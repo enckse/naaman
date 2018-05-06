@@ -119,3 +119,7 @@ not attempt to process these packages at any point.""",
                        metavar='N',
                        type=str,
                        nargs='+')
+    group.add_argument("--makedeps",
+                       help="""include the make dependencies as part of the
+dependency resolution when handling/resolving dependencies.""",
+                       action="store_true")

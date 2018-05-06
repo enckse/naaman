@@ -12,7 +12,7 @@ usage: naaman [\-h] [\-S] [\-R] [\-Q] [\-u] [\-s] [\-c] [\-d] [\-\-version] [\-\
 [\-\-rpc\-cache RPC_CACHE] [\-i] [\-\-vcs\-install\-only] [\-yyy] [\-f]
 [\-\-fetch\-dir FETCH_DIR]
 [\-\-rpc\-field {name\-desc,name,maintainer}]
-[\-\-do\-not\-track N [N ...]] [\-g]
+[\-\-do\-not\-track N [N ...]] [\-\-makedeps] [\-g]
 .SS "optional arguments:"
 .TP
 \fB\-h\fR, \fB\-\-help\fR
@@ -238,6 +238,11 @@ specify package names (1 or more) that naaman is NOT
 responsible for tracking and should skip during
 processing. naaman will not attempt to process these
 packages at any point.
+.TP
+\fB\-\-makedeps\fR
+include the make dependencies as part of the
+dependency resolution when handling/resolving
+dependencies.
 .SS "Query options:"
 .TP
 \fB\-g\fR, \fB\-\-gone\fR
