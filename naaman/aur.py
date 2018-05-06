@@ -188,6 +188,7 @@ def rpc_search(package_name, exact, context, include_deps):
         context.unlock()
     if factory is None:
         factory = urllib.request.urlopen
+    term_width = pkginfo.get_term_size()
     try:
         with factory(url) as req:
             result = req.read()
@@ -262,10 +263,7 @@ def rpc_search(package_name, exact, context, include_deps):
                             log.info("aur/{} {}{}".format(name, vers, ind))
                             if not desc or len(desc) == 0:
                                 desc = "no description"
-                            log.terminal_output(desc,
-                                                context.terminal_width,
-                                                None,
-                                                "    ")
+                            _terminal_output(desc, term_width)
                     except Exception as e:
                         log.error("unable to parse package")
                         log.error(e)
@@ -369,3 +367,33 @@ def install(file_definition, makepkg, cache_dirs, context, version):
         replaces["VERSION"] = use_version
         replaces["CACHE"] = cache_dirs
         return sh.template_script(script_text, replaces, temp_sh)
+
+
+def _terminal_output(input_str, width):
+    """Write formatted output to terminal."""
+    output_string = "    "
+    for l in _terminal_output_builder(input_str, width, output_string):
+        out_string = output_string
+        log.info("{}{}".format(out_string, l))
+
+
+def _terminal_output_builder(input_str, terminal_width, output_string):
+    """Write multiple lines to output terminal with wrapper."""
+    c_len = terminal_width
+    if c_len > 0:
+        c_len = c_len - len(output_string) - 4
+        cur = []
+        words = input_str.split(" ")
+        for c_idx in range(0, len(words)):
+            next_word = words[c_idx]
+            cur_len = sum([len(x) + 1 for x in cur])
+            next_len = cur_len + len(next_word) + 1
+            if next_len > c_len:
+                yield " ".join(cur)
+                cur = []
+            else:
+                cur.append(next_word)
+        if len(cur) > 0:
+            yield " ".join(cur)
+    else:
+        yield input_str

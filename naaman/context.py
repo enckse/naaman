@@ -18,7 +18,7 @@ import naaman.shell as sh
 import naaman.logger as log
 import naaman.consts as cst
 from datetime import datetime
-from pycman import config, pkginfo
+from pycman import config
 
 
 _CACHE_FILE = ".cache"
@@ -63,7 +63,6 @@ class Context(object):
         self._script_dir = self.get_custom_arg(csm_args.CUSTOM_SCRIPTS)
         self.now = datetime.now()
         self.timestamp = self.now.timestamp()
-        self.terminal_width = pkginfo.get_term_size()
         self.fetching = args.fetch
         self.fetch_dir = "."
         self.rpc_field = args.rpc_field
