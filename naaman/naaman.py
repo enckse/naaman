@@ -148,7 +148,52 @@ def _validate_options(args, unknown, groups):
     callback(ctx)
 
 
-def _load_deps(depth, packages, context, resolved, last_report):
+class DepTree(object):
+    """Tracks the dependency tree."""
+
+    def __init__(self, name, depth):
+        """Init the tree."""
+        self.name = name
+        self.depth = depth
+        self._children = []
+
+    def add(self, child):
+        """Add a child to the tree."""
+        self._children.append(child)
+
+    def get(self):
+        """Get the tree for install."""
+        yield (self.depth, self.name)
+        for c in self._children:
+            for g in c.get():
+                d = g[0]
+                n = g[1]
+                yield (max(d, self.depth + 1), n)
+
+    def search(self, name):
+        """Search the tree for an already set item."""
+        if self.name == name:
+            return self
+        for c in self._children:
+            child = c.search(name)
+            if child:
+                return child
+
+    def reindex(self, new_depth):
+        """Reindex the tree depth."""
+        if new_depth > self.depth:
+            self.depth = new_depth
+        self._reindex(new_depth + 1)
+
+    def _reindex(self, new_depth, child=False):
+        """Reindex with parent/child checks."""
+        if new_depth > self.depth and child:
+            self.depth = new_depth
+        for c in self._children:
+            c._reindex(new_depth, child=True)
+
+
+def _load_deps(depth, packages, context, resolved, last_report, parent):
     """Load dependencies for a package."""
     timed = datetime.now()
     if last_report is not None:
@@ -160,8 +205,10 @@ def _load_deps(depth, packages, context, resolved, last_report):
     if packages is None or len(packages) == 0:
         return timed
     for p in packages:
-        matched = [x for x in resolved if x[1] == p]
-        if len(matched) > 0:
+        t = DepTree(p, depth)
+        c = resolved.search(p)
+        if c is not None:
+            c.reindex(depth)
             continue
         log.debug("resolving dependencies level {}, {}".format(depth, p))
         dependency = aur.deps_compare(p)
@@ -172,8 +219,10 @@ def _load_deps(depth, packages, context, resolved, last_report):
         if pkg is None:
             log.debug("non-aur {}".format(p))
             continue
-        timed = _load_deps(depth + 1, pkg.deps, context, resolved, timed)
-        resolved.append((depth, p))
+        if parent is not None:
+            parent.add(t)
+        timed = _load_deps(depth + 1, pkg.deps, context, resolved, timed, t)
+        resolved.add(t)
     return timed
 
 
@@ -183,18 +232,21 @@ def _deps(context):
     context.deps = False
     targets = context.targets
     for target in targets:
-        resolved = []
+        resolved = DepTree(target, 0)
         log.debug("resolving {}".format(target))
         pkg = _rpc_search(target, True, context, include_deps=True)
         if pkg is None:
             log.console_error("unable to find package: {}".format(target))
             continue
         if pkg.deps is not None and len(pkg.deps) > 0:
-            _load_deps(1, pkg.deps, context, resolved, None)
-            resolved.append((0, target))
-            actual = reversed(sorted(resolved, key=lambda x: x[0]))
-            log.debug(actual)
-            context.targets = [x[1] for x in actual]
+            _load_deps(1, pkg.deps, context, resolved, None, None)
+            actual = reversed(sorted(resolved.get(), key=lambda x: x[0]))
+            context.targets = []
+            for act in actual:
+                log.debug(act)
+                a = act[1]
+                if a not in context.targets:
+                    context.targets.append(a)
         else:
             log.debug("no deps...")
             context.targets = [target]
