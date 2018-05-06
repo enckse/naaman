@@ -148,30 +148,6 @@ def _validate_options(args, unknown, groups):
     callback(ctx)
 
 
-class DepTree(object):
-    """Tracks the dependency tree."""
-
-    def __init__(self, name):
-        """Init the tree."""
-        self.name = name
-        self._children = []
-
-    def add(self, child):
-        """Add a child to the tree."""
-        self._children.append(child)
-
-    def get(self, visited, depth=0):
-        """Get the tree for install."""
-        if self.name in visited:
-            if visited[self.name] > depth:
-                return
-        yield (depth, self.name)
-        for c in self._children:
-            for g in c.get(visited, depth=depth+1):
-                yield g
-        visited[self.name] = depth
-
-
 def _load_deps(depth, packages, context, last_report, cache, parent):
     """Load dependencies for a package."""
     timed = datetime.now()
@@ -196,7 +172,7 @@ def _load_deps(depth, packages, context, last_report, cache, parent):
         if pkg is None:
             log.debug("non-aur {}".format(p))
             continue
-        t = DepTree(p)
+        t = aur.DepTree(p)
         timed = _load_deps(depth + 1, pkg.deps, context, timed, cache, t)
         parent.add(t)
         cache[p] = t
@@ -209,7 +185,7 @@ def _deps(context):
     context.deps = False
     targets = context.targets
     for target in targets:
-        resolved = DepTree(target)
+        resolved = aur.DepTree(target)
         log.debug("resolving {}".format(target))
         pkg = _rpc_search(target, True, context, include_deps=True)
         if pkg is None:

@@ -37,6 +37,30 @@ _AUR_MAKEDEPS = "MakeDepends"
 _MAKEPKG_VCS = ["-od"]
 
 
+class DepTree(object):
+    """Tracks the dependency tree."""
+
+    def __init__(self, name):
+        """Init the tree."""
+        self.name = name
+        self._children = []
+
+    def add(self, child):
+        """Add a child to the tree."""
+        self._children.append(child)
+
+    def get(self, visited, depth=0):
+        """Get the tree for install."""
+        if self.name in visited:
+            if visited[self.name] > depth:
+                return
+        yield (depth, self.name)
+        for c in self._children:
+            for g in c.get(visited, depth=depth+1):
+                yield g
+        visited[self.name] = depth
+
+
 class AURPackage(object):
     """AUR package object."""
 
