@@ -16,7 +16,6 @@ import naaman.logger as log
 import naaman.shell as sh
 import textwrap
 from datetime import datetime
-from pycman import pkginfo
 
 _PRINTABLE = set(string.printable)
 
@@ -161,6 +160,7 @@ def _rpc_caching(package_name, context):
 
 def rpc_search(package_name, exact, context, include_deps):
     """Search for a package in the aur."""
+    from pycman import pkginfo
     if exact and context.check_repos(package_name):
         log.debug("in repos")
         return None
