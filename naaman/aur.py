@@ -14,6 +14,7 @@ import os
 import naaman.consts as cst
 import naaman.logger as log
 import naaman.shell as sh
+import pycman.pkginfo as pkginfo
 from datetime import datetime
 
 _PRINTABLE = set(string.printable)
