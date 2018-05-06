@@ -17,6 +17,7 @@ import naaman.arguments.custom as csm_args
 import naaman.shell as sh
 import naaman.logger as log
 import naaman.consts as cst
+import naaman.alpm as alpm
 from datetime import datetime
 
 
@@ -31,12 +32,12 @@ class Context(object):
 
     def __init__(self, targets, groups, args):
         """Init the context."""
-        from pycman import config
         self.root = "root" == getpass.getuser()
+        self.alpm = alpm.Alpm()
         self.targets = []
         if targets and len(targets) > 0:
             self.targets = targets
-        self.handle = config.init_with_config(args.pacman)
+        self.handle = self.alpm.config(args.pacman)
         self.db = self.handle.get_localdb()
         self.groups = groups
         self.confirm = not args.no_confirm

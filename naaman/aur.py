@@ -14,7 +14,6 @@ import os
 import naaman.consts as cst
 import naaman.logger as log
 import naaman.shell as sh
-import textwrap
 from datetime import datetime
 
 _PRINTABLE = set(string.printable)
@@ -35,7 +34,6 @@ _AUR_VERS = "Version"
 _AUR_URLP = "URLPath"
 _AUR_DEPS = "Depends"
 _MAKEPKG_VCS = ["-od"]
-_INDENT = "    "
 
 
 class AURPackage(object):
@@ -160,7 +158,6 @@ def _rpc_caching(package_name, context):
 
 def rpc_search(package_name, exact, context, include_deps):
     """Search for a package in the aur."""
-    from pycman import pkginfo
     if exact and context.check_repos(package_name):
         log.debug("in repos")
         return None
@@ -190,7 +187,6 @@ def rpc_search(package_name, exact, context, include_deps):
         context.unlock()
     if factory is None:
         factory = urllib.request.urlopen
-    term_width = pkginfo.get_term_size()
     try:
         with factory(url) as req:
             result = req.read()
@@ -253,7 +249,7 @@ def rpc_search(package_name, exact, context, include_deps):
                                     if val and k in ["FirstSubmitted",
                                                      "LastModified"]:
                                         fmt = "time"
-                                    log.info(pkginfo.format_attr(k,
+                                    log.info(context.alpm.format(k,
                                                                  val,
                                                                  format=fmt))
                                 log.info("")
@@ -265,7 +261,8 @@ def rpc_search(package_name, exact, context, include_deps):
                             log.info("aur/{} {}{}".format(name, vers, ind))
                             if not desc or len(desc) == 0:
                                 desc = "no description"
-                            _terminal_output(desc, term_width)
+                            txt = context.alpm.format_line(desc)
+                            log.info(txt)
                     except Exception as e:
                         log.error("unable to parse package")
                         log.error(e)
@@ -369,15 +366,3 @@ def install(file_definition, makepkg, cache_dirs, context, version):
         replaces["VERSION"] = use_version
         replaces["CACHE"] = cache_dirs
         return sh.template_script(script_text, replaces, temp_sh)
-
-
-def _terminal_output(input_str, width):
-    """Write formatted output to terminal."""
-    output_string = "    "
-    wrapped = textwrap.fill(input_str,
-                            width=width,
-                            initial_indent=_INDENT,
-                            subsequent_indent=_INDENT,
-                            break_on_hyphens=False,
-                            break_long_words=False)
-    log.info(wrapped)
