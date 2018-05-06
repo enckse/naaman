@@ -154,7 +154,7 @@ def _load_deps(depth, packages, context, last_report, cache, parent):
     if last_report is not None:
         seconds = (timed - last_report).total_seconds()
         if seconds > 15:
-            log.console_output('still working...')
+            log.console_output('resolving deps, depth: {}'.format(depth))
         else:
             timed = last_report
     if packages is None or len(packages) == 0:
