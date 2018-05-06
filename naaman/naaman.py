@@ -151,49 +151,28 @@ def _validate_options(args, unknown, groups):
 class DepTree(object):
     """Tracks the dependency tree."""
 
-    def __init__(self, name, depth):
+    def __init__(self, name):
         """Init the tree."""
         self.name = name
-        self.depth = depth
         self._children = []
 
     def add(self, child):
         """Add a child to the tree."""
         self._children.append(child)
 
-    def get(self):
+    def get(self, visited, depth=0):
         """Get the tree for install."""
-        yield (self.depth, self.name)
+        if self.name in visited:
+            if visited[self.name] > depth:
+                return
+        yield (depth, self.name)
         for c in self._children:
-            for g in c.get():
-                d = g[0]
-                n = g[1]
-                yield (max(d, self.depth + 1), n)
-
-    def search(self, name):
-        """Search the tree for an already set item."""
-        if self.name == name:
-            return self
-        for c in self._children:
-            child = c.search(name)
-            if child:
-                return child
-
-    def reindex(self, new_depth):
-        """Reindex the tree depth."""
-        if new_depth > self.depth:
-            self.depth = new_depth
-        self._reindex(new_depth + 1)
-
-    def _reindex(self, new_depth, child=False):
-        """Reindex with parent/child checks."""
-        if new_depth > self.depth and child:
-            self.depth = new_depth
-        for c in self._children:
-            c._reindex(new_depth, child=True)
+            for g in c.get(visited, depth=depth+1):
+                yield g
+        visited[self.name] = depth
 
 
-def _load_deps(depth, packages, context, resolved, last_report, parent):
+def _load_deps(depth, packages, context, last_report, cache, parent):
     """Load dependencies for a package."""
     timed = datetime.now()
     if last_report is not None:
@@ -205,10 +184,8 @@ def _load_deps(depth, packages, context, resolved, last_report, parent):
     if packages is None or len(packages) == 0:
         return timed
     for p in packages:
-        t = DepTree(p, depth)
-        c = resolved.search(p)
-        if c is not None:
-            c.reindex(depth)
+        if p in cache:
+            parent.add(cache[p])
             continue
         log.debug("resolving dependencies level {}, {}".format(depth, p))
         dependency = aur.deps_compare(p)
@@ -219,10 +196,10 @@ def _load_deps(depth, packages, context, resolved, last_report, parent):
         if pkg is None:
             log.debug("non-aur {}".format(p))
             continue
-        if parent is not None:
-            parent.add(t)
-        timed = _load_deps(depth + 1, pkg.deps, context, resolved, timed, t)
-        resolved.add(t)
+        t = DepTree(p)
+        timed = _load_deps(depth + 1, pkg.deps, context, timed, cache, t)
+        parent.add(t)
+        cache[p] = t
     return timed
 
 
@@ -232,15 +209,17 @@ def _deps(context):
     context.deps = False
     targets = context.targets
     for target in targets:
-        resolved = DepTree(target, 0)
+        resolved = DepTree(target)
         log.debug("resolving {}".format(target))
         pkg = _rpc_search(target, True, context, include_deps=True)
         if pkg is None:
             log.console_error("unable to find package: {}".format(target))
             continue
         if pkg.deps is not None and len(pkg.deps) > 0:
-            _load_deps(1, pkg.deps, context, resolved, None, None)
-            actual = reversed(sorted(resolved.get(), key=lambda x: x[0]))
+            cache = {}
+            visits = {}
+            _load_deps(1, pkg.deps, context, None, cache, resolved)
+            actual = reversed(sorted(resolved.get(visits), key=lambda x: x[0]))
             context.targets = []
             for act in actual:
                 log.debug(act)
