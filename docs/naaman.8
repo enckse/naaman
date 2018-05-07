@@ -174,13 +174,12 @@ packages that are NOT installed. setting this will
 disable this check.
 .TP
 \fB\-\-reorder\-deps\fR
-attempt to re\-order dependency installs. by setting
-this, naaman will no longer try and re\-order
-dependencies. this setting attempts to detect install
-order and adjust to resolve any detected dependency
-issues (e.g. \fB\-S\fR package1 package0 where package1
-relies on package0 will change to install package0 and
-then package1)
+by default naaman will reorder the input package set
+install order if it detects certain packages must be
+installed others given as input (e.g. \fB\-S\fR package1
+package0 where package1 relies on package0 will change
+to \fB\-S\fR package0 package1). to disable this behavior,
+set this flag.
 .TP
 \fB\-\-rpc\-cache\fR RPC_CACHE
 enable rpc caching (minutes). instead of making a web
