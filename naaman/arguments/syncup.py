@@ -60,10 +60,10 @@ detect and error when checking an AUR package for other AUR packages that are
 NOT installed. setting this will disable this check.""",
                        action="store_true")
     group.add_argument("--reorder-deps",
-                       help="""attempt to re-order dependency installs. by
-setting this, naaman will no longer try and re-order dependencies. this
-setting attempts to detect install order and adjust to resolve any detected
-dependency issues (e.g. -S package1 package0 where package1 relies on
+                       help="""attempt to re-order dependency installs (default
+to on). by setting this, naaman will no longer try and re-order dependencies.
+this setting attempts to detect install order and adjust to resolve any
+detected dependency issues (e.g. -S package1 package0 where package1 relies on
 package0 will change to install package0 and then package1)""",
                        action="store_false")
     group.add_argument("--rpc-cache",
