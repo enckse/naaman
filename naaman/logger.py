@@ -20,8 +20,8 @@ _LOGGER.trace = _noop
 
 _CONSOLE_FORMAT = logging.Formatter('%(message)s')
 _FILE_FORMAT = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-
-_PROGRESS_MESSAGE = " => {}{}"
+_MESSAGE = "{} => {}"
+_PROGRESS_MESSAGE = _MESSAGE.format("", "{}{}")
 
 
 def init(verbose, trace, cache_dir):
@@ -77,7 +77,7 @@ def info(message):
 
 def console_output(string, prefix="", callback=_LOGGER.info):
     """console/pretty output."""
-    callback("{} => {}".format(prefix, string))
+    callback(_MESSAGE.format(prefix, string))
 
 
 def console_error(string):
