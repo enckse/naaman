@@ -21,8 +21,7 @@ _LOGGER.trace = _noop
 _CONSOLE_FORMAT = logging.Formatter('%(message)s')
 _FILE_FORMAT = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
-_PROGRESS_MESSAGE = " => {}: {}"
-_PROGRESS_INDICATOR = "#"
+_PROGRESS_MESSAGE = " => {}{}"
 
 
 def init(verbose, trace, cache_dir):
@@ -86,18 +85,13 @@ def console_error(string):
     console_output(string, prefix="FAILURE", callback=_LOGGER.error)
 
 
-def update_progress(message, current):
+def update_progress(message):
     """Update working progress."""
     prog = []
     max_level = alpm.Alpm().width()
-    local_max = max_level - (len(_PROGRESS_MESSAGE) + 2) - len(message)
-    prog.append((" ", local_max))
-    prog.append((_PROGRESS_INDICATOR, current))
-    for progress in prog:
-        k = progress[0]
-        v = progress[1]
-        cur = "".join([k for x in range(0, v)])
-        _stdout_only(" => {}: {}".format(message, cur), end='\r')
+    local_max = max_level - (len(_PROGRESS_MESSAGE) + 1) - len(message)
+    cur = "".join([" " for x in range(0, local_max)])
+    _stdout_only(_PROGRESS_MESSAGE.format(message, cur), end='\r')
 
 
 def _stdout_only(message, end='\n'):

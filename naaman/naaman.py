@@ -150,8 +150,6 @@ def _validate_options(args, unknown, groups):
 
 def _load_deps(depth, packages, context, cache, parent):
     """Load dependencies for a package."""
-    if not context.quiet:
-        log.update_progress("dependency resolution", depth)
     if packages is None or len(packages) == 0:
         return
     for p in packages:
@@ -168,6 +166,8 @@ def _load_deps(depth, packages, context, cache, parent):
             log.debug("non-aur {}".format(p))
             continue
         t = aur.DepTree(p)
+        if not context.quiet:
+            log.update_progress("dependency resolution: {}".format(p))
         _load_deps(depth + 1, pkg.deps, context, cache, t)
         parent.add(t)
         cache[p] = t
