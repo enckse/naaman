@@ -22,6 +22,7 @@ _CONSOLE_FORMAT = logging.Formatter('%(message)s')
 _FILE_FORMAT = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
 _PROGRESS_MESSAGE = " => {}: {}"
+_PROGRESS_INDICATOR = "#"
 
 
 def init(verbose, trace, cache_dir):
@@ -91,7 +92,7 @@ def update_progress(message, current):
     max_level = alpm.Alpm().width()
     local_max = max_level - (len(_PROGRESS_MESSAGE) + 2) - len(message)
     prog.append((" ", local_max))
-    prog.append((".", current))
+    prog.append((_PROGRESS_INDICATOR, current))
     for progress in prog:
         k = progress[0]
         v = progress[1]
