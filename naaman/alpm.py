@@ -14,6 +14,10 @@ class Alpm(object):
         self.format = pkginfo.format_attr
         self.config = config.init_with_config
 
+    def width(self):
+        """Get term width."""
+        return self._width
+
     def format_line(self, input_str):
         """Write formatted output to terminal."""
         output_string = "    "

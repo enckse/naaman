@@ -7,6 +7,7 @@ Wraps python logging to support verbose/trace outputs
 import os
 import logging
 import naaman.consts as consts
+import naaman.alpm as alpm
 
 
 def _noop(message):
@@ -19,6 +20,8 @@ _LOGGER.trace = _noop
 
 _CONSOLE_FORMAT = logging.Formatter('%(message)s')
 _FILE_FORMAT = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+_PROGRESS_MESSAGE = " => {}: {}"
 
 
 def init(verbose, trace, cache_dir):
@@ -80,3 +83,22 @@ def console_output(string, prefix="", callback=_LOGGER.info):
 def console_error(string):
     """Console error."""
     console_output(string, prefix="FAILURE", callback=_LOGGER.error)
+
+
+def update_progress(message, current):
+    """Update working progress."""
+    prog = []
+    max_level = alpm.Alpm().width()
+    local_max = max_level - (len(_PROGRESS_MESSAGE) + 2) - len(message)
+    prog.append((" ", local_max))
+    prog.append((".", current))
+    for progress in prog:
+        k = progress[0]
+        v = progress[1]
+        cur = "".join([k for x in range(0, v)])
+        _stdout_only(" => {}: {}".format(message, cur), end='\r')
+
+
+def _stdout_only(message, end='\n'):
+    """Write to stdout only (no logging)."""
+    print(message, end=end)

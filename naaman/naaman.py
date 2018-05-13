@@ -148,17 +148,12 @@ def _validate_options(args, unknown, groups):
     callback(ctx)
 
 
-def _load_deps(depth, packages, context, last_report, cache, parent):
+def _load_deps(depth, packages, context, cache, parent):
     """Load dependencies for a package."""
-    timed = datetime.now()
-    if last_report is not None:
-        seconds = (timed - last_report).total_seconds()
-        if seconds > 15:
-            log.console_output('resolving deps, depth: {}'.format(depth))
-        else:
-            timed = last_report
+    if not context.quiet:
+        log.update_progress("dependency resolution", depth)
     if packages is None or len(packages) == 0:
-        return timed
+        return
     for p in packages:
         if p in cache:
             parent.add(cache[p])
@@ -173,10 +168,9 @@ def _load_deps(depth, packages, context, last_report, cache, parent):
             log.debug("non-aur {}".format(p))
             continue
         t = aur.DepTree(p)
-        timed = _load_deps(depth + 1, pkg.deps, context, timed, cache, t)
+        _load_deps(depth + 1, pkg.deps, context, cache, t)
         parent.add(t)
         cache[p] = t
-    return timed
 
 
 def _deps(context):
@@ -194,7 +188,7 @@ def _deps(context):
         if pkg.deps is not None and len(pkg.deps) > 0:
             cache = {}
             visits = {}
-            _load_deps(1, pkg.deps, context, None, cache, resolved)
+            _load_deps(1, pkg.deps, context, cache, resolved)
             actual = reversed(sorted(resolved.get(visits), key=lambda x: x[0]))
             context.targets = []
             for act in actual:
