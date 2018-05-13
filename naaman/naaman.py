@@ -148,6 +148,12 @@ def _validate_options(args, unknown, groups):
     callback(ctx)
 
 
+def _resolution_output(context, name):
+    """Output a dep resolution message."""
+    if not context.quiet:
+        log.update_progress("dependency resolution: {}".format(name))
+
+
 def _load_deps(depth, packages, context, cache, parent):
     """Load dependencies for a package."""
     if packages is None or len(packages) == 0:
@@ -166,8 +172,7 @@ def _load_deps(depth, packages, context, cache, parent):
             log.debug("non-aur {}".format(p))
             continue
         t = aur.DepTree(p)
-        if not context.quiet:
-            log.update_progress("dependency resolution: {}".format(p))
+        _resolution_output(context, p)
         _load_deps(depth + 1, pkg.deps, context, cache, t)
         parent.add(t)
         cache[p] = t
@@ -189,6 +194,7 @@ def _deps(context):
             cache = {}
             visits = {}
             _load_deps(1, pkg.deps, context, cache, resolved)
+            _resolution_output(context, "{} (complete)".format(target))
             actual = reversed(sorted(resolved.get(visits), key=lambda x: x[0]))
             context.targets = []
             for act in actual:

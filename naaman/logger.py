@@ -92,6 +92,7 @@ def update_progress(message):
     local_max = max_level - (len(_PROGRESS_MESSAGE) + 1) - len(message)
     cur = "".join([" " for x in range(0, local_max)])
     _stdout_only(_PROGRESS_MESSAGE.format(message, cur), end='\r')
+    debug(message)
 
 
 def _stdout_only(message, end='\n'):
