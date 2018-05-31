@@ -51,7 +51,7 @@ completions: clean
 manpages: $(DOCS)
 
 $(DOCS):
-	m4 -DMONTH_YEAR='$(MONTH_YEAR)' -DVERSION='$(VERS)' $(DOC)$@ | tail -n +3 > $(BIN)$@
+	m4 -DMONTH_YEAR='$(MONTH_YEAR)' -DVERSION='$(VERS)' $(DOC)$@.in | tail -n +3 > $(BIN)$@
 	cd $(BIN) && gzip -k $@
 
 analyze:
