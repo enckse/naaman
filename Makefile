@@ -67,20 +67,11 @@ makedepends:
 
 build: makedepends dependencies peps install
 
-define diffman =
-	sed -i '/^\.\\" DO NOT MODIFY THIS FILE/ d' $1;
-	sed -i -e '1,3d' $1;
-	sed -i -n '/.SH "SEE ALSO"/q;p' $1;
-endef
+regen: clean install
+	help2man naaman > $(DOC)$(MAN8)
 
 install: completions manpages
-	python setup.py install
-	help2man naaman > $(NAAMAN8_DEV)
-	$(call diffman,$(NAAMAN8_DEV))
-	@cat $(NAAMAN8_HEADER) > $(NAAMAN8_DOC)
-	@cat $(NAAMAN8_DEV) >> $(NAAMAN8_DOC)
-	@cat $(NAAMAN8_FOOTER) >> $(NAAMAN8_DOC)
-	diff -u $(DOC_MAN8) $(NAAMAN8_DOC)
+	python setup.py install --root="$(INSTALL)/" --optimize=1
 	install -Dm644 LICENSE $(INSTALL)/usr/share/license/naaman/LICENSE
 	install -Dm644 $(COMPLETION) $(INSTALL)/usr/share/bash-completion/completions/naaman
 	install -Dm644 scripts/makepkg $(INSTALL)/usr/share/naaman/makepkg
