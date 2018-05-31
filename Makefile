@@ -16,12 +16,6 @@ MAN5           := naaman.conf.5
 DOCS           := $(MAN8) $(MAN5)
 MANPAGE8       := $(BIN)$(MAN8)
 MANPAGE5       := $(BIN)$(MAN5)
-NAAMAN8_DEV    := $(BIN)$(MAN8).template
-NAAMAN8_FOOTER := $(BIN)$(MAN8).footer
-NAAMAN8_HEADER := $(BIN)$(MAN8).header
-NAAMAN8_DOC    := $(BIN)$(MAN8).doc
-DOC_MAN8       := $(DOC)$(MAN8)
-DOC_MAN5       := $(DOC)$(MAN5)
 
 all: test analyze completions manpages
 
