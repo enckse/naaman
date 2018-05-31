@@ -20,6 +20,7 @@ NAAMAN8_FOOTER := $(BIN)$(MAN8).footer
 NAAMAN8_HEADER := $(BIN)$(MAN8).header
 NAAMAN8_DOC    := $(BIN)$(MAN8).doc
 DOC_MAN8       := $(DOC)$(MAN8)
+DOC_MAN5       := $(DOC)$(MAN5)
 
 all: test analyze completions manpages
 
@@ -49,7 +50,7 @@ completions: clean
 manpages: clean
 	cat $(DOC_MAN8) | head -n 3 > $(NAAMAN8_HEADER)
 	cat $(DOC_MAN8) | tail -n 2 > $(NAAMAN8_FOOTER)
-	cat $(DOC)$(MAN5) | sed "s/<Month Year>/$(MONTH_YEAR)/g"  > $(MANPAGE5)
+	cat $(DOC_MAN5) | sed "s/<Month Year>/$(MONTH_YEAR)/g"  > $(MANPAGE5)
 	cat $(DOC_MAN8) | sed "s/<Month Year>/$(MONTH_YEAR)/g;s/<Version>/$(VERS)/g"  > $(MANPAGE8)
 	cd $(BIN) && gzip -k $(MAN8)
 	cd $(BIN) && gzip -k $(MAN5)
