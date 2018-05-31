@@ -1,21 +1,25 @@
-BIN=bin/
-INSTALL=
-COMPLETION=$(BIN)bash.completions
-MAN8=naaman.8
-MAN5=naaman.conf.5
-MANPAGE8=$(BIN)$(MAN8)
-MANPAGE5=$(BIN)$(MAN5)
-MONTH_YEAR=$(shell date +"%B %Y")
-DOC=docs/
-SRC=$(shell find naaman/ -type f -name "*\.py") $(shell find tests/ -type f -name "*\.py")
-VERS=$(shell cat naaman/consts.py | grep "^\_\_version\_\_" | cut -d "=" -f 2 | sed 's/ //g;s/"//g')
-TST=tests/
-TESTS=$(shell ls $(TST) | grep "\.py$$")
-NAAMAN8_DEV=$(BIN)$(MAN8).template
-NAAMAN8_FOOTER=$(BIN)$(MAN8).footer
-NAAMAN8_HEADER=$(BIN)$(MAN8).header
-NAAMAN8_DOC=$(BIN)$(MAN8).doc
-DOC_MAN8=$(DOC)/$(MAN8)
+BIN            := bin/
+INSTALL        :=
+SRC            := $(shell find naaman/ -type f -name "*\.py") $(shell find tests/ -type f -name "*\.py")
+VERS           := $(shell cat naaman/consts.py | grep "^\_\_version\_\_" | cut -d "=" -f 2 | sed 's/ //g;s/"//g')
+COMPLETION     := $(BIN)bash.completions
+
+# tests
+TST            := tests/
+TESTS          := $(shell ls $(TST) | grep "\.py$$")
+
+# doc
+MONTH_YEAR     := $(shell date +"%B %Y")
+DOC            := docs/
+MAN8           := naaman.8
+MAN5           := naaman.conf.5
+MANPAGE8       := $(BIN)$(MAN8)
+MANPAGE5       := $(BIN)$(MAN5)
+NAAMAN8_DEV    := $(BIN)$(MAN8).template
+NAAMAN8_FOOTER := $(BIN)$(MAN8).footer
+NAAMAN8_HEADER := $(BIN)$(MAN8).header
+NAAMAN8_DOC    := $(BIN)$(MAN8).doc
+DOC_MAN8       := $(DOC)$(MAN8)
 
 all: test analyze completions manpages
 
