@@ -59,7 +59,7 @@ dependencies:
 makedepends:
 	pacman -S python-pip git help2man
 
-build: makedepends dependencies peps install
+dev: makedepends dependencies peps install
 
 regen: clean install
 	help2man naaman > $(DOC)$(MAN8)

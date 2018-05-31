@@ -21,7 +21,7 @@ git clone this repo
 
 install dependencies
 ```
-sudo make build
+sudo make dev
 ```
 
 ## Ahem
