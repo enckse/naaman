@@ -1,12 +1,12 @@
 BIN            := bin/
 INSTALL        :=
-SRC            := $(shell find naaman/ -type f -name "*\.py") $(shell find tests/ -type f -name "*\.py")
+SRC            := $(shell find . -type f -name "*.py")
 VERS           := $(shell cat naaman/consts.py | grep "^\_\_version\_\_" | cut -d "=" -f 2 | sed 's/ //g;s/"//g')
 COMPLETION     := $(BIN)bash.completions
 
 # tests
 TST            := tests/
-TESTS          := $(shell ls $(TST) | grep "\.py$$")
+TESTS          := $(shell find $(TST) -name "*.py")
 
 # doc
 MONTH_YEAR     := $(shell date +"%B %Y")
@@ -31,7 +31,7 @@ peps:
 
 $(TESTS): clean
 	@echo $@
-	PYTHONPATH=. python $(TST)$@
+	PYTHONPATH=. python $@
 
 clean:
 	rm -rf $(BIN)
