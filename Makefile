@@ -62,7 +62,7 @@ makedepends:
 dev: makedepends dependencies peps install
 
 regen: clean install
-	help2man naaman > $(DOC)$(MAN8)
+	help2man naaman > $(DOC)$(MAN8).in
 
 install: completions manpages
 	python setup.py install --root="$(INSTALL)/" --optimize=1
