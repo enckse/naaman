@@ -533,9 +533,12 @@ def _querying(context, gone):
     """Querying for package information."""
     matched = False
     for q in _do_query(context):
-        if gone:
-            found = _rpc_search(q.name, True, context)
-            if found:
+        found = _rpc_search(q.name, True, context)
+        if found:
+            if gone:
+                continue
+        else:
+            if not gone:
                 continue
         if context.quiet:
             output = "{}"
