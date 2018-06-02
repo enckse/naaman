@@ -247,8 +247,8 @@ dependencies.
 .SS "Query options:"
 .TP
 \fB\-g\fR, \fB\-\-gone\fR
-specifying this option will check for packages
-installed from the AUR but are no longer in the AUR
-(orphans).
+specifying this option will interrogate package
+information and indicate packages that are not
+tracked via repositories or the AUR (orphaned).
 .SH "SEE ALSO"
 .B man naaman.conf

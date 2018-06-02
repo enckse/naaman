@@ -9,6 +9,7 @@ def options(parser):
     """Get query options."""
     group = parser.add_argument_group("Query options")
     group.add_argument('-g', "--gone",
-                       help="""specifying this option will check for packages
-installed from the AUR but are no longer in the AUR (orphans).""",
+                       help="""specifying this option will interrogate package
+information and indicate packages that are not tracked via repositories or the
+AUR (orphaned).""",
                        action="store_true")
