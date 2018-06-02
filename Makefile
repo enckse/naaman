@@ -3,6 +3,7 @@ INSTALL        :=
 SRC            := $(shell find . -type f -name "*.py")
 VERS           := $(shell cat naaman/consts.py | grep "^\_\_version\_\_" | cut -d "=" -f 2 | sed 's/ //g;s/"//g')
 COMPLETION     := $(BIN)bash.completions
+DEPS           := python-xdg pyalpm bash-completion python-pip git help2man
 
 # tests
 TST            := tests/
@@ -54,12 +55,9 @@ analyze:
 	pycodestyle $(SRC)
 
 dependencies:
-	pacman -S python-xdg pyalpm bash-completion
+	pacman -S $(DEPS)
 
-makedepends:
-	pacman -S python-pip git help2man
-
-dev: makedepends dependencies peps install
+dev: dependencies peps install
 
 regen: clean install
 	help2man naaman > $(DOC)$(MAN8).in
