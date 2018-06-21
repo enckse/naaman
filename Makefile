@@ -9,6 +9,7 @@ DEPS           := python-xdg pyalpm bash-completion python-pip git help2man
 TST            := tests/
 TESTS          := $(shell find $(TST) -name "*.py")
 
+
 # doc
 MONTH_YEAR     := $(shell date +"%B %Y")
 DOC            := docs/
@@ -25,7 +26,7 @@ travis: ci all
 test: $(TESTS)
 
 ci: peps
-	pip install pyxdg pep257 pycodestyle
+	pip install pyxdg
 
 peps:
 	pip install pep257 pycodestyle
