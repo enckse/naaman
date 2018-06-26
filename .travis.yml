@@ -1,8 +1,16 @@
-language: python
-python:
-    - "3.6"
+sudo: required
 
-script: make travis
+services:
+- docker
+
+arch:
+    packages:
+    - python
+    script:
+    - make travis
+
+script:
+- "curl -s https://raw.githubusercontent.com/mikkeloscar/arch-travis/master/arch-travis.sh | bash"
 
 notifications:
     email:
