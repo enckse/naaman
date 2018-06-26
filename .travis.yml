@@ -6,6 +6,7 @@ services:
 arch:
     packages:
     - python
+    - python-pip
     script:
     - make travis
 
