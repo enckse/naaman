@@ -65,6 +65,7 @@ def main():
     is_vcs()
     deps_compare()
     get_deps()
+    print('completed')
 
 
 if __name__ == "__main__":

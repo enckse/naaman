@@ -112,6 +112,7 @@ def main():
     """Main-entry harness."""
     manual_args()
     config_args()
+    print('completed')
 
 
 if __name__ == "__main__":
