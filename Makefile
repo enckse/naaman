@@ -21,8 +21,6 @@ MANPAGE5       := $(BIN)$(MAN5)
 
 all: test analyze completions manpages
 
-travis: ci all
-
 test: $(TESTS)
 
 ci: peps
