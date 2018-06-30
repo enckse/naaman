@@ -406,8 +406,7 @@ def install(file_definition, makepkg, cache_dirs, context, version):
         scripts.append("makepkg " + " ".join(makepkg))
         if not _run_scripts(scripts, t, f_dir):
             return False
-
-        #replaces["SUDO"] = sudo
-        #replaces["VERSION"] = use_version
-        #replaces["CACHE"] = cache_dirs
+        # replaces["SUDO"] = sudo
+        # replaces["VERSION"] = use_version
+        # replaces["CACHE"] = cache_dirs
         return True
