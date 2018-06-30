@@ -33,6 +33,7 @@ _AUR_SEARCH = _AUR_RAW_URL.format("search&by={}", "{}")
 _AUR_VERS = "Version"
 _AUR_URLP = "URLPath"
 _AUR_DEPS = "Depends"
+_AUR_BASE = "PackageBase"
 _AUR_MAKEDEPS = "MakeDepends"
 _MAKEPKG_VCS = ["-od"]
 
@@ -64,12 +65,13 @@ class DepTree(object):
 class AURPackage(object):
     """AUR package object."""
 
-    def __init__(self, name, version, url, deps):
+    def __init__(self, name, version, url, deps, basepkg):
         """Init the instance."""
         self.name = name
         self.version = version
         self.url = url
         self.deps = deps
+        self.base = basepkg
 
 
 def _get_segment(j, key):
@@ -262,7 +264,8 @@ def rpc_search(package_name, exact, context, include_deps):
                                 return AURPackage(name,
                                                   vers,
                                                   result[_AUR_URLP],
-                                                  deps)
+                                                  deps,
+                                                  result[_AUR_BASE])
                         else:
                             ind = ""
                             if not name or not desc or not vers:
@@ -375,7 +378,7 @@ def install(file_definition, makepkg, cache_dirs, context, version):
             os.makedirs(p)
         f_dir = os.path.join(t, file_definition.name)
         pkg = sh.InstallPkg(can_sudo, f_dir)
-        if not pkg.git(_AUR_GIT.format(file_definition.name), clone_to, p):
+        if not pkg.git(_AUR_GIT.format(file_definition.base), clone_to, p):
             return False
         if context.fetching:
             log.console_output("{} was fetched".format(file_definition.name))
