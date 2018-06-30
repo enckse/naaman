@@ -384,12 +384,22 @@ def install(file_definition, makepkg, cache_dirs, context, version):
         if context.fetching:
             log.console_output("{} was fetched".format(file_definition.name))
             return True
+        glob = file_definition.name
         if is_installing:
             log.debug("installing")
+            is_split = pkg.is_split()
+            if pkg.is_split():
+                log.debug("split package")
+                if sh.confirm("split package, install all",
+                              [glob],
+                              False,
+                              True) is None:
+                    glob = sh.GLOB_INSTALL
+                log.debug(glob)
         if not pkg.makepkg(makepkg):
             return False
         if is_installing:
-            if not pkg.install(file_definition.name):
+            if not pkg.install(glob):
                 return False
             if not pkg.cache(cache_dirs):
                 return False

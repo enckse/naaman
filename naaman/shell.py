@@ -9,6 +9,7 @@ import os
 import naaman.logger as log
 from datetime import datetime
 
+GLOB_INSTALL = "*"
 _BASH_WRAPPER = """#!/bin/bash
 trap '' 2"""
 _SRCINFO = """
@@ -25,18 +26,26 @@ vers="$(_section 'pkgver')-$(_section 'pkgrel')"
 _PKGVER = _SRCINFO + """
 [[ "$vers" == '{VERSION}' ]] && exit 1
 """
+_PACMAN_U = "{SUDO}pacman -U"
+_INSTALL_ALL = _PACMAN_U + " *.pkg.tar.xz"
 _INSTALL = _SRCINFO + """
 for f in any x86_64; do
     fname=\"{PKGNAME}-${vers}-$f.pkg.tar.xz\"
     if [ -e "$fname" ]; then
-        {SUDO}pacman -U $fname
+        """ + _PACMAN_U + """ $fname
         if [ $? -ne 0 ]; then
             exit 1
         fi
     fi
 done
 """
-_CACHE = "[ $(ls | grep '*.tar.{}' | wc -l) -gt 0 ] || {}cp *.tar.{} {}/"
+_CACHE = "[ $(ls | grep '*\\.tar\\.{}' | wc -l) -gt 0 ] || {}cp *.tar.{} {}/"
+_SPLIT = """
+cnt=$(makepkg --printsrcinfo | grep \"\\.tar\\.xz\" | wc -l)
+if [ $cnt -gt 1 ]; then
+    exit 1
+fi
+"""
 
 
 class InstallPkg(object):
@@ -59,8 +68,11 @@ class InstallPkg(object):
     def install(self, name):
         """Install a package."""
         self._log_bash("install")
-        installing = _INSTALL.replace("{PKGNAME}",
-                                      name).replace("{SUDO}", self._sudo)
+        use_script = _INSTALL
+        if name == GLOB_INSTALL:
+            use_script = _INSTALL_ALL
+        installing = use_script.replace("{PKGNAME}",
+                                        name).replace("{SUDO}", self._sudo)
         return self._run([installing])
 
     def version(self, vers):
@@ -69,6 +81,11 @@ class InstallPkg(object):
         if vers is None:
             return True
         return self._run([_PKGVER.replace("{VERSION}", vers)])
+
+    def is_split(self):
+        """Indicate if split package."""
+        self._log_bash("split")
+        return self._run([_SPLIT])
 
     def cache(self, dirs):
         """Cache output files."""
@@ -113,9 +130,11 @@ class InstallPkg(object):
             script_text = "\n".join(script)
             log.trace(script_text)
             f.write(script_text)
-        return command(["/bin/bash --rcfile {}".format(file_name)],
-                       shell=True,
-                       workdir=self._workdir)
+        res = command(["/bin/bash --rcfile {}".format(file_name)],
+                      shell=True,
+                      workdir=self._workdir)
+        os.remove(file_name)
+        return res
 
 
 def command(command, shell=False, workdir=None):
