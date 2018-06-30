@@ -14,7 +14,6 @@ import signal
 import tempfile
 import subprocess
 import naaman.arguments.custom as csm_args
-import naaman.shell as sh
 import naaman.logger as log
 import naaman.consts as cst
 import naaman.alpm as alpm

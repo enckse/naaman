@@ -375,19 +375,12 @@ def install(file_definition, makepkg, cache_dirs, context, version):
             clone_to = "."
             p = os.path.join(t, file_definition.name)
             os.makedirs(p)
-        sh.shell(["git",
-                  "clone",
-                  "--depth=1",
-                  _AUR_GIT.format(file_definition.name),
-                  clone_to], suppress_error=True, workingdir=p)
+        f_dir = os.path.join(t, file_definition.name)
+        pkg = sh.InstallPkg(can_sudo, f_dir)
+        pkg.git(_AUR_GIT.format(file_definition.name), clone_to, p)
         if context.fetching:
             log.console_output("{} was fetched".format(file_definition.name))
             return True
-        sudo = ""
-        if can_sudo:
-            sudo = "sudo "
-        f_dir = os.path.join(t, file_definition.name)
-        pkg = sh.InstallPkg(sudo, f_dir)
         if not pkg.makepkg(makepkg):
             return False
         if not pkg.version(version):

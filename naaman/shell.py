@@ -33,7 +33,9 @@ class InstallPkg(object):
     def __init__(self, sudo, workingdir):
         """Init a package install."""
         self._workdir = workingdir
-        self._sudo = sudo
+        self._sudo = ""
+        if sudo:
+            self._sudo = "sudo "
         self._timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         self._idx = 0
 
@@ -69,6 +71,12 @@ class InstallPkg(object):
             self._idx += 1
         return True
 
+    def git(self, source, dest, path):
+        """Git clone an AUR package."""
+        _shell(["git", "clone", "--depth=1", source, dest],
+               workingdir=path,
+               suppress_error=True)
+
     def _bashpkg(self, file_name, command):
         """Do some shell work in bash."""
         script = [_BASH_WRAPPER]
@@ -84,7 +92,7 @@ class InstallPkg(object):
         return result == 0
 
 
-def shell(command, suppress_error=False, workingdir=None):
+def _shell(command, suppress_error=False, workingdir=None):
     """Run a shell command."""
     log.debug("shell")
     log.trace(command)
