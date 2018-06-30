@@ -12,11 +12,11 @@ import getpass
 import json
 import signal
 import tempfile
-import subprocess
 import naaman.arguments.custom as csm_args
 import naaman.logger as log
 import naaman.consts as cst
 import naaman.alpm as alpm
+import naaman.shell as sh
 from datetime import datetime
 
 
@@ -189,9 +189,7 @@ class Context(object):
         cmd.append("/usr/bin/pacman")
         cmd = cmd + args
         log.trace(cmd)
-        returncode = subprocess.call(cmd)
-        log.trace(returncode)
-        return returncode == 0
+        return sh.command(cmd)
 
     def check_pkgcache(self, name, version):
         """Check the pkgcache."""

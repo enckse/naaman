@@ -375,7 +375,8 @@ def install(file_definition, makepkg, cache_dirs, context, version):
             os.makedirs(p)
         f_dir = os.path.join(t, file_definition.name)
         pkg = sh.InstallPkg(can_sudo, f_dir)
-        pkg.git(_AUR_GIT.format(file_definition.name), clone_to, p)
+        if not pkg.git(_AUR_GIT.format(file_definition.name), clone_to, p):
+            return False
         if context.fetching:
             log.console_output("{} was fetched".format(file_definition.name))
             return True
