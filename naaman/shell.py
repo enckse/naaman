@@ -22,9 +22,7 @@ function _section() {
 makepkg --printsrcinfo > .SRCINFO
 [[ "$(_section 'pkgver')-$(_section 'pkgrel')" == '{VERSION}' ]] && exit 1
 """
-_CACHE = """
-test -e *.tar.{} && {}cp *.tar.{} {}/
-"""
+_CACHE = "test -e *.tar.{} && {}cp *.tar.{} {}/"
 
 
 class InstallPkg(object):
@@ -41,16 +39,19 @@ class InstallPkg(object):
 
     def makepkg(self, args):
         """Run makepkg."""
+        self._log_bash("makepkg")
         return self._run(["makepkg {}".format(" ".join(args))])
 
     def version(self, vers):
         """Check the makepkg output version."""
+        self._log_bash("version")
         if vers is None:
             return True
         return self._run([_PKGVER.replace("{VERSION}", vers)])
 
     def cache(self, dirs):
         """Cache output files."""
+        self._log_bash("cache")
         if dirs is None or len(dirs.strip()) == 0:
             return True
         scripts = []
@@ -60,12 +61,17 @@ class InstallPkg(object):
                 scripts.append(cache_cmd.format(f, f, cd))
         return self._run(scripts)
 
+    def _log_bash(self, name):
+        """Log that a bash step is running."""
+        log.debug("bash: {}".format(name))
+
     def _run(self, scripts):
         """Run a set of scripts."""
         for s in scripts:
             f_name = os.path.join(self._workdir,
                                   "naamanpkg.{}.{}".format(self._timestamp,
                                                            self._idx))
+            log.debug(f_name)
             if not self._bashpkg(f_name, s):
                 return False
             self._idx += 1
@@ -79,14 +85,13 @@ class InstallPkg(object):
 
     def _bashpkg(self, file_name, cmd):
         """Do some shell work in bash."""
-        log.debug("bash pkg")
         script = [_BASH_WRAPPER]
         script.append(cmd)
         script.append("exit $?")
         with open(file_name, 'w') as f:
             script_text = "\n".join(script)
             log.trace(script_text)
-            f.write("\n".join(script))
+            f.write(script_text)
         return command(["/bin/bash --rcfile {}".format(file_name)],
                        shell=True,
                        workdir=self._workdir)
