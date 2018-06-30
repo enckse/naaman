@@ -35,8 +35,6 @@ _AUR_URLP = "URLPath"
 _AUR_DEPS = "Depends"
 _AUR_MAKEDEPS = "MakeDepends"
 _MAKEPKG_VCS = ["-od"]
-_SRCINFO = ".SRCINFO"
-_VER_SRCINFO = ".SRCINFO.{}".format(cst.NAME)
 
 
 class DepTree(object):
