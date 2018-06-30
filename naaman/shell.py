@@ -5,7 +5,9 @@ Output to the shell in certain formats, executing shell commands,
 getting response from the user in the shell (as needed)
 """
 import subprocess
+import os
 import naaman.logger as log
+from datetime import datetime
 
 _BASH_WRAPPER = """#!/bin/bash
 trap '' 2
@@ -16,19 +18,69 @@ function _section() {
         | sed \"s/^\\s//g;s/\\s$//g\" \
         | head -n 1
 }"""
+_PKGVER = """
+makepkg --printsrcinfo > .SRCINFO
+[[ "$(_section 'pkgver')-$(_section 'pkgrel')" == '{}' ]] && exit 1
+"""
+_CACHE = """
+test -e *.tar{} && {}cp *.tar.{} {}/
+"""
 
 
-def bashpkg(file_name, command, workingdir):
-    """Do some shell work in bash."""
-    script = [_BASH_WRAPPER]
-    script.append(command)
-    script.append("exit $?")
-    with open(file_name, 'w') as f:
-        f.write("\n".join(script))
-    result = subprocess.call("/bin/bash --rcfile {}".format(file_name),
-                             shell=True,
-                             cwd=workingdir)
-    return result == 0
+class InstallPkg(object):
+    """Wrapper for installing packages (via makepkg)."""
+
+    def __init__(self, sudo, workingdir):
+        """Init a package install."""
+        self._workdir = workingdir
+        self._sudo = sudo
+        self._timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        self._idx = 0
+
+    def makepkg(self, args):
+        """Run makepkg."""
+        return self._run(["makepkg {}".format(args)])
+
+    def version(self, vers):
+        """Check the makepkg output version."""
+        if vers is None:
+            return True
+        return self._run([_PKGVER.format(vers)])
+
+    def cache(self, dirs):
+        """Cache output files."""
+        if dirs is None or len(dirs.strip()) == 0:
+            return True
+        scripts = []
+        cache_cmd = _CACHE.format("{}", self._sudo, "{}", "{}")
+        for f in ["xz"]:
+            for cd in dirs.split(" "):
+                scripts.append(cache_cmd.format(f, f, cd))
+        return self._run(scripts)
+
+    def _run(self, scripts):
+        """Run a set of scripts."""
+        for s in scripts:
+            f_name = os.path.join(self._workdir,
+                                  "naamanpkg.{}.{}".format(self._timestamp,
+                                                           self._idx))
+            if not self._bashpkg(f_name, s):
+                return False
+            self._idx += 1
+        return True
+
+    def _bashpkg(self, file_name, command):
+        """Do some shell work in bash."""
+        script = [_BASH_WRAPPER]
+        script.append(command)
+        script.append("exit $?")
+        print(file_name)
+        with open(file_name, 'w') as f:
+            f.write("\n".join(script))
+        result = subprocess.call("/bin/bash --rcfile {}".format(file_name),
+                                 shell=True,
+                                 cwd=self._workdir)
+        return result == 0
 
 
 def shell(command, suppress_error=False, workingdir=None):

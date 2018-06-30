@@ -52,9 +52,6 @@ see naaman '\-\-rpc\-cache' for information
 RPC_FIELD
 see naaman '\-\-rpc\-field' for information
 .TP
-SCRIPTS
-location of scripts naaman uses to perform various operations.
-.TP
 SKIP_DEPS
 see naaman '\-\-skip\-deps' for information
 directly to pacman. this option may be specified multiple times.

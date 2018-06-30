@@ -65,6 +65,5 @@ install: completions manpages
 	python setup.py install --root="$(INSTALL)/" --optimize=1
 	install -Dm644 LICENSE $(INSTALL)/usr/share/license/naaman/LICENSE
 	install -Dm644 $(COMPLETION) $(INSTALL)/usr/share/bash-completion/completions/naaman
-	install -Dm644 scripts/makepkg $(INSTALL)/usr/share/naaman/makepkg
 	install -Dm644 $(MANPAGE8).gz $(INSTALL)/usr/share/man/man8/
 	install -Dm644 $(MANPAGE5).gz $(INSTALL)/usr/share/man/man5/

@@ -35,6 +35,8 @@ _AUR_URLP = "URLPath"
 _AUR_DEPS = "Depends"
 _AUR_MAKEDEPS = "MakeDepends"
 _MAKEPKG_VCS = ["-od"]
+_SRCINFO = ".SRCINFO"
+_VER_SRCINFO = ".SRCINFO.{}".format(cst.NAME)
 
 
 class DepTree(object):
@@ -356,27 +358,10 @@ def check_vcs(package, context, version):
     return result
 
 
-def _run_scripts(scripts, tempdir, workdir):
-    """Run bash scripts for installing."""
-    idx = 0
-    currently = datetime.now().strftime("%Y%m%d%H%M%S")
-    for s in scripts:
-        f_name = os.path.join(tempdir, "{}.{}.{}".format(cst.NAME,
-                                                         currently,
-                                                         idx))
-        if not sh.bashpkg(f_name, s, workdir):
-            return False
-        idx += 1
-    return True
-
-
 def install(file_definition, makepkg, cache_dirs, context, version):
     """Install a package."""
     can_sudo = context.can_sudo
     new_file = context.build_dir
-    sudo = ""
-    if can_sudo:
-        sudo = "sudo"
     url = _AUR.format(file_definition.url)
     action = "installing"
     if version is not None:
@@ -398,15 +383,15 @@ def install(file_definition, makepkg, cache_dirs, context, version):
         if context.fetching:
             log.console_output("{} was fetched".format(file_definition.name))
             return True
-        use_version = ""
-        if version is not None:
-            use_version = version
+        sudo = ""
+        if can_sudo:
+            sudo = "sudo "
         f_dir = os.path.join(t, file_definition.name)
-        scripts = []
-        scripts.append("makepkg " + " ".join(makepkg))
-        if not _run_scripts(scripts, t, f_dir):
+        pkg = sh.InstallPkg(sudo, f_dir)
+        if not pkg.makepkg(makepkg):
             return False
-        # replaces["SUDO"] = sudo
-        # replaces["VERSION"] = use_version
-        # replaces["CACHE"] = cache_dirs
+        if not pkg.version(version):
+            return False
+        if not pkg.cache(cache_dirs):
+            return False
         return True
