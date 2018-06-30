@@ -23,7 +23,7 @@ makepkg --printsrcinfo > .SRCINFO
 [[ "$(_section 'pkgver')-$(_section 'pkgrel')" == '{}' ]] && exit 1
 """
 _CACHE = """
-test -e *.tar{} && {}cp *.tar.{} {}/
+test -e *.tar.{} && {}cp *.tar.{} {}/
 """
 
 
@@ -39,7 +39,7 @@ class InstallPkg(object):
 
     def makepkg(self, args):
         """Run makepkg."""
-        return self._run(["makepkg {}".format(args)])
+        return self._run(["makepkg {}".format(" ".join(args))])
 
     def version(self, vers):
         """Check the makepkg output version."""
@@ -74,8 +74,9 @@ class InstallPkg(object):
         script = [_BASH_WRAPPER]
         script.append(command)
         script.append("exit $?")
-        print(file_name)
         with open(file_name, 'w') as f:
+            script_text = "\n".join(script)
+            log.trace(script_text)
             f.write("\n".join(script))
         result = subprocess.call("/bin/bash --rcfile {}".format(file_name),
                                  shell=True,
