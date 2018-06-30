@@ -9,7 +9,6 @@ import os
 import naaman.logger as log
 from datetime import datetime
 
-GLOB_INSTALL = "*"
 _BASH_WRAPPER = """#!/bin/bash
 trap '' 2"""
 _SRCINFO = """
@@ -69,7 +68,7 @@ class InstallPkg(object):
         """Install a package."""
         self._log_bash("install")
         use_script = _INSTALL
-        if name == GLOB_INSTALL:
+        if name is None:
             use_script = _INSTALL_ALL
         installing = use_script.replace("{PKGNAME}",
                                         name).replace("{SUDO}", self._sudo)

@@ -394,7 +394,7 @@ def install(file_definition, makepkg, cache_dirs, context, version):
                               [glob],
                               False,
                               True) is None:
-                    glob = sh.GLOB_INSTALL
+                    glob = None
                 log.debug(glob)
         if not pkg.makepkg(makepkg):
             return False
