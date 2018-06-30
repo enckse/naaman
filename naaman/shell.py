@@ -10,17 +10,17 @@ import naaman.logger as log
 from datetime import datetime
 
 _BASH_WRAPPER = """#!/bin/bash
-trap '' 2
+trap '' 2"""
+_PKGVER = """
 function _section() {
     cat .SRCINFO \
         | grep \"\\s*$1\" \
         | cut -d \"=\" -f 2- \
         | sed \"s/^\\s//g;s/\\s$//g\" \
         | head -n 1
-}"""
-_PKGVER = """
+}
 makepkg --printsrcinfo > .SRCINFO
-[[ "$(_section 'pkgver')-$(_section 'pkgrel')" == '{}' ]] && exit 1
+[[ "$(_section 'pkgver')-$(_section 'pkgrel')" == '{VERSION}' ]] && exit 1
 """
 _CACHE = """
 test -e *.tar.{} && {}cp *.tar.{} {}/
@@ -47,7 +47,7 @@ class InstallPkg(object):
         """Check the makepkg output version."""
         if vers is None:
             return True
-        return self._run([_PKGVER.format(vers)])
+        return self._run([_PKGVER.replace("{VERSION}", vers)])
 
     def cache(self, dirs):
         """Cache output files."""
