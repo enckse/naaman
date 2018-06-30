@@ -19,7 +19,7 @@ setup(
     long_description=__desc__,
     url='https://github.com/enckse/naaman',
     license='MIT',
-    python_requires='>=3',
+    python_requires='>=3.6',
     packages=[__pkg_name__, __pkg_name__ + ".arguments"],
     entry_points={
         'console_scripts': [
