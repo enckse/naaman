@@ -73,12 +73,13 @@ class InstallPkg(object):
 
     def git(self, source, dest, path):
         """Git clone an AUR package."""
-        _shell(["git", "clone", "--depth=1", source, dest],
-               workingdir=path,
-               suppress_error=True)
+        log.debug("git clone")
+        subprocess.call(["git", "clone", "--depth=1", source, dest],
+                        cwd=path)
 
     def _bashpkg(self, file_name, command):
         """Do some shell work in bash."""
+        log.debug("bash pkg")
         script = [_BASH_WRAPPER]
         script.append(command)
         script.append("exit $?")
@@ -90,25 +91,6 @@ class InstallPkg(object):
                                  shell=True,
                                  cwd=self._workdir)
         return result == 0
-
-
-def _shell(command, suppress_error=False, workingdir=None):
-    """Run a shell command."""
-    log.debug("shell")
-    log.trace(command)
-    log.trace(workingdir)
-    sp = subprocess.Popen(command,
-                          cwd=workingdir,
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE)
-    out, err = sp.communicate()
-    log.trace(out)
-    if suppress_error:
-        log.trace(err)
-    else:
-        if err and len(err) > 0:
-            log.error(err)
-    return out
 
 
 def confirm(message, package_names, default_yes, must_confirm):
