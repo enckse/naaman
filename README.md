@@ -197,6 +197,6 @@ REMOVAL="-n"
 
 Specify flags to pass to makepkg
 ```
-MAKEPKG="-sri"
+MAKEPKG="-sr"
 MAKEPKG="-f"
 ```

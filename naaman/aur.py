@@ -365,7 +365,8 @@ def install(file_definition, makepkg, cache_dirs, context, version):
     new_file = context.build_dir
     url = _AUR.format(file_definition.url)
     action = "installing"
-    if version is not None:
+    is_installing = version is None
+    if not is_installing:
         action = "checking version"
     log.console_output("{}: {}".format(action, file_definition.name))
     with new_file() as t:
@@ -383,10 +384,15 @@ def install(file_definition, makepkg, cache_dirs, context, version):
         if context.fetching:
             log.console_output("{} was fetched".format(file_definition.name))
             return True
+        if is_installing:
+            log.debug("installing")
         if not pkg.makepkg(makepkg):
             return False
-        if not pkg.version(version):
-            return False
-        if not pkg.cache(cache_dirs):
-            return False
-        return True
+        if is_installing:
+            if not pkg.install(file_definition.name):
+                return False
+            if not pkg.cache(cache_dirs):
+                return False
+            return True
+        else:
+            return pkg.version(version)

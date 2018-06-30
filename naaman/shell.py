@@ -11,7 +11,7 @@ from datetime import datetime
 
 _BASH_WRAPPER = """#!/bin/bash
 trap '' 2"""
-_PKGVER = """
+_SRCINFO = """
 function _section() {
     cat .SRCINFO \
         | grep \"\\s*$1\" \
@@ -20,9 +20,23 @@ function _section() {
         | head -n 1
 }
 makepkg --printsrcinfo > .SRCINFO
-[[ "$(_section 'pkgver')-$(_section 'pkgrel')" == '{VERSION}' ]] && exit 1
+vers="$(_section 'pkgver')-$(_section 'pkgrel')"
 """
-_CACHE = "test -e *.tar.{} && {}cp *.tar.{} {}/"
+_PKGVER = _SRCINFO + """
+[[ "$vers" == '{VERSION}' ]] && exit 1
+"""
+_INSTALL = _SRCINFO + """
+for f in any x86_64; do
+    fname=\"{PKGNAME}-${vers}-$f.pkg.tar.xz\"
+    if [ -e "$fname" ]; then
+        {SUDO}pacman -U $fname
+        if [ $? -ne 0 ]; then
+            exit 1
+        fi
+    fi
+done
+"""
+_CACHE = "[ $(ls | grep '*.tar.{}' | wc -l) -gt 0 ] || {}cp *.tar.{} {}/"
 
 
 class InstallPkg(object):
@@ -41,6 +55,13 @@ class InstallPkg(object):
         """Run makepkg."""
         self._log_bash("makepkg")
         return self._run(["makepkg {}".format(" ".join(args))])
+
+    def install(self, name):
+        """Install a package."""
+        self._log_bash("install")
+        installing = _INSTALL.replace("{PKGNAME}",
+                                      name).replace("{SUDO}", self._sudo)
+        return self._run([installing])
 
     def version(self, vers):
         """Check the makepkg output version."""
