@@ -57,7 +57,6 @@ def load_config(args, config_file):
                        "SKIP_DEPS",
                        "NO_CACHE",
                        "REMOVAL",
-                       "SCRIPTS",
                        "VCS_INSTALL_ONLY",
                        "IGNORE_FOR",
                        "MAKEPKG",

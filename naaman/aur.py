@@ -356,10 +356,23 @@ def check_vcs(package, context, version):
     return result
 
 
+def _run_scripts(scripts, tempdir, workdir):
+    """Run bash scripts for installing."""
+    idx = 0
+    currently = datetime.now().strftime("%Y%m%d%H%M%S")
+    for s in scripts:
+        f_name = os.path.join(tempdir, "{}.{}.{}".format(cst.NAME,
+                                                         currently,
+                                                         idx))
+        if not sh.bashpkg(f_name, s, workdir):
+            return False
+        idx += 1
+    return True
+
+
 def install(file_definition, makepkg, cache_dirs, context, version):
     """Install a package."""
     can_sudo = context.can_sudo
-    script_text = context.load_script("makepkg")
     new_file = context.build_dir
     sudo = ""
     if can_sudo:
@@ -385,15 +398,16 @@ def install(file_definition, makepkg, cache_dirs, context, version):
         if context.fetching:
             log.console_output("{} was fetched".format(file_definition.name))
             return True
-        temp_sh = os.path.join(t, cst.NAME + ".sh")
         use_version = ""
         if version is not None:
             use_version = version
         f_dir = os.path.join(t, file_definition.name)
-        replaces = {}
-        replaces["DIRECTORY"] = f_dir
-        replaces["MAKEPKG"] = " ".join(makepkg)
-        replaces["SUDO"] = sudo
-        replaces["VERSION"] = use_version
-        replaces["CACHE"] = cache_dirs
-        return sh.template_script(script_text, replaces, temp_sh)
+        scripts = []
+        scripts.append("makepkg " + " ".join(makepkg))
+        if not _run_scripts(scripts, t, f_dir):
+            return False
+
+        #replaces["SUDO"] = sudo
+        #replaces["VERSION"] = use_version
+        #replaces["CACHE"] = cache_dirs
+        return True

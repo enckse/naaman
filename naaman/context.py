@@ -61,7 +61,6 @@ class Context(object):
         self._lock_file = os.path.join(self._cache_dir, "file" + _LOCKS)
         self.force_refresh = args.force_refresh
         self._custom_args = self.groups[csm_args.CUSTOM_ARGS]
-        self._script_dir = self.get_custom_arg(csm_args.CUSTOM_SCRIPTS)
         self.now = datetime.now()
         self.timestamp = self.now.timestamp()
         self.fetching = args.fetch
@@ -111,18 +110,6 @@ class Context(object):
         """Exiting via context."""
         self.unlock()
         exit(code)
-
-    def load_script(self, name):
-        """Load a script file."""
-        script = os.path.join(self._script_dir, name)
-        if not os.path.exists(script):
-            log.console_error("missing required script {}".format(script))
-            self.exiting(1)
-        if name not in self._scripts:
-            log.debug("loading script {}".format(name))
-            with open(script, 'r') as f:
-                self._scripts[name] = f.read()
-        return self._scripts[name]
 
     def known_dependency(self, package):
         """Check if we know a dependency."""

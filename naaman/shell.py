@@ -7,20 +7,27 @@ getting response from the user in the shell (as needed)
 import subprocess
 import naaman.logger as log
 
+_BASH_WRAPPER = """#!/bin/bash
+trap '' 2
+function _section() {
+    cat .SRCINFO \
+        | grep \"\\s*$1\" \
+        | cut -d \"=\" -f 2- \
+        | sed \"s/^\\s//g;s/\\s$//g\" \
+        | head -n 1
+}"""
 
-def template_script(script_text, replaces, temp_file):
-    """Template and run a script."""
-    script = script_text
-    for r in replaces:
-        val = replaces[r]
-        if val is None:
-            val = ""
-        script = script.replace("{" + r + "}", val)
-    log.trace(script)
-    with open(temp_file, 'w') as f:
-        f.write(script)
-    result = subprocess.call("/bin/bash --rcfile {}".format(temp_file),
-                             shell=True)
+
+def bashpkg(file_name, command, workingdir):
+    """Do some shell work in bash."""
+    script = [_BASH_WRAPPER]
+    script.append(command)
+    script.append("exit $?")
+    with open(file_name, 'w') as f:
+        f.write("\n".join(script))
+    result = subprocess.call("/bin/bash --rcfile {}".format(file_name),
+                             shell=True,
+                             cwd=workingdir)
     return result == 0
 
 
