@@ -39,12 +39,7 @@ for f in any x86_64; do
 done
 """
 _CACHE = "[ $(ls | grep '*\\.tar\\.{}' | wc -l) -gt 0 ] || {}cp *.tar.{} {}/"
-_SPLIT = """
-cnt=$(makepkg --printsrcinfo | grep \"\\.tar\\.xz\" | wc -l)
-if [ $cnt -gt 1 ]; then
-    exit 1
-fi
-"""
+_SPLIT = """exit $(makepkg --printsrcinfo | grep \"\\.tar\\.xz\" | wc -l))"""
 
 
 class InstallPkg(object):
