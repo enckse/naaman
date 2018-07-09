@@ -45,10 +45,16 @@ _ARCH_INSTALLS = [_INSTALL.replace("{ARCH}", x) for x in ["any", "x86_64"]]
 _CACHE = "[ $(ls | grep '*\\.tar\\.{}' | wc -l) -gt 0 ] || {}cp *.tar.{} {}/"
 
 # output the number of produced packages (minus 1, always produce 1 package)
-_SPLIT = """exit $(makepkg --printsrcinfo \
-                   | grep \"\\.tar\\.xz\" \
-                   | tail -n +2 \
-                   | wc -l)"""
+_SPLIT = """
+pkgs=$(makepkg --packagelist | grep \"\\.tar\\.xz\")
+cnt=$(echo \"$pkgs\" | wc -l)
+if [ $cnt -gt 1 ]; then
+    echo
+    echo "packagelist:"
+    for f in $(echo \"$pkgs\"); do basename $f | sed \"s/^/  -> /g\"; done
+    exit 1
+fi
+"""
 
 
 class InstallPkg(object):
@@ -89,7 +95,7 @@ class InstallPkg(object):
     def is_split(self):
         """Indicate if split package."""
         self._log_bash("split")
-        return self._run([_SPLIT])
+        return not self._run([_SPLIT])
 
     def cache(self, dirs):
         """Cache output files."""
