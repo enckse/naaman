@@ -106,7 +106,7 @@ class Context(object):
         return self._custom_args[name]
 
     def exiting(self, code):
-        """Exiting via context."""
+        """Exit via context."""
         self.unlock()
         exit(code)
 

@@ -530,7 +530,7 @@ def _gone(context):
 
 
 def _querying(context, gone):
-    """Querying for package information."""
+    """Query for package information."""
     matched = False
     for q in _do_query(context):
         found = _rpc_search(q.name, True, context)

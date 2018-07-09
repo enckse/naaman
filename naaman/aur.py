@@ -147,7 +147,7 @@ def _get_deps(pkgs, name):
 
 
 def _rpc_caching(package_name, context):
-    """rpc caching area/check."""
+    """Cache RPC area/check."""
     now = context.now
     use_file_name = "rpc-"
     for char in package_name:
