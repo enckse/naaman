@@ -9,15 +9,15 @@ import os
 import naaman.logger as log
 from datetime import datetime
 
-_BASH_WRAPPER = """#!/bin/bash
+_BASH_WRAPPER = r"""#!/bin/bash
 trap '' 2
 """
-_SRCINFO = """
+_SRCINFO = r"""
 function _section() {
     cat .SRCINFO \
-        | grep \"\\s*$1\" \
-        | cut -d \"=\" -f 2- \
-        | sed \"s/^\\s//g;s/\\s$//g\" \
+        | grep "\s*$1" \
+        | cut -d "=" -f 2- \
+        | sed "s/^\s//g;s/\s$//g" \
         | head -n 1
 }
 makepkg --printsrcinfo > .SRCINFO
@@ -25,13 +25,13 @@ vers="$(_section 'pkgver')-$(_section 'pkgrel')"
 """
 
 # Check if pkgver-pkgrel is unchanged
-_PKGVER = _SRCINFO + """[[ "$vers" == '{VERSION}' ]] && exit 1"""
+_PKGVER = _SRCINFO + r"""[[ "$vers" == '{VERSION}' ]] && exit 1"""
 
 # handle installing some or all packages
 _PACMAN_U = "{SUDO}pacman -U"
 _INSTALL_ALL = _PACMAN_U + " *.pkg.tar.xz"
-_INSTALL = _SRCINFO + """
-fname=\"{PKGNAME}-${vers}-{ARCH}.pkg.tar.xz\"
+_INSTALL = _SRCINFO + r"""
+fname="{PKGNAME}-${vers}-{ARCH}.pkg.tar.xz"
 if [ -e "$fname" ]; then
     """ + _PACMAN_U + """ $fname
     if [ $? -ne 0 ]; then
@@ -42,19 +42,19 @@ fi
 _ARCH_INSTALLS = [_INSTALL.replace("{ARCH}", x) for x in ["any", "x86_64"]]
 
 # If there are cache files, cache them
-_CACHE = "[ $(ls | grep '*\\.tar\\.{}' | wc -l) -gt 0 ] || {}cp *.tar.{} {}/"
+_CACHE = r"[ $(ls | grep '*\.tar\.{}' | wc -l) -gt 0 ] || {}cp *.tar.{} {}/"
 
 # output the number of produced packages (minus 1, always produce 1 package)
-_SPLIT = """
-pkgs=$(makepkg --packagelist | grep \"\\.tar\\.xz\")
-cnt=$(echo \"$pkgs\" | wc -l)
+_SPLIT = r"""
+pkgs=$(makepkg --packagelist | grep "\.tar\.xz")
+cnt=$(echo "$pkgs" | wc -l)
 if [ $cnt -gt 1 ]; then
     echo
     echo 'detected packages:'
-    for f in $(echo \"$pkgs\" | sed \"s/\\.pkg\\.tar\\.xz//g\"); do
+    for f in $(echo "$pkgs" | sed "s/\.pkg\.tar\.xz//g"); do
         basename $f | \
-            sed \"s/any$//g;s/x86\\_64$//g;s/-$//g\" | \
-            sed \"s/^/  -> /g\"
+            sed "s/any$//g;s/x86\_64$//g;s/-$//g" | \
+            sed "s/^/  -> /g"
     done
     exit 1
 fi
