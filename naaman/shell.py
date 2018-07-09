@@ -10,7 +10,8 @@ import naaman.logger as log
 from datetime import datetime
 
 _BASH_WRAPPER = """#!/bin/bash
-trap '' 2"""
+trap '' 2
+"""
 _SRCINFO = """
 function _section() {
     cat .SRCINFO \
@@ -22,22 +23,23 @@ function _section() {
 makepkg --printsrcinfo > .SRCINFO
 vers="$(_section 'pkgver')-$(_section 'pkgrel')"
 """
-_PKGVER = _SRCINFO + """
-[[ "$vers" == '{VERSION}' ]] && exit 1
-"""
+
+# Check if pkgver-pkgrel is unchanged
+_PKGVER = _SRCINFO + """[[ "$vers" == '{VERSION}' ]] && exit 1"""
+
+# handle installing some or all packages
 _PACMAN_U = "{SUDO}pacman -U"
 _INSTALL_ALL = _PACMAN_U + " *.pkg.tar.xz"
 _INSTALL = _SRCINFO + """
-for f in any x86_64; do
-    fname=\"{PKGNAME}-${vers}-$f.pkg.tar.xz\"
-    if [ -e "$fname" ]; then
-        """ + _PACMAN_U + """ $fname
-        if [ $? -ne 0 ]; then
-            exit 1
-        fi
+fname=\"{PKGNAME}-${vers}-{ARCH}.pkg.tar.xz\"
+if [ -e "$fname" ]; then
+    """ + _PACMAN_U + """ $fname
+    if [ $? -ne 0 ]; then
+        exit 1
     fi
-done
+fi
 """
+_ARCH_INSTALLS = [_INSTALL.replace("{ARCH}", x) for x in ["any", "x86_64"]]
 
 # If there are cache files, cache them
 _CACHE = "[ $(ls | grep '*\\.tar\\.{}' | wc -l) -gt 0 ] || {}cp *.tar.{} {}/"
@@ -69,12 +71,13 @@ class InstallPkg(object):
     def install(self, name):
         """Install a package."""
         self._log_bash("install")
-        use_script = _INSTALL
+        scripts = []
         if name is None:
-            use_script = _INSTALL_ALL
-        installing = use_script.replace("{PKGNAME}",
-                                        name).replace("{SUDO}", self._sudo)
-        return self._run([installing])
+            scripts = [_INSTALL_ALL]
+        else:
+            scripts = [x.replace("{PKGNAME}", name) for x in _ARCH_INSTALLS]
+        scripts = [x.replace("{SUDO}", self._sudo) for x in scripts]
+        return self._run(scripts)
 
     def version(self, vers):
         """Check the makepkg output version."""
