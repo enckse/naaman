@@ -38,8 +38,15 @@ for f in any x86_64; do
     fi
 done
 """
+
+# If there are cache files, cache them
 _CACHE = "[ $(ls | grep '*\\.tar\\.{}' | wc -l) -gt 0 ] || {}cp *.tar.{} {}/"
-_SPLIT = """exit $(makepkg --printsrcinfo | grep \"\\.tar\\.xz\" | wc -l))"""
+
+# output the number of produced packages (minus 1, always produce 1 package)
+_SPLIT = """exit $(makepkg --printsrcinfo \
+                   | grep \"\\.tar\\.xz\" \
+                   | tail -n +2 \
+                   | wc -l))"""
 
 
 class InstallPkg(object):
