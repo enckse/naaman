@@ -50,7 +50,7 @@ pkgs=$(makepkg --packagelist | grep \"\\.tar\\.xz\")
 cnt=$(echo \"$pkgs\" | wc -l)
 if [ $cnt -gt 1 ]; then
     echo
-    echo "packagelist:"
+    echo "detected packages:"
     for f in $(echo \"$pkgs\"); do basename $f | sed \"s/^/  -> /g\"; done
     exit 1
 fi
@@ -153,14 +153,15 @@ def command(command, shell=False, workdir=None):
     return res == 0
 
 
-def confirm(message, package_names, default_yes, must_confirm):
+def confirm(message, display, default_yes, must_confirm):
     """Confirm package changes."""
     exiting = None
     if must_confirm:
         log.info("")
-        for p in package_names:
-            log.info("  -> {}".format(p))
-        log.info("")
+        if display is not None:
+            for p in display:
+                log.info("  -> {}".format(p))
+            log.info("")
         defaulting = "Y/n"
         if not default_yes:
             defaulting = "y/N"

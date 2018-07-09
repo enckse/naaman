@@ -390,8 +390,8 @@ def install(file_definition, makepkg, cache_dirs, context, version):
             is_split = pkg.is_split()
             if is_split:
                 log.debug("split package")
-                if sh.confirm("split package, install all",
-                              [],
+                if sh.confirm("split package - install all",
+                              None,
                               False,
                               True) is None:
                     glob = None
