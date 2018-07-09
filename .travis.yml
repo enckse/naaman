@@ -6,7 +6,6 @@ services:
 arch:
     packages:
     - python
-    - python-pip
     - python-pycodestyle
     - python-pydocstyle
     - python-xdg
