@@ -48,7 +48,7 @@ _CACHE = "[ $(ls | grep '*\\.tar\\.{}' | wc -l) -gt 0 ] || {}cp *.tar.{} {}/"
 _SPLIT = """exit $(makepkg --printsrcinfo \
                    | grep \"\\.tar\\.xz\" \
                    | tail -n +2 \
-                   | wc -l))"""
+                   | wc -l)"""
 
 
 class InstallPkg(object):
