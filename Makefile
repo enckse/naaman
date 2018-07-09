@@ -23,12 +23,6 @@ all: test analyze completions manpages
 
 test: $(TESTS)
 
-ci: peps
-	pip install pyxdg
-
-peps:
-	pip install pep257 pycodestyle
-
 $(TESTS): clean
 	@echo $@
 	PYTHONPATH=. python $@
@@ -50,7 +44,7 @@ $(DOCS):
 
 analyze:
 	@echo $(SRC)
-	pep257 $(SRC)
+	pydocstyle $(SRC)
 	pycodestyle $(SRC)
 
 dependencies:

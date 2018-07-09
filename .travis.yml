@@ -7,8 +7,10 @@ arch:
     packages:
     - python
     - python-pip
+    - python-pycodestyle
+    - python-pydocstyle
+    - python-xdg
     script:
-    - sudo make ci
     - make
 
 script:
