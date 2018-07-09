@@ -50,8 +50,12 @@ pkgs=$(makepkg --packagelist | grep \"\\.tar\\.xz\")
 cnt=$(echo \"$pkgs\" | wc -l)
 if [ $cnt -gt 1 ]; then
     echo
-    echo "detected packages:"
-    for f in $(echo \"$pkgs\"); do basename $f | sed \"s/^/  -> /g\"; done
+    echo 'detected packages:'
+    for f in $(echo \"$pkgs\" | sed \"s/\\.pkg\\.tar\\.xz//g\"); do
+        basename $f | \
+            sed \"s/any$//g;s/x86\\_64$//g;s/-$//g\" | \
+            sed \"s/^/  -> /g\"
+    done
     exit 1
 fi
 """
