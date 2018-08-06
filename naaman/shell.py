@@ -42,11 +42,11 @@ fi
 _ARCH_INSTALLS = [_INSTALL.replace("{ARCH}", x) for x in ["any", "x86_64"]]
 
 # If there are cache files, cache them
-_CACHE = r"[ $(ls | grep '*\.tar\.{}' | wc -l) -gt 0 ] || {}cp *.tar.{} {}/"
+_CACHE = r"[ $(ls | grep '*\.pkg\.tar\.{}' | wc -l) -gt 0 ] || {}cp *\.pkg\.tar.{} {}/"
 
 # output the number of produced packages (minus 1, always produce 1 package)
 _SPLIT = r"""
-pkgs=$(makepkg --packagelist | grep "\.tar\.xz")
+pkgs=$(makepkg --packagelist | grep "\.pkg\.tar\.xz")
 cnt=$(echo "$pkgs" | wc -l)
 if [ $cnt -gt 1 ]; then
     echo
