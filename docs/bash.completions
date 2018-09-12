@@ -1,5 +1,4 @@
-function _naaman()
-{
+_naaman() {
     local cur opts cmn sync query top cmd
     cmn="--builds --cache-dir --config --no-config --no-confirm --no-sudo --pacman -q --quiet --trace --verbose"
     top="-h --help -Q --query -R --remove -S --sync --version"
