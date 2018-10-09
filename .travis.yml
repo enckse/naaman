@@ -5,7 +5,7 @@ matrix:
           dist: xenial
 
 install:
-    - pip install pycodestyle pydocstyle xdg
+    - pip install pycodestyle pydocstyle pyxdg
 
 script:
     - make
